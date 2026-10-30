@@ -1,0 +1,30 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# data
+data/
+*.parquet
+*.csv
+!tests/fixtures/**/*.csv
+letters/out/
+eval/reports/*.local.*
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# node
+node_modules/
+.next/
+app/web/out/
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/
