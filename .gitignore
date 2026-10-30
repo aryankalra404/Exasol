@@ -28,3 +28,6 @@ app/web/out/
 .DS_Store
 .idea/
 .vscode/
+
+# web build output
+app/web/dist/
