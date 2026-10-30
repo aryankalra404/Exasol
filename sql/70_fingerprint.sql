@@ -39,7 +39,11 @@ CREATE OR REPLACE TABLE {WORK}.best_match AS
 SELECT loan_id, period_start,
        COUNT(*) AS n_tied,
        COUNT(DISTINCT practice_codes) AS n_practice_sets,
-       GROUP_CONCAT(convention_id ORDER BY is_permitted_variant, convention_id SEPARATOR ';') AS tied_ids,
+       -- when the survivors name the same practice the label is the first in this order: non-fee variant,
+       -- start basis MIH, CHQ, SNC, AGR (sanction before agreement, as RBI words it), then id
+       GROUP_CONCAT(convention_id ORDER BY is_permitted_variant,
+                    CASE SUBSTR(convention_id, 1, 3) WHEN 'MIH' THEN 1 WHEN 'CHQ' THEN 2 WHEN 'SNC' THEN 3 ELSE 4 END,
+                    convention_id SEPARATOR ';') AS tied_ids,
        MAX(support) AS support
 FROM (
     SELECT m.*, s.support,

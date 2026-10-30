@@ -267,7 +267,8 @@ def audit(dataset_dir: Path, loan_ids: list[str] | None = None) -> list[Result]:
                     best = max(support[c] for c in unfair)
                     top = [c for c in unfair if support[c] == best]
                     fewest = min(dims(c) for c in top)
-                    top = sorted(c for c in top if dims(c) == fewest)
+                    order = {"MIH": 1, "CHQ": 2, "SNC": 3, "AGR": 4}
+                    top = sorted((c for c in top if dims(c) == fewest), key=lambda c: (order.get(c[:3], 5), c))
                     if posted < fair[p]:
                         status, conv = "UNDERCHARGE", None
                     elif len({practices(c) for c in top}) == 1:
