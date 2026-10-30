@@ -1,0 +1,378 @@
+"""Sahi Byaaj API. Reads result tables in Exasol; never computes an interest or refund figure itself.
+
+Writes are limited to policy settings and starting a new audit run (which runs the SQL pipeline in Exasol).
+"""
+
+from __future__ import annotations
+
+import csv
+import io
+import queue
+import re
+import threading
+from contextlib import contextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
+from letters.letter import check, render
+from scripts.audit import run_audit
+from scripts.db import ROOT, connect, schemas
+
+S = schemas()
+RAW, POL, OUT = S["RAW"], S["POLICY"], S["OUT"]
+app = FastAPI(title="Sahi Byaaj", version="0.1.0")
+
+# Exasol Personal allows 20 connections; keep a small pool
+_pool: queue.Queue = queue.Queue()
+_pool_size = 4
+_pool_lock = threading.Lock()
+_created = 0
+_run_lock = threading.Lock()
+
+
+@contextmanager
+def db():
+    global _created
+    try:
+        conn = _pool.get_nowait()
+    except queue.Empty:
+        with _pool_lock:
+            if _created < _pool_size:
+                _created += 1
+                conn = connect()
+            else:
+                conn = None
+        if conn is None:
+            conn = _pool.get(timeout=30)
+    try:
+        yield conn
+    except Exception:
+        try:
+            conn.close()
+        finally:
+            with _pool_lock:
+                _created -= 1
+        raise
+    else:
+        _pool.put(conn)
+
+
+def _val(v):
+    # paise arrive as strings for wide decimals; send integers when they fit safely in JSON
+    if isinstance(v, str) and re.fullmatch(r"-?\d+", v):
+        n = int(v)
+        return n if abs(n) < 2**53 else v
+    return v
+
+
+def rows(sql: str, params: dict | None = None) -> list[dict]:
+    with db() as c:
+        st = c.execute(sql, params or {})
+        cols = [x.lower() for x in st.column_names()]
+        return [{k: _val(v) for k, v in zip(cols, r)} for r in st.fetchall()]
+
+
+def one(sql: str, params: dict | None = None) -> dict | None:
+    r = rows(sql, params)
+    return r[0] if r else None
+
+
+def resolve_run(run_id: str) -> str:
+    if run_id == "latest":
+        r = one(f"SELECT run_id FROM {OUT}.audit_runs WHERE status = 'DONE' ORDER BY started_at DESC LIMIT 1")
+        if not r:
+            raise HTTPException(404, "no completed audit run yet: run `make demo`")
+        return r["run_id"]
+    if not re.fullmatch(r"[0-9a-f-]{36}", run_id):
+        raise HTTPException(400, "bad run id")
+    return run_id
+
+
+@app.get("/api/runs")
+def runs():
+    return rows(f"""SELECT r.run_id, r.dataset_id, r.started_at, r.duration_ms, r.status, r.label, r.loan_count,
+                           r.posting_count, r.policy_snapshot, s.refund_paise, s.refund_loans
+                    FROM {OUT}.audit_runs r LEFT JOIN {OUT}.run_summary s ON s.run_id = r.run_id
+                    ORDER BY r.started_at DESC LIMIT 50""")
+
+
+@app.get("/api/runs/{run_id}/summary")
+def summary(run_id: str):
+    rid = resolve_run(run_id)
+    run = one(f"SELECT * FROM {OUT}.audit_runs WHERE run_id = {{r}}", {"r": rid})
+    return {
+        "run": run,
+        "summary": one(f"SELECT * FROM {OUT}.run_summary WHERE run_id = {{r}}", {"r": rid}),
+        "steps": rows(f"""SELECT t.sql_step_id, t.duration_ms, t.rows_out, l.file_path, l.description, l.statement_sha
+                          FROM {OUT}.step_timings t LEFT JOIN {OUT}.lineage l ON l.sql_step_id = t.sql_step_id
+                          WHERE t.run_id = {{r}} ORDER BY t.started_at""", {"r": rid}),
+        "rollups": rows(f"SELECT dimension, dim_value, status, loans, findings, excess_paise FROM {OUT}.rollups "
+                        f"WHERE run_id = {{r}} ORDER BY dimension, dim_value", {"r": rid}),
+        "root_causes": rows(f"""SELECT rc.*, b.branch_name FROM {OUT}.root_causes rc
+                                JOIN {RAW}.branches b ON b.branch_id = rc.branch_id
+                                WHERE rc.run_id = {{r}} ORDER BY rc.excess_paise DESC""", {"r": rid}),
+        "practices": rows(f"SELECT practice_code, title, rbi_reference FROM {POL}.practices ORDER BY 1"),
+        "branches": rows(f"SELECT branch_id, branch_name, state_name, region FROM {RAW}.branches ORDER BY 1"),
+        "dataset": one(f"SELECT * FROM {RAW}.dataset_info"),
+    }
+
+
+LEDGER_SQL = f"""
+    SELECT l.loan_id, l.borrower_id, b.display_name, l.branch_id, br.branch_name, l.product, l.practice_code,
+           l.periods, l.days_affected, l.excess_paise, l.first_period, l.last_period
+    FROM {OUT}.refund_ledger l
+    JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
+    JOIN {RAW}.branches br ON br.branch_id = l.branch_id
+    WHERE l.run_id = {{r}}
+      AND ({{practice}} IS NULL OR l.practice_code = {{practice}})
+      AND ({{branch}} IS NULL OR l.branch_id = {{branch}})
+      AND ({{product}} IS NULL OR l.product = {{product}})
+      AND ({{q}} IS NULL OR UPPER(l.loan_id) LIKE {{q}} OR UPPER(b.display_name) LIKE {{q}})
+"""
+
+
+def _ledger_params(rid, practice, branch, product, q):
+    return {"r": rid, "practice": practice or None, "branch": branch or None, "product": product or None,
+            "q": f"%{q.upper()}%" if q else None}
+
+
+@app.get("/api/runs/{run_id}/ledger")
+def ledger(run_id: str, practice: str = "", branch: str = "", product: str = "", q: str = "",
+           sort: str = "excess", page: int = Query(1, ge=1), size: int = Query(50, le=500)):
+    rid = resolve_run(run_id)
+    order = {"excess": "l.excess_paise DESC", "loan": "l.loan_id", "days": "l.days_affected DESC",
+             "period": "l.first_period"}.get(sort, "l.excess_paise DESC")
+    p = _ledger_params(rid, practice, branch, product, q)
+    total = one(f"SELECT COUNT(*) AS n, COALESCE(SUM(excess_paise), 0) AS excess_paise, "
+                f"COUNT(DISTINCT loan_id) AS loans FROM ({LEDGER_SQL}) x", p)
+    data = rows(f"{LEDGER_SQL} ORDER BY {order}, l.loan_id, l.practice_code LIMIT {size} OFFSET {(page - 1) * size}", p)
+    return {"total": total, "rows": data, "page": page, "size": size}
+
+
+@app.get("/api/runs/{run_id}/ledger.csv")
+def ledger_csv(run_id: str, practice: str = "", branch: str = "", product: str = "", q: str = ""):
+    rid = resolve_run(run_id)
+    data = rows(f"{LEDGER_SQL} ORDER BY l.loan_id, l.practice_code", _ledger_params(rid, practice, branch, product, q))
+    buf = io.StringIO()
+    if data:
+        w = csv.DictWriter(buf, fieldnames=list(data[0].keys()) + ["run_id"])
+        w.writeheader()
+        for r in data:
+            w.writerow({**r, "run_id": rid})
+    return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv",
+                             headers={"Content-Disposition": f"attachment; filename=refund_ledger_{rid[:8]}.csv"})
+
+
+@app.get("/api/runs/{run_id}/queue/{status}")
+def work_queue(run_id: str, status: str, limit: int = Query(200, le=2000)):
+    rid = resolve_run(run_id)
+    if status not in ("UNEXPLAINED", "AMBIGUOUS", "PERMITTED", "UNDERCHARGE", "EVIDENCE_GAP"):
+        raise HTTPException(400, "unknown queue")
+    return rows(f"""SELECT f.loan_id, b.display_name, f.branch_id, f.product, f.period_start, f.practice_code,
+                           f.excess_paise, f.days_affected, f.reason, fp.posted_paise, fp.fair_paise,
+                           fp.closest_convention_id, fp.closest_diff_paise, fp.tied_convention_ids, fp.has_manual
+                    FROM {OUT}.findings f
+                    JOIN {RAW}.borrowers b ON b.borrower_id = f.borrower_id
+                    JOIN {OUT}.fingerprints fp ON fp.run_id = f.run_id AND fp.loan_id = f.loan_id
+                                               AND fp.period_start = f.period_start
+                    WHERE f.run_id = {{r}} AND f.status = {{s}}
+                    ORDER BY ABS(f.excess_paise) DESC LIMIT {limit}""", {"r": rid, "s": status})
+
+
+@app.get("/api/runs/{run_id}/gaps")
+def gaps(run_id: str):
+    rid = resolve_run(run_id)
+    return rows(f"""SELECT g.*, br.branch_name, b.display_name FROM {OUT}.evidence_gaps g
+                    JOIN {RAW}.branches br ON br.branch_id = g.branch_id
+                    JOIN {RAW}.loans l ON l.loan_id = g.loan_id
+                    JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
+                    WHERE g.run_id = {{r}} ORDER BY g.posted_paise_at_stake DESC""", {"r": rid})
+
+
+@app.get("/api/runs/{run_id}/cohorts")
+def cohorts(run_id: str, branch: str):
+    rid = resolve_run(run_id)
+    return rows(f"SELECT sanction_quarter, period_quarter, loans_in_cohort, loans_overcharged, excess_paise "
+                f"FROM {OUT}.cohorts WHERE run_id = {{r}} AND branch_id = {{b}} ORDER BY 1, 2", {"r": rid, "b": branch})
+
+
+@app.get("/api/runs/{run_id}/loans/{loan_id}")
+def loan(run_id: str, loan_id: str):
+    rid = resolve_run(run_id)
+    p = {"r": rid, "l": loan_id}
+    head = one(f"""SELECT l.*, b.display_name, b.preferred_language, br.branch_name, br.state_name,
+                          k.annual_rate_pct, k.day_count_basis, k.commitment_fee_rate_pct, k.disclosed_emi_paise
+                   FROM {RAW}.loans l JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
+                   JOIN {RAW}.branches br ON br.branch_id = l.branch_id JOIN {RAW}.kfs k ON k.loan_id = l.loan_id
+                   WHERE l.loan_id = {{l}}""", p)
+    if not head:
+        raise HTTPException(404, "loan not found")
+    return {
+        "loan": head,
+        "tranches": rows(f"""SELECT m.*, t.payee_type FROM {OUT}.money_in_hand m
+                             JOIN {RAW}.tranches t ON t.loan_id = m.loan_id AND t.tranche_no = m.tranche_no
+                             WHERE m.run_id = {{r}} AND m.loan_id = {{l}} ORDER BY m.tranche_no""", p),
+        "evidence": rows(f"SELECT * FROM {RAW}.disbursement_evidence WHERE loan_id = {{l}} ORDER BY tranche_no, event_date", p),
+        "rates": rows(f"SELECT effective_date, annual_rate_pct FROM {RAW}.rate_history WHERE loan_id = {{l}} ORDER BY 1", p),
+        "periods": rows(f"SELECT * FROM {OUT}.fingerprints WHERE run_id = {{r}} AND loan_id = {{l}} ORDER BY period_start", p),
+        "findings": rows(f"SELECT * FROM {OUT}.findings WHERE run_id = {{r}} AND loan_id = {{l}} ORDER BY period_start, practice_code", p),
+        "ledger": rows(f"SELECT * FROM {OUT}.refund_ledger WHERE run_id = {{r}} AND loan_id = {{l}} ORDER BY practice_code", p),
+        "ledger_total": one(f"SELECT COALESCE(SUM(excess_paise), 0) AS excess_paise, COUNT(DISTINCT practice_code) AS practices "
+                            f"FROM {OUT}.refund_ledger WHERE run_id = {{r}} AND loan_id = {{l}}", p),
+        "receipts": rows(f"SELECT * FROM {RAW}.receipts WHERE loan_id = {{l}} AND kind IN ('ADVANCE_EMI', 'CLOSURE') ORDER BY value_date", p),
+        "conventions": rows(f"SELECT convention_id, start_basis, principal_basis, advance_treatment, month_rounding, "
+                            f"practice_codes FROM {POL}.conventions"),
+    }
+
+
+@app.get("/api/runs/{run_id}/loans/{loan_id}/proof/{period}")
+def proof(run_id: str, loan_id: str, period: str):
+    """Interval-level working for one billing period: the fair path and the extra balance that was charged."""
+    rid = resolve_run(run_id)
+    p = {"r": rid, "l": loan_id, "p": period}
+    den = one(f"SELECT CASE WHEN day_count_basis = '30E_360' THEN 360 ELSE 365 END AS divisor FROM {RAW}.kfs WHERE loan_id = {{l}}", p)
+    divisor = den["divisor"] if den else 365
+    # unrounded interval amounts are computed by Exasol here, for display; the period total is rounded once in S50
+    fair = rows(f"""SELECT interval_start, interval_end, balance_paise, annual_rate_pct, days, numerator,
+                           CAST(CAST(numerator AS DECIMAL(36,0)) / CAST({100000000 * divisor} AS DECIMAL(18,0)) AS DECIMAL(30,4)) AS interest_paise_exact
+                    FROM {OUT}.balance_intervals WHERE run_id = {{r}} AND loan_id = {{l}} AND period_start = {{p}}
+                    ORDER BY interval_start""", p)
+    extra = rows(f"""SELECT convention_id, interval_start, interval_end, extra_balance_paise, fee_balance_paise,
+                            annual_rate_pct, fee_rate_pct, days, numerator,
+                            CAST(CAST(numerator AS DECIMAL(36,0)) / CAST({100000000 * divisor} AS DECIMAL(18,0)) AS DECIMAL(30,4)) AS interest_paise_exact
+                     FROM {OUT}.excess_intervals WHERE run_id = {{r}} AND loan_id = {{l}} AND period_start = {{p}}
+                     ORDER BY interval_start""", p)
+    fp = one(f"SELECT * FROM {OUT}.fingerprints WHERE run_id = {{r}} AND loan_id = {{l}} AND period_start = {{p}}", p)
+    postings = rows(f"SELECT * FROM {RAW}.interest_postings WHERE loan_id = {{l}} AND period_start = {{p}} ORDER BY posted_on, posting_id", p)
+    return {"divisor": divisor, "fair_intervals": fair, "extra_intervals": extra, "fingerprint": fp, "postings": postings}
+
+
+@app.get("/api/runs/{run_id}/letters/{loan_id}")
+def letter(run_id: str, loan_id: str, lang: str = ""):
+    rid = resolve_run(run_id)
+    q = f"SELECT * FROM {OUT}.letter_figures WHERE run_id = {{r}} AND loan_id = {{l}}"
+    figs = rows(q, {"r": rid, "l": loan_id})
+    if not figs:
+        raise HTTPException(404, "no refundable findings for this loan in this run")
+    for f in figs:
+        for k in ("first_period", "last_period"):
+            from datetime import date as _d
+            f[k] = _d.fromisoformat(str(f[k]))
+    lang = lang or next(f["preferred_language"] for f in figs)
+    lt = render(figs, lang)
+    # the checker re-reads the ledger on its own, not the rows used to render
+    result = check(lt, rows(q, {"r": rid, "l": loan_id}))
+    return {"loan_id": loan_id, "lang": lt.lang, "requested_lang": lang, "text": lt.text, "check": result}
+
+
+@app.get("/api/lineage")
+def lineage():
+    return rows(f"SELECT * FROM {OUT}.lineage ORDER BY sql_step_id")
+
+
+@app.get("/api/lineage/{step_id}")
+def lineage_step(step_id: str):
+    r = one(f"SELECT * FROM {OUT}.lineage WHERE sql_step_id = {{s}}", {"s": step_id})
+    if not r:
+        raise HTTPException(404, "unknown step")
+    r["sql"] = (ROOT / r["file_path"]).read_text()
+    return r
+
+
+@app.get("/api/policy/settings")
+def get_settings():
+    return {"settings": rows(f"SELECT * FROM {POL}.settings ORDER BY setting_key"),
+            "date_precedence": rows(f"SELECT * FROM {POL}.date_precedence ORDER BY payment_mode, rank")}
+
+
+class SettingIn(BaseModel):
+    setting_key: str
+    setting_value: str
+
+
+@app.put("/api/policy/settings")
+def put_setting(s: SettingIn):
+    if not one(f"SELECT 1 AS x FROM {POL}.settings WHERE setting_key = {{k}}", {"k": s.setting_key}):
+        raise HTTPException(404, "unknown setting")
+    if not re.fullmatch(r"true|false|\d{1,6}", s.setting_value):
+        raise HTTPException(400, "value must be true, false or a whole number")
+    with db() as c:
+        c.execute(f"UPDATE {POL}.settings SET setting_value = {{v}} WHERE setting_key = {{k}}",
+                  {"v": s.setting_value, "k": s.setting_key})
+    return get_settings()
+
+
+class RunIn(BaseModel):
+    label: str = ""
+
+
+@app.post("/api/runs")
+def start_run(body: RunIn):
+    if not _run_lock.acquire(blocking=False):
+        raise HTTPException(409, "an audit run is already in progress")
+    try:
+        with db() as c:
+            return run_audit(body.label or "re-run from app", conn=c)
+    finally:
+        _run_lock.release()
+
+
+@app.get("/api/compare/{a}/{b}")
+def compare(a: str, b: str):
+    """What changed between two runs: totals per status and practice, and loans whose refund changed."""
+    ra, rb = resolve_run(a), resolve_run(b)
+    p = {"a": ra, "b": rb}
+    by = rows(f"""SELECT COALESCE(x.status, y.status) AS status, COALESCE(x.practice_code, y.practice_code) AS practice_code,
+                         COALESCE(x.excess_paise, 0) AS a_paise, COALESCE(y.excess_paise, 0) AS b_paise,
+                         COALESCE(y.excess_paise, 0) - COALESCE(x.excess_paise, 0) AS delta_paise,
+                         COALESCE(x.loans, 0) AS a_loans, COALESCE(y.loans, 0) AS b_loans
+                  FROM (SELECT status, practice_code, SUM(excess_paise) excess_paise, COUNT(DISTINCT loan_id) loans
+                        FROM {OUT}.findings WHERE run_id = {{a}} GROUP BY 1, 2) x
+                  FULL OUTER JOIN (SELECT status, practice_code, SUM(excess_paise) excess_paise, COUNT(DISTINCT loan_id) loans
+                        FROM {OUT}.findings WHERE run_id = {{b}} GROUP BY 1, 2) y
+                    ON x.status = y.status AND COALESCE(x.practice_code, '-') = COALESCE(y.practice_code, '-')
+                  ORDER BY 1, 2""", p)
+    loans = rows(f"""SELECT COALESCE(x.loan_id, y.loan_id) AS loan_id, COALESCE(x.refund, 0) AS a_paise,
+                            COALESCE(y.refund, 0) AS b_paise, COALESCE(y.refund, 0) - COALESCE(x.refund, 0) AS delta_paise,
+                            x.statuses AS a_status, y.statuses AS b_status
+                     FROM (SELECT loan_id, SUM(CASE WHEN status IN ('REFUND','AMBIGUOUS') THEN excess_paise ELSE 0 END) refund,
+                                  GROUP_CONCAT(DISTINCT status ORDER BY status SEPARATOR ',') statuses
+                           FROM {OUT}.findings WHERE run_id = {{a}} GROUP BY 1) x
+                     FULL OUTER JOIN (SELECT loan_id, SUM(CASE WHEN status IN ('REFUND','AMBIGUOUS') THEN excess_paise ELSE 0 END) refund,
+                                  GROUP_CONCAT(DISTINCT status ORDER BY status SEPARATOR ',') statuses
+                           FROM {OUT}.findings WHERE run_id = {{b}} GROUP BY 1) y ON x.loan_id = y.loan_id
+                     WHERE COALESCE(x.refund, 0) <> COALESCE(y.refund, 0) OR COALESCE(x.statuses, '') <> COALESCE(y.statuses, '')
+                     ORDER BY ABS(COALESCE(y.refund, 0) - COALESCE(x.refund, 0)) DESC LIMIT 200""", p)
+    totals = one(f"""SELECT a.refund_paise AS a_refund, b.refund_paise AS b_refund, b.refund_paise - a.refund_paise AS delta_refund,
+                             a.refund_loans AS a_loans, b.refund_loans AS b_loans, b.refund_loans - a.refund_loans AS delta_loans,
+                             a.permitted_paise AS a_permitted, b.permitted_paise AS b_permitted
+                      FROM {OUT}.run_summary a, {OUT}.run_summary b WHERE a.run_id = {{a}} AND b.run_id = {{b}}""", p)
+    return {"a": ra, "b": rb, "totals": totals, "by_status_practice": by, "loans": loans}
+
+
+@app.get("/api/search")
+def search(q: str):
+    qq = f"%{q.upper()}%"
+    return rows(f"""SELECT l.loan_id, b.display_name, l.branch_id, l.product FROM {RAW}.loans l
+                    JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
+                    WHERE UPPER(l.loan_id) LIKE {{q}} OR UPPER(b.display_name) LIKE {{q}}
+                    ORDER BY CASE WHEN l.loan_id LIKE 'LDM%' THEN 0 ELSE 1 END, l.loan_id LIMIT 12""", {"q": qq})
+
+
+@app.get("/api/health")
+def health():
+    return PlainTextResponse("ok")
+
+
+DIST = Path(__file__).resolve().parent.parent / "web" / "dist"
+if DIST.exists():
+    app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
+
+    @app.get("/{path:path}")
+    def spa(path: str):
+        f = DIST / path
+        return FileResponse(f if path and f.is_file() else DIST / "index.html")
