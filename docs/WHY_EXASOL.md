@@ -4,25 +4,35 @@ What Exasol Personal does in Sahi Byaaj, step by step, and what deliberately sta
 
 ## Step map
 
-Fill in as files land. One row per pipeline step.
+Rows out are from the 10,003-loan demo book (seed 42), run on 30 Oct 2026; see `STATUS.md` "Measured results".
 
-| Step | What it does | SQL file | Exasol features used | Rows out (measured) |
-|---|---|---|---|---|
-| Load | Import synthetic extracts | `scripts/load` | `IMPORT` | |
-| Policy seed | Precedence, settings, practices, 33 conventions | | | |
-| Money-in-hand | Resolve the real disbursement date per tranche, flag conflicts and gaps | | window functions over evidence | |
-| Balance events | Disbursements, repayments, advance EMIs, rate resets under each convention | | | |
-| Intervals | Constant-balance, constant-rate intervals | | `LEAD`/`LAG` | |
-| Period interest | Fair and candidate interest per billing period, exact decimals | | `DECIMAL(36,12)` | |
-| Fingerprint | Which convention reproduces each posting to the paisa | | set-based join across 33 candidates | |
-| Permitted check | KFS and policy-driven exceptions | | | |
-| Findings | Status, attribution by practice, evidence ids | | | |
-| Ledger and rollups | Refund ledger, gaps, rollups | | | |
-| Lineage | Step ids and statement hashes | | | |
+| Step | What it does | SQL file | Exasol features used |
+|---|---|---|---|
+| Load | Create schemas, import synthetic extracts | `sql/01_raw_schema.sql`, `scripts/load.py` | `IMPORT ... FROM CSV` via pyexasol |
+| Policy seed | Settings, precedence, practices, 33 conventions (as a cross join of four value lists) | `sql/05_policy_and_out_schema.sql` | `VALUES` tables, `CROSS JOIN`, idempotent seeding |
+| S10 Run setup | Snapshot policy, find the audit window from the data, months, rate spans, loan facts | `sql/10_run_setup.sql` | `CONNECT BY` number generator, `LEAD`, `ROW_NUMBER` |
+| S20 Money-in-hand | Resolve the real disbursement date per tranche from conflicting evidence using the precedence table; flag conflicts and gaps | `sql/20_money_in_hand.sql` | window functions over evidence, `GROUP_CONCAT` |
+| S30 Balance events | Fair balance events; each candidate convention stored only as its difference from fair | `sql/30_balance_events.sql` | set-based per-convention events for every loan at once |
+| S40 Intervals | Constant-balance, constant-rate intervals clipped to billing months, with exact integer numerators | `sql/40_balance_intervals.sql` | running `SUM ... OVER`, `LEAD`, range joins, `DECIMAL(36,0)` |
+| S50 Period interest | Fair interest per month, rounded half up once; net postings after reversals | `sql/50_period_interest.sql` | exact `DIV` rounding on integers |
+| S60 Candidates | Every differing month recomputed under all candidate conventions side by side | `sql/60_candidate_conventions.sql` | one join, all conventions at once |
+| S70 Fingerprint + permitted check | Which convention reproduces each posting to the paisa; loan-history tie-break; KFS commitment fee permitted by policy | `sql/70_fingerprint.sql` | `DENSE_RANK`, `REGEXP_SUBSTR` |
+| S80 Findings | Status per month, excess split across practices so the parts sum exactly, evidence ids, step id | `sql/80_findings.sql` | telescoping attribution in one statement |
+| S90 Ledger | Refund ledger, gap queue with drafted queries, rollups, root causes, cohorts, letter figures, interval proof, run summary | `sql/90_ledger_and_rollups.sql` | `GROUPING SETS`, string building in SQL |
+| Lineage | Step id, file, SHA-256 of each SQL file; per-step timings; policy snapshot per run | `scripts/audit.py` writes `SAHI_OUT.lineage`, `step_timings`, `audit_runs` | `MERGE` |
+
+The runner (`scripts/audit.py`) only orders the files and records timings. It does no arithmetic.
 
 ## Measured
 
-From `STATUS.md` "Measured results". Hardware, dataset size, end-to-end runtime, per-step timings. Nothing here that we did not run.
+See `STATUS.md` "Measured results" for every figure, with dataset, hardware and date.
+
+## Why this shape suits Exasol
+
+- **No row per day.** A loan's balance changes a few dozen times; billing months and rate changes split those into intervals. That is ~42 fair intervals per loan instead of ~1,000 day rows
+- **All 33 conventions at once, cheaply.** Interest is linear in the balance, so a convention is stored as its difference from the fair path (often two rows: +amount on the cheque date, -amount on the handover date). Exact candidate figures come from fair numerator + difference numerator
+- **Exact by construction.** Numerators are integers (`balance * rate_micro * days`); one `DIV` per month does the rounding. The independent oracle reproduces every month to the paisa
+- **Re-runnable.** Every run gets an id, a policy snapshot and its own result rows, so policy changes and loan-system configuration changes can be diffed run against run
 
 ## What stays outside Exasol, and why
 
@@ -30,5 +40,5 @@ From `STATUS.md` "Measured results". Hardware, dataset size, end-to-end runtime,
 |---|---|---|
 | Synthetic data generation | Python | Test fixture production, not analysis |
 | Independent oracle | Python | Must not share code with the SQL it checks |
-| Letter wording | Templates (+ optional LLM phrasing) | Text only; every number is substituted from SAHI_OUT and checked |
-| UI | Next.js | Presentation only |
+| Letter wording | Templates in `letters/letter.py` | Text only; every number is substituted from `SAHI_OUT.letter_figures` and checked against a second read of it |
+| UI | React + Vite static build served by FastAPI | Presentation only; formats paise as rupees with string operations |

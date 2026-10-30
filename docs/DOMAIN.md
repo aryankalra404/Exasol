@@ -23,9 +23,9 @@ Any change here needs a `DECISIONS.md` entry and matching changes in the SQL and
 
 - Amounts at rest: integer **paise**, `DECIMAL(18,0)`
 - Rates: annual percent, `DECIMAL(9,6)` (8.75% is `8.750000`)
-- Intermediates: `DECIMAL(36,12)`. Never floating point
-- **Rounding: half up to the paisa, once per loan per billing period**, after summing all intervals in that period. Never round per interval or per day
-- Python: `decimal.Decimal` with `ROUND_HALF_UP`, context precision >= 36
+- Intermediates: exact integers. One interval's interest is held as the integer numerator `balance_paise * rate_micro * days` (`rate_micro` = rate × 1,000,000, so 8.75% is 8,750,000), in `DECIMAL(36,0)`. Never floating point
+- **Rounding: half up to the paisa, once per loan per billing period**, after summing all interval numerators in that period: `round(N / D) = sign(N) * DIV(2|N| + D, 2D)` with `D = 100 * 1,000,000 * divisor`. Half away from zero; N is only negative in a provisional EVIDENCE_GAP period. Never round per interval or per day
+- Python: integers or `decimal.Decimal`, never floats
 
 ## Time
 
@@ -40,7 +40,7 @@ Any change here needs a `DECISIONS.md` entry and matching changes in the SQL and
 Use the basis disclosed in the KFS. Default `ACT_365`.
 
 - `ACT_365` (actual/365 fixed): `days = end - start`, divisor 365, including in leap years
-- `30E_360` (30E/360): day of month capped at 30 for both dates, `days = 360*(y2-y1) + 30*(m2-m1) + (d2-d1)`, divisor 360
+- `30E_360` (30E/360): day of month capped at 30 for both dates, `days = 360*(y2-y1) + 30*(m2-m1) + (d2-d1)`, divisor 360. Written as `f(date) = 360y + 30m + min(d, 30)` and `days = f(end) - f(start)`, it telescopes: splitting a period into intervals never changes its day count
 
 Interest for one interval: `balance_paise * rate_pct / 100 * days / divisor`.
 
@@ -69,7 +69,8 @@ Each tranche has several date evidence records (`disbursement_evidence` in the c
 **Outputs per tranche:** resolved date, resolved source, confidence (`CONFIRMED`, `FALLBACK`, `GAP`), conflict flag, max spread in days.
 
 - **Conflict flag:** any non-sanction/agreement source differs from the resolved date by more than `conflict_tolerance_days` (default 0). Flagged, not hidden. Conflicts do not stop resolution
-- **GAP:** no defensible date. The tranche's periods are excluded from the refund total and listed in the evidence-gap queue with the missing source named
+- **GAP:** no defensible date. The billing periods that overlap the tranche's uncertainty window (earliest to latest evidence date of any source) are `EVIDENCE_GAP`, excluded from the refund total, and listed in the evidence-gap queue with the missing source named and a drafted branch query. Later periods are still audited, using the latest evidence date as a provisional start (the balance is the same either way once the money has certainly arrived)
+- **Duplicate records of one source** (two handover acks with different dates): the earliest is used, because it gives the smaller refund claim, and the conflict flag is raised
 
 ## Conventions
 
@@ -87,10 +88,16 @@ That is 4 x 2 x 2 x 2 = **32 candidates**, plus one permitted variant:
 - `DISCLOSED_COMMITMENT_FEE`: fair interest plus a commitment fee on the undisbursed amount from sanction to money-in-hand, at the rate the KFS discloses. Only a candidate when the KFS discloses one
 
 **What each dimension does to the balance path:**
-- `start_basis` moves the date each tranche's principal starts accruing
-- `principal_basis = SANCTIONED` accrues on the full sanctioned amount from the first accrual date instead of the disbursed balance
-- `advance_treatment = IGNORED` delays the principal reduction of `ADVANCE_EMI` receipts to their due date
-- `month_rounding = FULL_MONTH` snaps disbursement start dates back to the period start and closing repayment dates forward to the next period start
+- `start_basis` moves the date a tranche starts accruing:
+  - `CHEQUE_DATE`: tranches paid by CHEQUE or DD accrue from the cheque date; electronic tranches have no cheque, so they keep the money-in-hand date
+  - `SANCTION_DATE` / `AGREEMENT_DATE`: tranche 1 accrues from the sanction (agreement) date; later tranches keep their money-in-hand date
+- `principal_basis = SANCTIONED`: the full sanctioned amount accrues from tranche 1's start (so later tranches add nothing and any undisbursed part is charged too), until a `CLOSURE` receipt removes the undisbursed remainder
+- `advance_treatment = IGNORED` delays the principal reduction of `ADVANCE_EMI` receipts to their `due_date`
+- `month_rounding = FULL_MONTH` snaps disbursement start dates back to the 1st of their month and `CLOSURE` receipts forward to the 1st of the next month (a closure on the 1st stays)
+- `DISCLOSED_COMMITMENT_FEE` (`CFEE`): the fair path, plus a fee balance equal to the sanctioned amount from the sanction date, reduced by each tranche on its money-in-hand date, accruing at the KFS commitment fee rate
+- Rates: the rate in force on a day is the latest `rate_history` row with `effective_date <= day`; before the first row, the first row's rate applies
+
+**How the SQL computes them all at once:** interest is linear in the balance, so each convention is stored only as its *difference* from the fair path (usually a handful of dated changes, for example one tranche moved by eight days). A candidate's numerator is the fair numerator plus its difference numerator, rounded once. This is exact and avoids recomputing 33 full loan histories.
 
 ## Principal path
 
@@ -107,10 +114,12 @@ For each posting (loan, period):
 2. Find candidates whose amount equals the posted amount within `match_tolerance_paise` (default 0)
 3. Label:
    - The fair convention matches → `FAIR`
-   - `DISCLOSED_COMMITMENT_FEE` matches and policy allows it → `PERMITTED`
-   - One or more unfair candidates match → `MATCHED`. Pick the one with the fewest non-fair dimensions. If still tied, `AMBIGUOUS` and keep all tied candidates
-   - Nothing matches → `UNEXPLAINED`
-4. Any tranche feeding this period has confidence `GAP` → status `EVIDENCE_GAP` regardless of match
+   - `DISCLOSED_COMMITMENT_FEE` matches and policy allows it → `PERMITTED`. If policy does not allow it, it competes as an unfair convention with practice P1
+   - One or more unfair candidates match → choose among them by, in order: (a) **loan history**: the convention that reproduces the most of this loan's differing periods (evidence-gap periods do not vote), (b) the fewest non-fair dimensions. If the conventions left all name the same practices → `MATCHED` (labelled with the first in start-basis order MIH, CHQ, SNC, AGR; for example a personal loan whose agreement date equals its sanction date is labelled "from sanction date"), else `AMBIGUOUS` with all tied candidates kept. A match whose posting is below fair is `UNDERCHARGE`
+   - Nothing matches → `UNEXPLAINED` (posting above fair) or `UNDERCHARGE` (below), with the closest candidate and its difference
+4. The period overlaps the uncertainty window of a tranche with confidence `GAP` → status `EVIDENCE_GAP` regardless of match
+
+Why loan history: in a month where money arrived early and the sanction was in an earlier month, "from sanction date" and "full month" give the same figure. The same loan's other months usually separate them, because the lender's system applies one configuration to a loan.
 
 **Excess does not depend on attribution.** `excess = posted - fair`. Fingerprinting only names the practice. Negative excess is recorded as `UNDERCHARGE` and never refunded.
 

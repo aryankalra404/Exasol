@@ -108,8 +108,8 @@ docs/
 generator/           synthetic loan book (Python, fixed seeds)
 sql/                 numbered pipeline steps, one step per file
 oracle/              independent Python recompute (exact Decimal)
-app/                 API + web UI (reads result tables only)
-agent/               ask-the-book assistant via Exasol MCP (read-only)
+app/api/             FastAPI over result tables (reads only; writes policy settings, starts runs)
+app/web/             React + Vite auditor UI (static build served by the API)
 letters/             borrower letter templates + number checker
 tests/               unit, oracle agreement, fixtures, false positives
 eval/                fingerprint accuracy, red team, scale runs
@@ -144,17 +144,21 @@ Folders are created when first needed. Update this tree if you add a top-level f
 Fill these in as they come to exist. Keep them accurate.
 
 ```
-# setup                     TBD (scripts/setup.sh)
-# generate data             TBD
-# load into Exasol          TBD
-# run audit                 TBD
-# run tests                 TBD
-# run oracle agreement      TBD
-# start app                 TBD
+make setup                  # python venv + deps, web deps (needs Exasol Personal installed: `exasol install local`)
+make generate LOANS=10000   # synthetic book -> data/s42_n10000 (SEED=42 default)
+make load LOANS=10000       # schemas + IMPORT into Exasol
+make audit                  # run the SQL pipeline in Exasol (records run, timings, lineage)
+make demo LOANS=10000       # generate + load + audit
+make test                   # pytest; db tests skip without .env
+make oracle LOANS=10000     # independent oracle vs latest run, every loan
+make app                    # build UI and serve API + UI on http://127.0.0.1:8000
 ```
+
+Scale runs can use separate schemas so the demo data is untouched: set `EXASOL_SCHEMA_RAW=SCALE_RAW` (and `_POLICY`, `_OUT`, `_TRUTH`, `_WORK`) in the environment.
 
 ## Environment
 
-- Exasol Personal runs locally (macOS Apple Silicon, single node). Connection in `.env` (see `.env.example`): `EXASOL_DSN`, `EXASOL_USER`, `EXASOL_PASSWORD`, plus one `EXASOL_SCHEMA_*` per schema
+- Exasol Personal runs locally (macOS Apple Silicon, single node). Connection in `.env` (see `.env.example`): `EXASOL_DSN`, `EXASOL_USER`, `EXASOL_PASSWORD`, plus one `EXASOL_SCHEMA_*` per schema. The local password is in `~/.exasol/personal/deployments/default/secrets.json`
+- Exasol reserved words to avoid as column names or aliases: `STATE`, `SOURCE`, `VALUE`, `CS`. No `LATERAL` joins
 - Exasol Personal allows 20 connections. Use a small pool in the app
 - Python UDFs locally need the script language container installed first (`exasol slc install python3`). Prefer plain SQL; UDFs only where justified (see `docs/DECISIONS.md`)

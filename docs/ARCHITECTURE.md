@@ -7,36 +7,37 @@ Synthetic extracts go into Exasol; a numbered chain of SQL steps turns them into
 ## Flow
 
 ```
-generator/ (Python, fixed seed)
+generator/ (Python, fixed seed, simulated LMS posts interest under a hidden per-branch config)
    │  CSV per table + manifest
    ▼
-scripts/load  ──IMPORT──►  SAHI_RAW            SAHI_TRUTH (eval only)
+scripts/load ──IMPORT──►  SAHI_RAW            SAHI_TRUTH (eval only)
                               │                      ▲
                               ▼                      │
-                      sql/ pipeline (Exasol)     eval/, tests/
-                        10 schema + policy seed      │
-                        20 money-in-hand             │ compare
-                        30 balance events            │
-                        40 balance intervals         │
-                        50 period interest (fair)    │
-                        60 candidate conventions     │
-                        70 fingerprint               │
-                        80 permitted check           │
-                        90 findings + attribution    │
-                        95 ledger, gaps, rollups     │
-                              │                      │
-                              ▼                      │
+                    sql/ pipeline in Exasol      eval/, tests/
+                    (scripts/audit orders it)        │
+                      10 run setup, windows          │
+                      20 money-in-hand               │
+                      30 balance events (fair + diffs per convention)
+                      40 intervals, exact numerators │
+                      50 fair interest, net postings │ compare
+                      60 candidate conventions       │
+                      70 fingerprint + permitted     │
+                      80 findings + attribution      │
+                      90 ledger, gaps, rollups,      │
+                         root causes, cohorts,       │
+                         letter figures, proof       │
+                              │   (SAHI_WORK holds   │
+                              ▼    intermediates)    │
                           SAHI_OUT  ─────────────────┘
-                     │        │         │
-                     ▼        ▼         ▼
-                   app/    letters/   agent/ (MCP, read-only)
-                (API + UI) (template   (Tier 2)
-                           + checker)
+                     │                 │
+                     ▼                 ▼
+               app/api (FastAPI)   letters/ (template + checker)
+               app/web (React UI)
 
-oracle/ (Python Decimal, independent) ──► compared with SAHI_OUT in tests/
+oracle/ (Python, day-by-day, independent) ──► eval/oracle_agreement compares with SAHI_OUT
 ```
 
-Step numbers are indicative. The real map lives in `WHY_EXASOL.md` and is updated as files land.
+The step map with files and Exasol features is in `WHY_EXASOL.md`.
 
 ## Components
 
@@ -49,7 +50,6 @@ Step numbers are indicative. The real map lives in `WHY_EXASOL.md` and is update
 | oracle | Recomputes fair interest and fingerprints per loan in Python | CSVs in `data/` | test reports |
 | app | API + web UI for the auditor | `SAHI_OUT`, `SAHI_POLICY` | `SAHI_POLICY.settings`, triggers runs |
 | letters | Renders refund letters and checks every figure | `SAHI_OUT` | `letters/out/` |
-| agent | Answers questions over results via Exasol MCP, shows its SQL | `SAHI_OUT` (read-only user) | nothing |
 | eval | Fingerprint accuracy, robustness, red team, scale | `SAHI_OUT`, `SAHI_TRUTH` | `eval/reports/` |
 
 ## Design principles
@@ -65,5 +65,5 @@ Step numbers are indicative. The real map lives in `WHY_EXASOL.md` and is update
 - Exasol Personal, local on macOS Apple Silicon (single node)
 - Python 3.11+, `pyexasol`, `decimal`
 - API: FastAPI (Python, `pyexasol` pool, read-mostly)
-- UI: Next.js + TypeScript, built to static files served by the API, so one process runs the demo
-- Tests: `pytest`; CI on GitHub Actions for the Python parts that do not need Exasol
+- UI: React + TypeScript + Vite, built to static files served by the API, so one process runs the demo (D19)
+- Tests: `pytest` (oracle-only tests need no database; `db` tests skip without `.env`)
