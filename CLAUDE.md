@@ -155,6 +155,6 @@ Fill these in as they come to exist. Keep them accurate.
 
 ## Environment
 
-- Exasol Personal runs locally (macOS Apple Silicon, single node). Connection in `.env`: `EXASOL_DSN`, `EXASOL_USER`, `EXASOL_PASSWORD`, `EXASOL_SCHEMA`
+- Exasol Personal runs locally (macOS Apple Silicon, single node). Connection in `.env` (see `.env.example`): `EXASOL_DSN`, `EXASOL_USER`, `EXASOL_PASSWORD`, plus one `EXASOL_SCHEMA_*` per schema
 - Exasol Personal allows 20 connections. Use a small pool in the app
 - Python UDFs locally need the script language container installed first (`exasol slc install python3`). Prefer plain SQL; UDFs only where justified (see `docs/DECISIONS.md`)
