@@ -1,0 +1,16 @@
+[project]
+name = "sahi-byaaj"
+version = "0.1.0"
+description = "Full-book interest audit for Indian lenders, built on Exasol Personal"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.ruff]
+line-length = 180
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

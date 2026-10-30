@@ -1,0 +1,5 @@
+pyexasol>=0.27
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pytest>=8
+ruff>=0.4
