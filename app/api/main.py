@@ -83,7 +83,8 @@ def one(sql: str, params: dict | None = None) -> dict | None:
 
 def resolve_run(run_id: str) -> str:
     if run_id == "latest":
-        r = one(f"SELECT run_id FROM {OUT}.audit_runs WHERE status = 'DONE' ORDER BY started_at DESC LIMIT 1")
+        r = one(f"SELECT run_id FROM {OUT}.audit_runs WHERE status = 'DONE' AND dataset_id = "
+                f"(SELECT MAX(dataset_id) FROM {RAW}.dataset_info) ORDER BY started_at DESC LIMIT 1")
         if not r:
             raise HTTPException(404, "no completed audit run yet: run `make demo`")
         return r["run_id"]
@@ -97,6 +98,8 @@ def runs():
     return rows(f"""SELECT r.run_id, r.dataset_id, r.started_at, r.duration_ms, r.status, r.label, r.loan_count,
                            r.posting_count, r.policy_snapshot, s.refund_paise, s.refund_loans
                     FROM {OUT}.audit_runs r LEFT JOIN {OUT}.run_summary s ON s.run_id = r.run_id
+                    -- only runs over the dataset currently loaded; older datasets' loans are no longer in RAW
+                    WHERE r.dataset_id = (SELECT MAX(dataset_id) FROM {RAW}.dataset_info)
                     ORDER BY r.started_at DESC LIMIT 50""")
 
 

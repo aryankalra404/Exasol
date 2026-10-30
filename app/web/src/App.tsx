@@ -35,7 +35,7 @@ export default function App() {
       setRuns(done);
       if (runId !== "latest" && !done.some((x) => x.run_id === runId)) setRunId("latest");
     }).catch(() => setRuns([]));
-  }, [ver]);
+  }, [ver, parts[0]]);
 
   const pickRun = (id: string) => {
     setRunId(id);

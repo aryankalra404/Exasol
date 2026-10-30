@@ -30,8 +30,9 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
   const rerun = async () => {
     setBusy(true); setErr(null);
     try {
-      const label = (data?.settings ?? []).map((s: any) => `${s.setting_key.split("_")[0]}=${s.setting_value}`).join(" ");
-      const r = await api<any>("/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label: `policy: ${label}`.slice(0, 190) }) });
+      const off = (data?.settings ?? []).filter((s: any) => s.setting_value === "false").map((s: any) => (NICE[s.setting_key] ?? s.setting_key).split(" ").slice(0, 3).join(" ").toLowerCase());
+      const label = off.length ? `re-run, off: ${off.join("; ")}` : "re-run, all permissions on";
+      const r = await api<any>("/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label: label.slice(0, 190) }) });
       setLast(r); setA(""); setB(""); onRun(r.run_id);
     } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
   };
