@@ -34,6 +34,8 @@ Exasol Personal local (VM: 2 vCPU, 8 GB RAM) on an Apple M4 MacBook (16 GB). 30 
 
 Fingerprint accuracy against the generator's hidden configuration (demo book): every one of 7,535 MATCHED periods names either the hidden convention (6,612) or one that produces the identical figure (923); all 2,072 PERMITTED periods are exact. Periods the tool could not decide go to EVIDENCE_GAP (252), UNEXPLAINED (454) or AMBIGUOUS (385); every UNEXPLAINED period traces to a planted defect.
 
+False positives: 0 wrongly flagged. Disclosed commitment fees, a disclosed 30E/360 basis and fairly posted months are never sent to the ledger (`tests/test_false_positives.py`). Public anchor: RBI's own KFS illustration (₹20,000 over 24 months, EMI ₹969.73, APR 17.07%) runs through the full SQL pipeline and every month reproduces to the paisa (`tests/test_rbi_fixtures.py`).
+
 ## The three demo loans
 
 | Loan | What happened | What Sahi Byaaj says |

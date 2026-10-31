@@ -87,3 +87,6 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 - Why: time. A Tamil-preferring borrower gets the English letter and the UI says so
 - Gave up: Tamil (Tier 1 item, still open)
 
+**D21. RBI worked example as a one-loan fixture run through the real pipeline** (accepted)
+- Why: a public anchor the generator did not produce. RBI's illustration (Rs 20,000, 24 months, EMI Rs 969.73, interest Rs 3,274, fee Rs 400, APR 17.07%) does not quote the rate in the excerpts we could read; 15% p.a. reproduces all four figures at once, and the test asserts that. 30E/360 is disclosed in the fixture so each whole month is balance x rate / 12, as in RBI's schedule. The SQL test loads it into separate `RBIFIX_*` schemas and drops them after, so demo data is untouched
+- Gave up: comparing row by row with RBI's printed schedule (the RBI PDF host served a CAPTCHA, so rows were not read directly)

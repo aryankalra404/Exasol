@@ -24,6 +24,7 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 ## Interpretation
 
 - **Not legal advice.** Contested interpretations (for example a commitment fee from sanction date, or what counts as disbursement for a cheque to a builder) are policy settings, not verdicts
+- **RBI worked example read through excerpts.** rbi.org.in served a CAPTCHA to scripted requests, so the illustration's figures (EMI, total interest, fee, APR) come from RBI's annex as quoted in search results, not a direct read. The rate (15%) is derived as the one that reproduces all of them. Open the annex in a browser before quoting it
 - RBI's 31 Jul 2026 directions were verified for the RRB text; NBFC, co-op and commercial bank versions were read through summaries
 
 ## Assumptions not yet validated

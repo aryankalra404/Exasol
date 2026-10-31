@@ -51,11 +51,11 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 |---|---|---|---|---|
 | T1 | Oracle (independent recompute + fingerprint) | Aashman | done | `oracle/oracle.py`, day by day, no shared code. Ideally re-reviewed by a teammate who did not write the SQL |
 | T2 | Oracle agreement test on 10k+ loans | Aashman | done | 232,890 / 232,890 periods |
-| T3 | RBI worked-example fixtures | Aryan | doing | need the exact rate behind the ₹969.73 fact-sheet example from the RBI source before encoding it |
+| T3 | RBI worked-example fixtures | Aryan | done | `tests/test_rbi_fixtures.py`: RBI's Rs 20,000 / 24-month illustration through oracle and full SQL pipeline (separate schemas) |
 | T4 | False-positive suite | Aryan | done | `tests/test_false_positives.py`: disclosed commitment fee, disclosed 30E/360, fairly posted periods; oracle on a clean book plus SQL on the loaded run |
 | T5 | Fingerprint accuracy vs truth | Aashman | done | measured below; script still inline, move to `eval/` |
 | T6 | Scale run, measured | Aashman | done | 100k loans |
-| T7 | CI (ruff + db-free tests) and README badge | Aryan | doing | |
+| T7 | CI (ruff + db-free tests) and README badge | Aryan | done | `.github/workflows/ci.yml`: ruff, pytest without Exasol, web build |
 | T8 | Robustness: defect levels none to heavy | Aryan | doing | |
 | T9 | Larger scale run (up to 1M loans) | Aryan | todo | |
 
@@ -105,7 +105,8 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Policy flip (commitment fee not permitted) | refund +₹30,68,322.19, 250 more borrowers; re-run 16.5 s | s42_n10000 | 30 Oct 2026 |
 | False positives (oracle, clean book) | 0 wrongly flagged: 519 disclosed-fee periods (151 PERMITTED, 368 FAIR), 131 disclosed 30E/360 periods FAIR, 13,632 fairly posted periods FAIR | s23_n1200, defect scale 0 | 31 Oct 2026 |
 | False positives (SQL) | 0 wrongly flagged: 1,826 disclosed-fee periods on loans without planted defects all PERMITTED, no fairly posted period in findings | s42_n10000 | 31 Oct 2026 |
-| Tests | 16 passed | | 31 Oct 2026 |
+| RBI worked example | pass: EMI Rs 969.73 (Rs 970), total interest Rs 3,273.58 (Rs 3,274), APR 17.07% on Rs 19,600 net; oracle and SQL reproduce all 24 months to the paisa, all FAIR, 0 findings | fixture `rbi_kfs` | 31 Oct 2026 |
+| Tests | 19 passed locally with Exasol; CI runs 16 (db tests skip) | | 31 Oct 2026 |
 
 ## Blockers and open questions
 
