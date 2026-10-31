@@ -4,14 +4,28 @@ All names and figures are synthetic.
 
 ## 3-minute video script
 
-1. **0:00 to 0:20, the person.** "Priya audits a housing finance company. RBI has told lenders to stop these interest practices and refund the excess. Her loan system is the only thing computing interest, and it is what she has to check." Show the RBI text for two seconds
-2. **0:20 to 0:50, the whole book.** One click runs the audit inside Exasol. Show measured runtime and row counts, loans per practice, total excess. Point out the evidence-gap and unexplained queues next to the total
-3. **0:50 to 1:40, Meena's home loan** (`#/loan/LDM0001`, search "Meena"). Tranche 2 of ₹12,00,000 at 8.75%: cheque dated 3 Mar 2025, handover acknowledged 11 Mar. Timeline shows every date source side by side, with the 8 days charged before money in hand shaded. "Why this figure" shows the posted March interest is reproduced exactly by "from the cheque date": ₹12,00,000 × 8.75% × 8 days = ₹2,301.37. Click "SQL that matched it" for the statement
-4. **1:40 to 2:20, the hard cases.** (a) Raghav: charged from sanction, but his KFS disclosed a commitment fee and the posting reproduces it. PERMITTED under current policy, no refund, setting visible. (b) Asha: cheque tranche, no handover record, other dates 4 days apart. "Cannot decide", kept out of the refund total, branch query generated
-5. **2:20 to 2:45, the outcome.** Meena's refund letter, then the checker re-reading every figure against the ledger
-6. **2:45 to 3:00, why it holds up.** Oracle agreement (232,890 of 232,890 periods, 0 paise), RBI's own KFS illustration reproduced to the paisa by the SQL, 0 false positives, robustness (no fair or permitted month refunded even at heavy defects), green CI, MIT licence
+Have open before recording, one tab or window each:
 
-Opening matters most: the date conflict and the fingerprint must be on screen in the first minute so nobody files this under "interest calculator".
+1. `docs/Sahi-Byaaj-pitch.pdf` (slides 1, 2, 12, 13)
+2. The app at http://127.0.0.1:8000 (`make app`), browser zoom ~125%
+3. https://github.com/aryankalra404/Exasol (README, CI badge)
+
+Do not open rbi.org.in on camera: the 29 Apr 2024 circular now carries a "Withdrawn" stamp (its practices moved into the 31 Jul 2026 directions). Slide 1 quotes its exact words.
+
+| Time | On screen | Say |
+|---|---|---|
+| 0:00 to 0:15 | Deck slides 1 and 2 | "RBI found lenders charging interest from the date on a cheque handed over days later, and told them to refund it. Meena paid 8 days of interest on money she didn't have yet. She has no idea." |
+| 0:15 to 0:35 | App: Overview | "Sahi Byaaj audits the whole book inside Exasol. This test book: ₹8,83,23,995.69 owed to 3,063 borrowers. And everything it couldn't decide is shown here, not guessed." |
+| 0:35 to 1:15 | Search "Meena" (`LDM0001`) | "Every date for every payment, side by side. Cheque dated 3 March, handed over 11 March. The bank posted ₹21,904.97; fair is ₹19,603.60. One rule reproduces the bank's figure to the paisa: from the cheque date." Click "SQL that matched it" |
+| 1:15 to 1:45 | `LDM0002`, then `LDM0003`, then Work queues | "Raghav: his contract disclosed this fee, so no refund. Asha: her records don't settle the date, so it drafts a query to the branch instead of guessing." |
+| 1:45 to 2:00 | Policy & re-runs | "If the auditor decides that fee isn't fair, one switch re-runs the whole book in Exasol: ₹30.7 lakh more, 250 more borrowers." If the live re-run is slow on camera, show the run comparison |
+| 2:00 to 2:15 | Fix coverage | "This branch fixed its system in July 2024, but only for new loans. Older loans stayed overcharged into 2026." |
+| 2:15 to 2:30 | Borrower letter, switch to Hindi or Tamil | "The refund letter, in the borrower's language. Every figure comes from the ledger and is checked." |
+| 2:30 to 2:37 | Method & lineage | "Every step is SQL inside Exasol, with its timing and fingerprint." |
+| 2:37 to 2:55 | Deck slides 12 and 13 | "Half a million loans in under 8 minutes on a laptop. 0 paise off an independent checker. Zero false alarms. RBI's own example reproduced." |
+| 2:55 to 3:00 | GitHub repo | "Open source, MIT. Everything reproduces from the README." |
+
+Opening matters most: the date conflict and the matched rule must be on screen in the first minute so nobody files this under "interest calculator".
 
 ## Live demo day (top 5)
 
