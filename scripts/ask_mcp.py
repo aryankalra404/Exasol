@@ -1,6 +1,6 @@
 """Start Exasol's MCP server as the read-only ASK_READER user, limited to the SAHI_ASK views.
 
-Used by .mcp.json (Claude Code) or any MCP client config: command `.venv/bin/python -m scripts.ask_mcp`.
+Used by the project .mcp.json or any MCP client config: command `.venv/bin/python -m scripts.ask_mcp`.
 Reads the connection from .env so no secret lives in a client config file. Run `make ask-setup` first.
 """
 
