@@ -35,7 +35,7 @@ Every number is computed by SQL inside Exasol; the app only reads result tables.
 
 ### Results, as measured
 
-Exasol Personal local, single node, VM with 2 vCPU. Demo and 100k books: VM 8 GB on an Apple M4 MacBook (16 GB), 30 Oct 2026. 500k book: VM 12 GB on an Apple M4 MacBook Air (24 GB), 31 Oct 2026. Full table in [STATUS](docs/STATUS.md).
+Exasol Personal local, single node, VM with 2 vCPU. Demo and 100k books: VM 8 GB on an Apple M4 MacBook (16 GB), 30 Oct 2026. 500k book: VM 12 GB on an Apple M4 MacBook Air (24 GB), 31 Oct 2026. Raw reports in [eval/reports](eval/reports).
 
 | | Demo book | 100k book | 500k book |
 |---|---|---|---|
@@ -152,8 +152,6 @@ oracle (independent Python, day by day) ──► compared with SAHI_OUT, to the
 | [FEATURES](docs/FEATURES.md) | Feature thinking: built, next, rejected |
 | [DECISIONS](docs/DECISIONS.md) | Decision log |
 | [LIMITS](docs/LIMITS.md) | Limitations and assumptions |
-| [DEMO](docs/DEMO.md) | Demo script |
-| [STATUS](docs/STATUS.md) | Task board and measured results |
 
 ## Licence and contributing
 
