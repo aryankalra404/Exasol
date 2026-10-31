@@ -20,6 +20,8 @@ Opening matters most: the date conflict and the fingerprint must be on screen in
 - Live policy toggle: flip commitment fee permission, re-run, totals change
 - Ask the book live from an MCP client (`docs/ASK.md`): "how much do we owe borrowers disbursed by cheque in 2024?", show the SQL, then show the same client being refused a read of `SAHI_TRUTH`
 - Meena's letter in Tamil as well as English and Hindi, checker green each time
+- Data page: download the template, upload it as a book (three loans), show Meena's ₹2,301.37 again on an uploaded book, then reload the sample. Answers "how would a lender use this?" on screen
+- Overview: download the inspection pack and open its README
 - Have ready: SQL for money-in-hand and fingerprint steps, `tests/test_rbi_fixtures.py`, `eval/reports/robustness.json`, `LIMITS.md`, answers on interpretation, data realism, and what a real lender would need to connect
 - Backup: recorded video and screenshots if the laptop or network fails
 

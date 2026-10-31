@@ -1,6 +1,7 @@
 """Sahi Byaaj API. Reads result tables in Exasol; never computes an interest or refund figure itself.
 
-Writes are limited to policy settings and starting a new audit run (which runs the SQL pipeline in Exasol).
+Writes are limited to policy settings, starting a new audit run (which runs the SQL pipeline in Exasol), and
+replacing the loaded loan book with a validated extract or the synthetic sample (Data page).
 """
 
 from __future__ import annotations
@@ -13,11 +14,12 @@ import threading
 from contextlib import contextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, PlainTextResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from app.api.book_io import inspection_pack, templates_zip, validate_extract, write_book
 from letters.letter import check, render
 from scripts.audit import run_audit
 from scripts.db import ROOT, connect, schemas
@@ -365,7 +367,97 @@ def search(q: str):
     return rows(f"""SELECT l.loan_id, b.display_name, l.branch_id, l.product FROM {RAW}.loans l
                     JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
                     WHERE UPPER(l.loan_id) LIKE {{q}} OR UPPER(b.display_name) LIKE {{q}}
-                    ORDER BY CASE WHEN l.loan_id LIKE 'LDM%' THEN 0 ELSE 1 END, l.loan_id LIMIT 12""", {"q": qq})
+                    ORDER BY b.display_name, l.loan_id LIMIT 12""", {"q": qq})
+
+
+# ---------- data: what is loaded, templates, import, sample, inspection pack ----------
+SAMPLE = ("s42_n10000", 42, 10000)
+MAX_UPLOAD = 512 * 2**20
+
+
+@app.get("/api/data/status")
+def data_status():
+    try:
+        info = one(f"SELECT dataset_id, seed, loans, as_of, generator_version FROM {RAW}.dataset_info")
+    except Exception:
+        info = None
+    if not info:
+        return {"loaded": False}
+    counts = rows("SELECT LOWER(table_name) AS table_name, table_row_count AS n FROM EXA_ALL_TABLES "
+                  "WHERE table_schema = {s} AND table_name <> 'DATASET_INFO' ORDER BY 1", {"s": RAW})
+    run = one(f"SELECT run_id, started_at, duration_ms, label FROM {OUT}.audit_runs WHERE status = 'DONE' "
+              f"AND dataset_id = {{d}} ORDER BY started_at DESC LIMIT 1", {"d": info["dataset_id"]})
+    return {"loaded": True, "dataset": info, "synthetic": info["generator_version"] != "upload",
+            "tables": counts, "latest_run": run}
+
+
+@app.get("/api/data/templates.zip")
+def data_templates():
+    return Response(templates_zip(), media_type="application/zip",
+                    headers={"Content-Disposition": "attachment; filename=sahi_byaaj_extract_templates.zip"})
+
+
+def _replace_book(path: Path, label: str) -> dict:
+    """Load a dataset folder into Exasol and audit it. On a failed load, put the previous book back."""
+    from scripts.load import load
+    try:
+        prev = one(f"SELECT dataset_id FROM {RAW}.dataset_info")
+    except Exception:
+        prev = None
+    try:
+        loaded = load(path)
+    except Exception as e:
+        for cand in ([ROOT / "data" / prev["dataset_id"], ROOT / "data" / "uploads" / prev["dataset_id"]] if prev else []):
+            if cand.exists():
+                load(cand)
+                break
+        raise HTTPException(422, f"Exasol rejected the extract during load, so the previous book was kept. Detail: {str(e)[:300]}")
+    run = run_audit(label)
+    return {"dataset_id": loaded["dataset_id"], "load_ms": loaded["load_ms"], "run": run}
+
+
+@app.post("/api/data/upload")
+async def data_upload(request: Request):
+    body = await request.body()
+    if len(body) > MAX_UPLOAD:
+        raise HTTPException(413, "The ZIP is larger than 512 MB. Load large books with `make load` instead.")
+    tables, errors, counts = validate_extract(body)
+    if errors:
+        return {"ok": False, "errors": errors, "counts": counts}
+    if not _run_lock.acquire(blocking=False):
+        raise HTTPException(409, "An audit run is already in progress. Try again when it finishes.")
+    try:
+        path = write_book(tables, ROOT / "data" / "uploads")
+        return {"ok": True, "counts": counts, **_replace_book(path, "Uploaded book")}
+    finally:
+        _run_lock.release()
+
+
+@app.post("/api/data/sample")
+def data_sample():
+    from datetime import date as _date
+
+    from generator.generate import generate
+    if not _run_lock.acquire(blocking=False):
+        raise HTTPException(409, "An audit run is already in progress. Try again when it finishes.")
+    try:
+        name, seed, loans = SAMPLE
+        path = ROOT / "data" / name
+        if not (path / "manifest.json").exists():
+            path = generate(seed, loans, _date(2026, 10, 1), 1.0, ROOT / "data")
+        return {"ok": True, **_replace_book(path, "Baseline audit")}
+    finally:
+        _run_lock.release()
+
+
+@app.get("/api/runs/{run_id}/inspection-pack.zip")
+def run_inspection_pack(run_id: str):
+    rid = resolve_run(run_id)
+    if not one(f"SELECT run_id FROM {OUT}.run_summary WHERE run_id = {{r}}", {"r": rid}):
+        raise HTTPException(404, "no such completed run")
+    data = inspection_pack(rid, rows, OUT, RAW)
+    return Response(data, media_type="application/zip",
+                    headers={"Content-Disposition": f"attachment; filename=inspection_pack_{rid[:8]}.zip"})
 
 
 @app.get("/api/health")

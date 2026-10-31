@@ -25,6 +25,11 @@ export default function Book({ runId }: { runId: string }) {
             or on money they did not have yet. Every loan, tranche and billing period in the book was recomputed
             inside Exasol and compared with the interest the loan system posted.
           </p>
+          <div className="filters" style={{ marginTop: 16, marginBottom: 0 }}>
+            <a className="btn" href={`/api/runs/${run.run_id}/inspection-pack.zip`}>Download inspection pack</a>
+            <a className="btn ghost" href="#/ledger">Open refund ledger</a>
+          </div>
+          <p className="tiny faint" style={{ marginTop: 8 }}>The pack holds the ledger, every finding, the branch queries, the policy used and the SQL with its fingerprints, for the inspector.</p>
         </div>
         <div className="facts">
           <div><div className="v">{n(s.loans_audited)}</div><div className="k">loans audited (whole book)</div></div>

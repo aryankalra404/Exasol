@@ -8,6 +8,7 @@ import Regression from "./pages/Regression";
 import Policy from "./pages/Policy";
 import Method from "./pages/Method";
 import Letter from "./pages/Letter";
+import Data, { FirstRun } from "./pages/Data";
 
 export type Run = {
   run_id: string; dataset_id: string; started_at: string; duration_ms: number; status: string; label: string;
@@ -16,7 +17,7 @@ export type Run = {
 
 const NAV: [string, [string, string][]][] = [
   ["Audit", [["book", "Overview"], ["ledger", "Refund ledger"], ["queues", "Work queues"], ["regression", "Fix coverage"]]],
-  ["Controls", [["policy", "Policy & re-runs"], ["method", "Method & lineage"]]],
+  ["Controls", [["policy", "Policy & re-runs"], ["method", "Method & lineage"], ["data", "Data"]]],
 ];
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [runId, setRunId] = useState<string>(() => localStorage.getItem("run") ?? "latest");
   const [ver, setVer] = useState(0);
+  const status = useApi<any>("/data/status", [ver]).data;
 
   useEffect(() => {
     api<Run[]>("/runs").then((r) => {
@@ -40,6 +42,7 @@ export default function App() {
   const current = runs.find((r) => r.run_id === runId) ?? runs[0];
   const rid = runId === "latest" ? "latest" : runId;
   const page = parts[0] ?? "book";
+  const empty = status && (!status.loaded || !status.latest_run);
 
   return (
     <div className="shell">
@@ -77,17 +80,20 @@ export default function App() {
               ))}
             </select>
             {current && <span className="faint">{current.dataset_id} · {day(current.started_at)} · {seconds(current.duration_ms)} in Exasol</span>}
+            {status?.loaded && <a href="#/data" className={`tag ${status.synthetic ? "PERMITTED" : "FAIR"}`} style={{ textDecoration: "none" }}>{status.synthetic ? "Synthetic sample" : "Uploaded extract"}</a>}
           </div>
           <Search />
         </div>
-        {page === "book" && <Book runId={rid} />}
-        {page === "ledger" && <Ledger runId={rid} params={params} />}
-        {page === "loan" && <Loan runId={rid} loanId={parts[1]} period={params.get("period")} />}
-        {page === "queues" && <Queues runId={rid} tab={parts[1] ?? "gaps"} />}
-        {page === "regression" && <Regression runId={rid} branch={parts[1]} />}
-        {page === "policy" && <Policy runs={runs} onRun={(id) => { pickRun(id); setVer((v) => v + 1); }} />}
-        {page === "method" && <Method runId={rid} step={parts[1]} />}
-        {page === "letter" && <Letter runId={rid} loanId={parts[1]} lang={params.get("lang") ?? ""} />}
+        {page === "data" && <Data onChanged={() => { pickRun("latest"); setVer((v) => v + 1); }} />}
+        {page !== "data" && empty && <FirstRun />}
+        {!empty && page === "book" && <Book runId={rid} />}
+        {!empty && page === "ledger" && <Ledger runId={rid} params={params} />}
+        {!empty && page === "loan" && <Loan runId={rid} loanId={parts[1]} period={params.get("period")} />}
+        {!empty && page === "queues" && <Queues runId={rid} tab={parts[1] ?? "gaps"} />}
+        {!empty && page === "regression" && <Regression runId={rid} branch={parts[1]} />}
+        {!empty && page === "policy" && <Policy runs={runs} onRun={(id) => { pickRun(id); setVer((v) => v + 1); }} />}
+        {!empty && page === "method" && <Method runId={rid} step={parts[1]} />}
+        {!empty && page === "letter" && <Letter runId={rid} loanId={parts[1]} lang={params.get("lang") ?? ""} />}
       </main>
     </div>
   );

@@ -99,3 +99,11 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 - Why: peak memory was 3.6 GB at 100k loans, so 1M would not fit beside the Exasol VM. Rows are written per table in the same order, so output is byte-identical (checked on s42_n10000: every CSV and the manifest match); peak memory at 100k is now 277 MB
 - Gave up: nothing
 
+**D24. Load your own book from the app: ZIP upload checked against the table DDL, then the normal loader** (accepted)
+- Why: a user opening the app needs to see what data it is showing and how to put their own in. The upload is checked file by file against `sql/01_raw_schema.sql` (columns, dates, whole paise, booleans, widths, loan references) before Exasol is touched, so a bad file never half-replaces a book; if Exasol still rejects it, the previous book is reloaded. It then goes through the same `scripts/load.py` IMPORT and audit as `make demo`. The ZIP is sent as the raw request body so no extra upload library is needed
+- Gave up: multi-book side by side (one book loaded at a time; runs of earlier books stay in history); very large books, which load faster with `make load`
+
+**D25. Inspection pack is a copy, not a report** (accepted)
+- Why: what an inspector needs is the rows and the means to check them: the ledger, every finding with its evidence ids, the branch queries, the policy snapshot, and the SQL files whose SHA-256 must match `lineage`. A ZIP of CSVs and SQL is what an audit file holds; nothing is recalculated
+- Gave up: a formatted PDF
+

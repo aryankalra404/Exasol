@@ -15,6 +15,7 @@ Live task board. Update it when you start, finish, block or cut something. Keep 
 
 Breaking or notable changes to `CONTRACT.md` that others must react to. Newest first.
 
+- 0.4.0 (31 Oct): additive, data and inspection-pack endpoints, uploaded books. No action needed
 - 0.3.0 (31 Oct): additive, `SAHI_ASK` views + `ASK_READER` user for ask-the-book. No action needed
 - 0.2.0 (30 Oct): reserved-word renames (`state_name`, `evidence_source`), `SAHI_WORK`, new OUT tables. See CONTRACT changelog
 
@@ -81,6 +82,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | # | Task | Owner | State | Notes |
 |---|---|---|---|---|
 | S1 | README final, run guide, deployment instructions | Aashman | done | |
+| A7 | Data page (load your own book, templates, sample reload), first-run screen, inspection pack | Aryan | done | `app/api/book_io.py`, `tests/test_book_io.py`; upload of the template book and sample reload tested end to end |
 | S7 | UI copy and polish pass (every screen) | Aryan | done | plain words instead of codes, plurals, letter reflow, readable branch queries, timeline label overlap, Method panel overflow, grouped nav, paged work queues with branch filter, no demo-specific defaults |
 | S2 | WHY_EXASOL, LIMITS, DECISIONS final | Aashman | done | |
 | S3 | Cold-start install test (fresh clone) | Aryan | done | fresh GitHub clone on a second laptop (MacBook Air M4): setup, demo, test, oracle from the README, separate `COLD_*` schemas |
@@ -118,7 +120,7 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Intermediate rows at 500k | 21.1M fair intervals, 56.5M difference intervals, 17.5M candidate figures | s7_n500000 | 31 Oct 2026 |
 | Oracle agreement | 69,895 / 69,895 periods (fair figure, status, matched convention), largest deviation 0 paise | s7_n500000, random 3,003 loans | 31 Oct 2026 |
 | Cold start from a fresh clone | `make setup`, `make demo LOANS=10000` (19.9 s), `make test` 20 passed, `make oracle` 232,890 / 232,890, 0 paise; refund total identical to the paisa to the original machine's run; working tree clean | s42_n10000, MacBook Air M4 24 GB | 31 Oct 2026 |
-| Tests | 20 passed locally with Exasol; CI runs 16 (db tests skip) | | 31 Oct 2026 |
+| Tests | 26 passed locally with Exasol; CI runs 21 (db tests skip) | | 31 Oct 2026 |
 
 ## Blockers and open questions
 

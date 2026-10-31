@@ -1,6 +1,6 @@
 # Contract
 
-**Version 0.3.1** (31 Oct 2026)
+**Version 0.4.0** (31 Oct 2026)
 
 The interface between components. Generator, SQL pipeline, oracle, app, letters and agent talk only through what is defined here. Build against this, not against each other's code.
 
@@ -196,7 +196,10 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - `GET /api/runs/{run_id}/queue/{status}?page=&size=` for `UNEXPLAINED`, `AMBIGUOUS`, `PERMITTED`, `UNDERCHARGE`, `EVIDENCE_GAP`; each row carries `total_rows`
 - `GET /api/runs/{run_id}/gaps`, `GET /api/runs/{run_id}/cohorts?branch=`
 - `GET /api/runs/{run_id}/loans/{loan_id}` and `/loans/{loan_id}/proof/{period_start}`
-- `GET /api/runs/{run_id}/letters/{loan_id}?lang=en|hi` (rendered letter + checker result)
+- `GET /api/runs/{run_id}/letters/{loan_id}?lang=en|hi|ta` (rendered letter + checker result)
+- `GET /api/runs/{run_id}/inspection-pack.zip`: README with totals, refund_ledger, findings, evidence_gaps, run_summary, step_timings, lineage CSVs, policy_snapshot.json and the SQL files
+- `GET /api/data/status` (loaded dataset, synthetic or uploaded, row counts, latest run), `GET /api/data/templates.zip`
+- `POST /api/data/upload` (body: a ZIP of one CSV per `SAHI_RAW` table, header row, any column order; checked against `sql/01_raw_schema.sql` before loading; returns `{ok:false, errors}` or loads, audits and returns the run), `POST /api/data/sample` (reload the synthetic sample)
 - `GET /api/lineage`, `GET /api/lineage/{sql_step_id}` (includes the SQL text)
 - `GET/PUT /api/policy/settings`, `POST /api/runs` (re-run the pipeline), `GET /api/compare/{a}/{b}`, `GET /api/search?q=`
 
@@ -206,3 +209,4 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - 0.2.0 (30 Oct 2026): renamed reserved-word columns (`state` → `state_name`, `source` → `evidence_source`); added `SAHI_WORK`, `RAW.dataset_info`, `conventions.practice_codes`, `audit_runs.label`; fingerprints gain `UNDERCHARGE`, `posting_ids`, `has_manual`, `gap_tranches`; findings gain `matched_convention_id` and use `AMB` for ambiguous; new OUT tables `root_causes`, `cohorts`, `letter_figures`, `excess_intervals`, `run_summary`; `period_interest` not persisted. Affects generator, loader, app
 - 0.3.0 (31 Oct 2026): additive. New schema `SAHI_ASK` (views, latest run) and user `ASK_READER`; env `EXASOL_SCHEMA_ASK`, `EXASOL_ASK_USER`, `EXASOL_ASK_PASSWORD`. Affects nobody else
 - 0.3.1 (31 Oct 2026): additive. Work-queue API takes `page` and `size` (replaces `limit`) and returns `total_rows`. Affects app only
+- 0.4.0 (31 Oct 2026): additive. Data and inspection-pack endpoints. An uploaded book gets `dataset_id = upload_<UTC timestamp>`, `generator_version = 'upload'`, empty truth tables, and is stored under `data/uploads/`. Affects app only
