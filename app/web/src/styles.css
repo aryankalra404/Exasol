@@ -120,6 +120,12 @@ h3 { font-size: 15px; font-family: var(--sans); font-weight: 600; letter-spacing
 .facts div { background: var(--card); padding: 12px 14px; }
 .facts .v { font: 600 18px var(--mono); }
 .facts .k { font-size: 12px; color: var(--ink-2); }
+.facts.f4 { grid-template-columns: repeat(4, 1fr); }
+.facts.f4 > div:last-child:nth-child(4n+2) { grid-column: span 3; }
+.facts.f4 > div:last-child:nth-child(4n+3) { grid-column: span 2; }
+@media (max-width: 1100px) { .facts.f4 { grid-template-columns: 1fr 1fr; } }
+.action-card { display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+.action-card p { margin: 6px 0 0; }
 
 /* tiles */
 .tile { display: block; text-decoration: none; padding: 16px 18px; border-radius: 10px; border: 1px solid var(--rule); background: var(--card); transition: border-color 0.15s; }
