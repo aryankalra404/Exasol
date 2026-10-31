@@ -58,7 +58,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | T6 | Scale run, measured | Aashman | done | 100k loans |
 | T7 | CI (ruff + db-free tests) and README badge | Aryan | done | `.github/workflows/ci.yml`: ruff, pytest without Exasol, web build |
 | T8 | Robustness: defect levels none to heavy | Aryan | done | `eval/robustness.py`, `make robustness`, report in `eval/reports/robustness.json` |
-| T9 | Larger scale run (up to 1M loans) | Aryan | todo | |
+| T9 | Larger scale run | Aryan | done | 500k loans, `eval/scale.py`, report `eval/reports/scale_s7_n500000.json` |
 
 ### App
 | # | Task | Owner | State | Notes |
@@ -112,6 +112,10 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Robustness, defects heavy (3) | 4,057 planted defects: refund 96.82% of true unfair excess, 0 wrongly refunded, 683 gap tranches, 1,786 unexplained, 2,410 undercharge | same | 31 Oct 2026 |
 | Full audit inside Exasol, second machine | 7.1 to 7.2 s per run | s42_n10000 at defect levels 0/1/3, MacBook Air M4 24 GB, Exasol VM 2 vCPU / 12 GB | 31 Oct 2026 |
 | Ask-the-book over MCP | 5 of 5 example questions answered through `exasol-mcp-server` 2.3.0 as `ASK_READER`; read of `SAHI_TRUTH` refused by Exasol (insufficient privileges); no write tool exposed | s42_n10000 | 31 Oct 2026 |
+| Full audit inside Exasol | 479.0 s (generate 248.4 s, load 22.3 s) | s7_n500000 (500,003 loans, 785,974 tranches, 11,702,698 postings, 11,639,169 periods), MacBook Air M4 24 GB, Exasol VM 2 vCPU / 12 GB | 31 Oct 2026 |
+| Steps at 500k | S30 events 146.8 s, S40 intervals 93.1 s, S60 candidates 85.7 s, S90 ledger 56.7 s, S70 fingerprint 37.7 s, S50 34.4 s, S80 13.4 s, S20 7.2 s, S10 3.3 s | s7_n500000 | 31 Oct 2026 |
+| Intermediate rows at 500k | 21.1M fair intervals, 56.5M difference intervals, 17.5M candidate figures | s7_n500000 | 31 Oct 2026 |
+| Oracle agreement | 69,895 / 69,895 periods (fair figure, status, matched convention), largest deviation 0 paise | s7_n500000, random 3,003 loans | 31 Oct 2026 |
 | Tests | 19 passed locally with Exasol; CI runs 16 (db tests skip) | | 31 Oct 2026 |
 
 ## Blockers and open questions

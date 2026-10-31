@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-31",
+  "hardware": "Apple M4, 24 GB, Darwin",
+  "seed": 7,
+  "loans": 500000,
+  "generate_s": 248.4,
+  "load_s": 22.3,
+  "rows": {
+    "SCALE_RAW.branches": 12,
+    "SCALE_RAW.borrowers": 500003,
+    "SCALE_RAW.loans": 500003,
+    "SCALE_RAW.kfs": 500003,
+    "SCALE_RAW.kfs_disbursal_schedule": 785974,
+    "SCALE_RAW.rate_history": 570239,
+    "SCALE_RAW.tranches": 785974,
+    "SCALE_RAW.disbursement_evidence": 1979864,
+    "SCALE_RAW.demands": 11070652,
+    "SCALE_RAW.receipts": 11174608,
+    "SCALE_RAW.interest_postings": 11702698,
+    "SCALE_TRUTH.lms_config": 16,
+    "SCALE_TRUTH.planted_defects": 67967,
+    "SCALE_TRUTH.expected": 11638705
+  },
+  "audit_s": 479.0,
+  "steps": [
+    {
+      "step": "S10_RUN_SETUP",
+      "ms": 3307
+    },
+    {
+      "step": "S20_MONEY_IN_HAND",
+      "ms": 7150
+    },
+    {
+      "step": "S30_BALANCE_EVENTS",
+      "ms": 146824
+    },
+    {
+      "step": "S40_BALANCE_INTERVALS",
+      "ms": 93077
+    },
+    {
+      "step": "S50_PERIOD_INTEREST",
+      "ms": 34362
+    },
+    {
+      "step": "S60_CANDIDATE_CONVENTIONS",
+      "ms": 85684
+    },
+    {
+      "step": "S70_FINGERPRINT",
+      "ms": 37662
+    },
+    {
+      "step": "S80_FINDINGS",
+      "ms": 13353
+    },
+    {
+      "step": "S90_LEDGER",
+      "ms": 56706
+    }
+  ],
+  "summary": {
+    "loans": 500003,
+    "tranches": 785974,
+    "periods": 11639169,
+    "postings": 11702698,
+    "refund_paise": 456748547811,
+    "refund_loans": 152749
+  },
+  "work_rows": {
+    "ATTRIBUTION": 374481,
+    "AUDIT_WINDOW": 1,
+    "BEST_MATCH": 392960,
+    "CANDIDATES": 17522631,
+    "CFG": 1,
+    "CLOSEST": 562110,
+    "CONV_SUPPORT": 2399886,
+    "DIFF_EVENTS": 38678006,
+    "DIFF_INTERVALS": 56548751,
+    "DIFF_PERIOD": 51272750,
+    "DIFF_SEGMENTS": 22340809,
+    "EV_SRC": 1974502,
+    "FAIR_EVENTS": 10102245,
+    "FAIR_INTERVALS": 21079997,
+    "FAIR_PERIOD": 11587064,
+    "FAIR_SEGMENTS": 10003480,
+    "FINDINGS": 565280,
+    "FP": 11639169,
+    "GAP_PERIOD": 12491,
+    "LOAN_BASE": 500003,
+    "LOAN_CONV": 15511650,
+    "LOAN_EVIDENCE": 500003,
+    "MATCHES": 5364616,
+    "MIH": 785974,
+    "MIH_PICK": 774442,
+    "PERIODS": 12999341,
+    "PERIOD_AUDIT": 11639169,
+    "POSTED_PERIOD": 11638705,
+    "RATE_SPANS": 570239,
+    "REFUNDABLE": 391475
+  }
+}

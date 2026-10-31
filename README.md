@@ -21,16 +21,16 @@ All data is synthetic. See [docs/LIMITS.md](docs/LIMITS.md).
 
 ## Results, as measured
 
-Exasol Personal local (VM: 2 vCPU, 8 GB RAM) on an Apple M4 MacBook (16 GB). 30 Oct 2026. Full table in [docs/STATUS.md](docs/STATUS.md).
+Exasol Personal local, single node, VM with 2 vCPU. Demo and 100k books: VM 8 GB on an Apple M4 MacBook (16 GB), 30 Oct 2026. 500k book: VM 12 GB on an Apple M4 MacBook Air (24 GB), 31 Oct 2026. Full table in [docs/STATUS.md](docs/STATUS.md).
 
-| | Demo book | Scale book |
-|---|---|---|
-| Loans / tranches | 10,003 / 15,794 | 100,003 / 157,461 |
-| Interest postings | 234,195 | 2,342,745 |
-| Billing periods recomputed | 232,890 | 2,329,775 |
-| Full audit inside Exasol, end to end | 16.2 to 17.4 s | 120.6 s |
-| Independent oracle agreement | 232,890 of 232,890 periods, all loans | 70,361 of 70,361 periods, random 3,003 loans |
-| Largest deviation from oracle | 0 paise | 0 paise |
+| | Demo book | 100k book | 500k book |
+|---|---|---|---|
+| Loans / tranches | 10,003 / 15,794 | 100,003 / 157,461 | 500,003 / 785,974 |
+| Interest postings | 234,195 | 2,342,745 | 11,702,698 |
+| Billing periods recomputed | 232,890 | 2,329,775 | 11,639,169 |
+| Full audit inside Exasol, end to end | 16.2 to 17.4 s | 120.6 s | 479.0 s |
+| Independent oracle agreement | 232,890 of 232,890 periods, all loans | 70,361 of 70,361 periods, random 3,003 loans | 69,895 of 69,895 periods, random 3,003 loans |
+| Largest deviation from oracle | 0 paise | 0 paise | 0 paise |
 
 Fingerprint accuracy against the generator's hidden configuration (demo book): every one of 7,535 MATCHED periods names either the hidden convention (6,612) or one that produces the identical figure (923); all 2,072 PERMITTED periods are exact. Periods the tool could not decide go to EVIDENCE_GAP (252), UNEXPLAINED (454) or AMBIGUOUS (385); every UNEXPLAINED period traces to a planted defect.
 

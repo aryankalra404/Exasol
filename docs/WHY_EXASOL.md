@@ -28,6 +28,8 @@ The runner (`scripts/audit.py`) only orders the files and records timings. It do
 
 See `STATUS.md` "Measured results" for every figure, with dataset, hardware and date.
 
+Headline: the full audit of a 500,003-loan book (11.7M interest postings, 11.6M billing periods recomputed under 33 conventions, 56.5M difference intervals) runs inside Exasol Personal in 479.0 s on a MacBook Air M4 with a 2 vCPU / 12 GB VM, and agrees with the independent oracle to the paisa on a random 3,003-loan sample. `make scale LOANS=500000` reproduces it; `eval/reports/scale_s7_n500000.json` has every step
+
 ## Why this shape suits Exasol
 
 - **No row per day.** A loan's balance changes a few dozen times; billing months and rate changes split those into intervals. That is ~42 fair intervals per loan instead of ~1,000 day rows

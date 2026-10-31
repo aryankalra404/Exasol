@@ -152,6 +152,7 @@ make audit                  # run the SQL pipeline in Exasol (records run, timin
 make demo LOANS=10000       # generate + load + audit
 make test                   # pytest; db tests skip without .env
 make oracle LOANS=10000     # independent oracle vs latest run, every loan
+make scale LOANS=500000     # SCALE_* schemas, timings + row counts into eval/reports/scale_*.json
 make robustness LOANS=10000 # defect levels 0/1/3 in ROB_* schemas, report in eval/reports/robustness.json
 make ask-setup              # SAHI_ASK views + read-only ASK_READER user for MCP (password into .env)
 make ask-smoke              # MCP server end to end as ASK_READER: tools, example questions, boundary check
