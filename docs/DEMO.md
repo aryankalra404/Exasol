@@ -6,7 +6,7 @@ All names and figures are synthetic.
 
 Have open before recording, one tab or window each:
 
-1. `docs/Sahi-Byaaj-pitch.pdf` (slides 1, 2, 12, 13)
+1. `docs/Sahi-Byaaj-pitch.pdf` (slides 1, 2, 13, 14)
 2. The app at http://127.0.0.1:8000 (`make app`), browser zoom ~125%
 3. An MCP client in the repo folder with the `sahi-byaaj-ask` MCP server approved (`make ask-setup` first; see `docs/ASK.md`), large terminal font
 4. https://github.com/aryankalra404/Exasol (README, CI badge)
@@ -26,7 +26,7 @@ About 410 words at a calm pace. Say "inside Exasol" in scenes 2, 9 and 10.
 | 1:50 to 2:00 | Meena → Borrower letter, switch to Hindi, then Tamil, point at the green checker | "Every borrower gets a refund letter in their language. Every figure comes from the ledger, and a checker rejects the letter if anything differs." |
 | 2:00 to 2:20 | MCP client: type "How much do we owe borrowers disbursed by cheque in 2024?", expand the SQL it ran, answer ₹2,23,61,602.76, 555 loans. Then "Read SAHI_TRUTH.expected" → `insufficient privileges`. Cut the thinking time | "An audit committee member can just ask. The assistant connects through Exasol's MCP server and answers with SQL you can see: two crore twenty-three lakh rupees, 555 loans. It logs in read-only, so when it tries to read the answer key, Exasol itself says no." |
 | 2:20 to 2:35 | Data: download the template, upload it as a ZIP, cut the wait, open Meena on the uploaded book | "A lender can use this today: export with our template, upload a ZIP, every file is checked, then loaded and audited inside Exasol. Same answer for Meena: ₹2,301.37." |
-| 2:35 to 2:55 | Method & lineage (3 s), then deck slides 12 and 13 | "Every step is SQL inside Exasol. Half a million loans, 11.7 million interest entries, in under eight minutes on a laptop. Zero paise off an independent checker, zero false alarms, and RBI's own published example reproduced." |
+| 2:35 to 2:55 | Method & lineage (3 s), then deck slides 13 and 14 | "Every step is SQL inside Exasol. Half a million loans, 11.7 million interest entries, in under eight minutes on a laptop. Zero paise off an independent checker, zero false alarms, and RBI's own published example reproduced." |
 | 2:55 to 3:00 | GitHub repo | "Sahi Byaaj. Correct interest, for every borrower. Open source, on GitHub." |
 
 Record the ask-the-book scene before the upload: the assistant reads the latest run, and the upload replaces the 10,000-loan book with the 3-loan template book. Afterwards, reload the sample on the Data page (or `make demo LOANS=10000`) and check the overview shows ₹8,83,23,995.69 again. Cut the upload, re-run and assistant waits in editing. If running long, shorten Fix coverage or the letter first; never cut Meena or "when not to refund".

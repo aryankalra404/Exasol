@@ -86,7 +86,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | S7 | UI copy and polish pass (every screen) | Aryan | done | plain words instead of codes, plurals, letter reflow, readable branch queries, timeline label overlap, Method panel overflow, grouped nav, paged work queues with branch filter, no demo-specific defaults |
 | S2 | WHY_EXASOL, LIMITS, DECISIONS final | Aashman | done | |
 | S3 | Cold-start install test (fresh clone) | Aryan | done | fresh GitHub clone on a second laptop (MacBook Air M4): setup, demo, test, oracle from the README, separate `COLD_*` schemas |
-| S4 | Pitch deck (PDF) | Aryan | done | `docs/Sahi-Byaaj-pitch.pdf`, 15 slides; RBI quote and KFS annex figures checked in a browser |
+| S4 | Pitch deck (PDF) | Aryan | done | `docs/Sahi-Byaaj-pitch.pdf`, 16 slides (flowchart added as slide 8); RBI quote and KFS annex figures checked in a browser |
 | S5 | Demo video under 3 min | | todo | |
 | S6 | Submit form, repo public, licence present | | todo | see SUBMISSION.md |
 
