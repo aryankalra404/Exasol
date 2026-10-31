@@ -30,7 +30,7 @@ make demo LOANS=10000   # seed 42; Meena, Raghav, Asha are always LDM0001-LDM000
 make app                # http://127.0.0.1:8000
 ```
 
-Flow: Book → root causes → Meena (search) → Raghav (`LDM0002`) → Asha (`LDM0003`, then Work queues → Evidence gaps) → Fixed for new loans? (BR001: every loan still charged was sanctioned before Jul 2024) → Policy: turn off "commitment fee permitted", re-run, compare → Meena's letter (English, then Hindi) → Method.
+Flow: Overview → root causes → Meena (search) → Raghav (`LDM0002`) → Asha (`LDM0003`, then Work queues → Evidence gaps) → Fix coverage (BR001: every loan still charged was sanctioned before Jul 2024) → Policy: turn off "commitment fee permitted", re-run, compare → Meena's letter (English, Hindi, Tamil) → Method & lineage.
 
 ## Prep checklist
 

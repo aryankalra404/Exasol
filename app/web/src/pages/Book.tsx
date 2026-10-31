@@ -50,7 +50,7 @@ export default function Book({ runId }: { runId: string }) {
           <a className="tile" href="#/queues/unexplained">
             <div className="upper">Unexplained postings</div>
             <div className="v">{plural(s.unexplained_periods, "period")}</div>
-            <div className="d">{plural(s.unexplained_loans, "loan")} where no known convention reproduces the posting. Needs a person.</div>
+            <div className="d">{plural(s.unexplained_loans, "loan")} where no known calculation method reproduces the posting. Needs manual review.</div>
           </a>
           <a className="tile slate" href="#/queues/permitted">
             <div className="upper">Permitted, not refunded</div>

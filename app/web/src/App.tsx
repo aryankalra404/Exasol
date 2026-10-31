@@ -14,13 +14,9 @@ export type Run = {
   refund_paise: number; refund_loans: number;
 };
 
-const NAV: [string, string][] = [
-  ["book", "Book"],
-  ["ledger", "Refund ledger"],
-  ["queues", "Work queues"],
-  ["regression", "Fixed for new loans?"],
-  ["policy", "Policy & runs"],
-  ["method", "Method"],
+const NAV: [string, [string, string][]][] = [
+  ["Audit", [["book", "Overview"], ["ledger", "Refund ledger"], ["queues", "Work queues"], ["regression", "Fix coverage"]]],
+  ["Controls", [["policy", "Policy & re-runs"], ["method", "Method & lineage"]]],
 ];
 
 export default function App() {
@@ -53,8 +49,13 @@ export default function App() {
           <span>सही ब्याज · interest audit</span>
         </div>
         <nav className="nav">
-          {NAV.map(([k, label]) => (
-            <a key={k} href={`#/${k}`} className={page === k || (k === "ledger" && page === "loan") ? "on" : ""}>{label}</a>
+          {NAV.map(([group, items]) => (
+            <div key={group} className="nav-group">
+              <div className="nav-label">{group}</div>
+              {items.map(([k, label]) => (
+                <a key={k} href={`#/${k}`} className={page === k || (k === "ledger" && (page === "loan" || page === "letter")) ? "on" : ""}>{label}</a>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="side-foot">

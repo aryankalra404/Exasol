@@ -12,7 +12,7 @@ All features are deterministic. Every figure comes from SQL in Exasol.
 | **"Why this figure"** | What proves this rupee? | Loan page. Posted vs fair vs excess, fair interest interval by interval, the extra balance charged and on which days, the postings, and the SQL step |
 | **Evidence timeline per tranche** | When did the money really arrive? | Loan page. Every date source on one axis, the resolved date, and a band showing the days charged before money was in hand |
 | **Root causes: what the loan system was doing** | What do we fix? | Book. One row per (branch, behaviour): "from the cheque date, 19 loans, ₹61,565". One configuration fix closes the row |
-| **"Fixed for new loans only?" cohorts** | Did last year's fix actually cover everyone? | Regression. Sanction quarter × charge quarter heatmap. Old cohorts that stay dark after newer ones clear show an unmigrated fix |
+| **Fix coverage: "fixed for new loans only?" cohorts** | Did last year's fix actually cover everyone? | Regression. Sanction quarter × charge quarter heatmap. Old cohorts that stay dark after newer ones clear show an unmigrated fix |
 | **Evidence-gap work queue with drafted branch queries** | What do I ask the branch for? | Work queues. One card per tranche, naming what is missing and what we have, with copy-ready text |
 | **Policy as settings + re-run + run compare** | What if legal says the commitment fee is not OK? | Policy. Flip a setting, re-run the whole book in Exasol, see the rupee and loan deltas computed by SQL |
 | **Ask the book (MCP)** | What else does the committee want to know? | Any MCP client, through Exasol's MCP server as a read-only user on latest-run views; SQL always shown. See `ASK.md` |

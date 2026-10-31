@@ -80,14 +80,14 @@ make ask-setup && make ask-smoke
 
 ## What you see
 
-- **Book**: the refund total, what is held out of it and why, excess by RBI practice and branch, and *what the loan system was actually doing* (one row per branch and behaviour, found from the postings alone)
+- **Overview**: the refund total, what is held out of it and why, excess by RBI practice and branch, and *what the loan system was actually doing* (one row per branch and behaviour, found from the postings alone)
 - **Loan**: every date source per tranche on one timeline, every billing month posted vs recomputed, and *why this figure*: the fair interest interval by interval, the extra balance that was charged and on which days, the postings, and the SQL step
 - **Refund ledger**: filter, sort, export CSV
 - **Work queues**: evidence gaps with drafted branch queries, unexplained, ambiguous, permitted, undercharge
-- **Fixed for new loans?**: sanction-cohort × charge-quarter heatmap. A fix that covered only new loans shows as old cohorts still being charged
-- **Policy & runs**: flip an interpretation, re-run the whole book in Exasol, compare runs loan by loan
+- **Fix coverage**: was a fix applied to everyone or only new loans? Sanction-cohort × charge-quarter heatmap. A fix that covered only new loans shows as old cohorts still being charged
+- **Policy & re-runs**: flip an interpretation, re-run the whole book in Exasol, compare runs loan by loan
 - **Letter**: borrower refund letter in English, Hindi or Tamil, every figure from the ledger, rejected by the checker if any figure differs
-- **Method**: each SQL step with its file, SHA-256 and timing
+- **Method & lineage**: each SQL step with its file, SHA-256 and timing
 - **Ask the book** (any MCP client): "how much do we owe borrowers disbursed by cheque in 2024?" answered by SQL over read-only views through Exasol's MCP server, SQL shown. The assistant's database user cannot read the truth tables or borrower names, or write anything. See [ASK](docs/ASK.md)
 
 ## How it works
