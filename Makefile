@@ -8,7 +8,7 @@ DATASET := data/s$(SEED)_n$(LOANS)
 setup:            ## python venv + dependencies, web build tools
 	python3 -m venv .venv
 	$(PY) -m pip install -q -r requirements.txt
-	cd app/web && npm install --silent
+	cd app/web && npm ci --silent
 
 generate:         ## synthetic loan book (deterministic for SEED and LOANS)
 	$(PY) -m generator.generate --seed $(SEED) --loans $(LOANS)
