@@ -39,6 +39,8 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 
 ## Platform
 
+- **Single-user local tool.** No login, roles or audit-log of who changed a policy setting; a lender deployment would put the app behind its own sign-on. Data comes in through `make load` from extract files, not an upload screen
+
 - Runs on Exasol Personal local (single node). Scale figures are from our laptop and stated with hardware
 - Exasol Personal allows 20 connections; the app uses a pool of four
 - Exasol local VM as measured: 2 vCPU, 8 GB RAM, on an Apple M4 (16 GB) MacBook
