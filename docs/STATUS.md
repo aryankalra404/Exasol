@@ -82,7 +82,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 |---|---|---|---|---|
 | S1 | README final, run guide, deployment instructions | Aashman | done | |
 | S2 | WHY_EXASOL, LIMITS, DECISIONS final | Aashman | done | |
-| S3 | Cold-start install test (fresh clone) | Aryan | doing | |
+| S3 | Cold-start install test (fresh clone) | Aryan | done | fresh GitHub clone on a second laptop (MacBook Air M4): setup, demo, test, oracle from the README, separate `COLD_*` schemas |
 | S4 | Pitch deck (PDF) | | todo | |
 | S5 | Demo video under 3 min | | todo | |
 | S6 | Submit form, repo public, licence present | | todo | see SUBMISSION.md |
@@ -116,7 +116,8 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Steps at 500k | S30 events 146.8 s, S40 intervals 93.1 s, S60 candidates 85.7 s, S90 ledger 56.7 s, S70 fingerprint 37.7 s, S50 34.4 s, S80 13.4 s, S20 7.2 s, S10 3.3 s | s7_n500000 | 31 Oct 2026 |
 | Intermediate rows at 500k | 21.1M fair intervals, 56.5M difference intervals, 17.5M candidate figures | s7_n500000 | 31 Oct 2026 |
 | Oracle agreement | 69,895 / 69,895 periods (fair figure, status, matched convention), largest deviation 0 paise | s7_n500000, random 3,003 loans | 31 Oct 2026 |
-| Tests | 19 passed locally with Exasol; CI runs 16 (db tests skip) | | 31 Oct 2026 |
+| Cold start from a fresh clone | `make setup`, `make demo LOANS=10000` (19.9 s), `make test` 20 passed, `make oracle` 232,890 / 232,890, 0 paise; refund total identical to the paisa to the original machine's run; working tree clean | s42_n10000, MacBook Air M4 24 GB | 31 Oct 2026 |
+| Tests | 20 passed locally with Exasol; CI runs 16 (db tests skip) | | 31 Oct 2026 |
 
 ## Blockers and open questions
 

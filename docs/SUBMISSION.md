@@ -35,7 +35,7 @@ Re-read the event page before submitting; dates have moved before.
 
 ## Final pass
 
-- [ ] Fresh clone on a second machine: setup, load, run, test all work from README alone (fresh clone on a second laptop, 31 Oct: see STATUS S3)
+- [x] Fresh clone on a second machine: setup, load, run, test all work from README alone (31 Oct, see STATUS S3)
 - [x] No secrets, no `.env`, no large data files in git
 - [ ] Every number in README, deck and video is in `STATUS.md` "Measured results"
 - [x] No "first"/"only" claims, no prevalence numbers
