@@ -1,9 +1,9 @@
-import { describeConvention, go, inr, month, n, useApi } from "../lib";
+import { describeConvention, go, inr, month, plural, useApi } from "../lib";
 
 export default function Regression({ runId, branch }: { runId: string; branch?: string }) {
   const meta = useApi<any>(`/runs/${runId}/summary`, [runId]).data;
-  const br = branch ?? "BR001";
-  const { data } = useApi<any[]>(`/runs/${runId}/cohorts?branch=${br}`, [runId, br]);
+  const br = branch ?? defaultBranch(meta?.root_causes ?? []);
+  const { data } = useApi<any[]>(br ? `/runs/${runId}/cohorts?branch=${br}` : null, [runId, br]);
   const causes = (meta?.root_causes ?? []).filter((r: any) => r.branch_id === br);
   const sq = [...new Set((data ?? []).map((r) => r.sanction_quarter))].sort();
   const pq = [...new Set((data ?? []).map((r) => r.period_quarter))].sort();
@@ -34,7 +34,7 @@ export default function Regression({ runId, branch }: { runId: string; branch?: 
         <div className="grid" style={{ marginBottom: 20 }}>
           {causes.map((c: any) => (
             <div key={c.convention_id} className="verdict">
-              <b>{name}</b>: {describeConvention(c.convention_id).toLowerCase()} on <b>{n(c.loans)} loans</b> sanctioned
+              <b>{name}</b>: {describeConvention(c.convention_id).toLowerCase()} on <b>{plural(c.loans, "loan")}</b> sanctioned
               {" "}{month(c.earliest_sanction)} to {month(c.latest_sanction)}, still charged up to <b>{month(c.last_period)}</b>.
               {" "}Excess {inr(c.excess_paise)}.
             </div>
@@ -73,4 +73,12 @@ export default function Regression({ runId, branch }: { runId: string; branch?: 
       </div>
     </>
   );
+}
+
+/** Open on the branch where overcharging went on longest after the last affected loan was sanctioned:
+ *  the clearest sign of a fix that reached new loans but not old ones. Picks a branch, computes no figure. */
+function defaultBranch(causes: any[]): string {
+  const gap = (c: any) => Date.parse(c.last_period) - Date.parse(c.latest_sanction);
+  const best = [...causes].sort((a, b) => gap(b) - gap(a))[0];
+  return best?.branch_id ?? "";
 }

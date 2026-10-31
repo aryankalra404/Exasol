@@ -11,7 +11,7 @@ export default function Method({ runId, step }: { runId: string; step?: string }
         <div>
           <h1>Method</h1>
           <p>
-            The audit is nine SQL files run in order inside Exasol. Each finding records the step that produced it, and each step
+            The audit is {steps.length || "a set of"} SQL files run in order inside Exasol. Each finding records the step that produced it, and each step
             records the SHA-256 of its SQL, so any number on screen can be traced to the exact statement that computed it.
           </p>
         </div>

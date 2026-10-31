@@ -142,7 +142,7 @@ export default function Book({ runId }: { runId: string }) {
         <header>
           <div>
             <h2>How this run was computed</h2>
-            <p>Nine SQL steps in Exasol, timed on this machine. Select a step to read the statement that produced its numbers.</p>
+            <p>{(data.steps as any[]).length} SQL steps in Exasol, timed on this machine. Select a step to read the statement that produced its numbers.</p>
           </div>
           <a className="btn ghost" href="#/method">Open method</a>
         </header>

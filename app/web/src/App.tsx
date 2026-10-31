@@ -59,8 +59,8 @@ export default function App() {
           ))}
         </nav>
         <div className="side-foot">
-          Every figure on these screens is computed by SQL inside Exasol. The app only reads result tables.
-          <br /><br />Synthetic data. No real lender, borrower or loan.
+          All figures are computed by SQL in Exasol.
+          <br />Demo data is synthetic.
         </div>
       </aside>
       <main className="main">
@@ -106,7 +106,7 @@ function Search() {
   return (
     <div className="search" ref={ref}>
       <input
-        placeholder="Find a loan or borrower (try Meena)"
+        placeholder="Search by loan ID or borrower name"
         value={q}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         onKeyDown={(e) => { if (e.key === "Enter" && data?.[0]) { go(`/loan/${data[0].loan_id}`); setOpen(false); } }}

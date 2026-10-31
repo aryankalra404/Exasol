@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { day, go, inr, MODE_WORDS, month, n, plural, sources, useApi } from "../lib";
+import { useEffect, useState } from "react";
+import { day, describeConvention, go, inr, MODE_WORDS, month, n, plural, sources, useApi } from "../lib";
 
 const TABS: [string, string, string][] = [
   ["gaps", "Evidence gaps", "The money-in-hand date cannot be decided. A query to the branch is drafted for each."],
   ["unexplained", "Unexplained", "No known calculation method reproduces the posted amount. Needs manual review."],
-  ["ambiguous", "Ambiguous", "Excess is known; more than one practice explains it equally well."],
+  ["ambiguous", "Ambiguous", "The overcharge is certain, but more than one practice explains it equally well."],
   ["permitted", "Permitted", "The posting matches a term the KFS disclosed, and policy allows it. No refund."],
   ["undercharge", "Undercharge", "The lender posted less than the fair amount. Nothing to refund; listed for completeness."],
 ];
@@ -32,14 +32,48 @@ export default function Queues({ runId, tab }: { runId: string; tab: string }) {
   );
 }
 
+const GAPS_PER_PAGE = 20;
+const ROWS_PER_PAGE = 50;
+
+function Pager({ page, size, total, onPage, noun }: { page: number; size: number; total: number; onPage: (p: number) => void; noun: string }) {
+  const last = Math.max(1, Math.ceil(total / size));
+  const from = total ? (page - 1) * size + 1 : 0;
+  const to = Math.min(page * size, total);
+  return (
+    <div className="pager">
+      <span className="small muted">Showing {n(from)}–{n(to)} of {plural(total, noun)}</span>
+      <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <button className="btn ghost" disabled={page <= 1} onClick={() => onPage(page - 1)}>Previous</button>
+        <span className="small muted">Page {page} of {last}</span>
+        <button className="btn ghost" disabled={page >= last} onClick={() => onPage(page + 1)}>Next</button>
+      </span>
+    </div>
+  );
+}
+
 function Gaps({ runId }: { runId: string }) {
   const { data } = useApi<any[]>(`/runs/${runId}/gaps`, [runId]);
   const [copied, setCopied] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [branch, setBranch] = useState("");
+  useEffect(() => setPage(1), [runId, branch]);
   if (!data) return <div className="loading">Loading…</div>;
   if (!data.length) return <div className="empty">No evidence gaps in this run.</div>;
+  const branches = [...new Map(data.map((g) => [g.branch_id, g.branch_name])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  const shown = branch ? data.filter((g) => g.branch_id === branch) : data;
+  const pageRows = shown.slice((page - 1) * GAPS_PER_PAGE, page * GAPS_PER_PAGE);
+  const toPage = (p: number) => { setPage(p); window.scrollTo({ top: 0 }); };
   return (
+    <>
+    <div className="filters" style={{ marginBottom: 12 }}>
+      <select value={branch} onChange={(e) => setBranch(e.target.value)}>
+        <option value="">All branches</option>
+        {branches.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+      </select>
+    </div>
+    <Pager page={page} size={GAPS_PER_PAGE} total={shown.length} onPage={toPage} noun="tranche" />
     <div className="grid g2">
-      {data.map((g) => (
+      {pageRows.map((g) => (
         <div key={g.loan_id + g.tranche_no} className="card pad">
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
             <div>
@@ -60,16 +94,24 @@ function Gaps({ runId }: { runId: string }) {
         </div>
       ))}
     </div>
+    <Pager page={page} size={GAPS_PER_PAGE} total={shown.length} onPage={toPage} noun="tranche" />
+    </>
   );
 }
 
 function FindingQueue({ runId, status }: { runId: string; status: string }) {
-  const { data } = useApi<any[]>(`/runs/${runId}/queue/${status}?limit=300`, [runId, status]);
+  const [page, setPage] = useState(1);
+  useEffect(() => setPage(1), [runId, status]);
+  const { data } = useApi<any[]>(`/runs/${runId}/queue/${status}?page=${page}&size=${ROWS_PER_PAGE}`, [runId, status, page]);
   if (!data) return <div className="loading">Loading…</div>;
   if (!data.length) return <div className="empty">Nothing in this queue for this run.</div>;
+  const total = Number(data[0].total_rows ?? data.length);
+  const onPage = (p: number) => { setPage(p); window.scrollTo({ top: 0 }); };
   return (
     <div className="card">
-      <div className="pad small muted" style={{ borderBottom: "1px solid var(--rule-2)" }}>{plural(data.length, "month")}{data.length >= 300 ? " (first 300 shown)" : ""}. Select a row to see the working.</div>
+      <div className="pad" style={{ borderBottom: "1px solid var(--rule-2)", paddingTop: 10, paddingBottom: 10 }}>
+        <Pager page={page} size={ROWS_PER_PAGE} total={total} onPage={onPage} noun="billing month" />
+      </div>
       <table className="t">
         <thead><tr><th>Borrower</th><th>Loan</th><th>Month</th><th className="r">Posted</th><th className="r">Fair</th><th className="r">Difference</th><th>Why it is here</th></tr></thead>
         <tbody>
@@ -81,11 +123,23 @@ function FindingQueue({ runId, status }: { runId: string; status: string }) {
               <td className="r">{inr(r.posted_paise)}</td>
               <td className="r">{inr(r.fair_paise)}</td>
               <td className="r">{inr(r.excess_paise)}</td>
-              <td className="small muted" style={{ maxWidth: 420 }}>{r.reason}</td>
+              <td className="small muted" style={{ maxWidth: 420 }}>{reason(r)}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      <div className="pad" style={{ borderTop: "1px solid var(--rule-2)", paddingTop: 10, paddingBottom: 10 }}>
+        <Pager page={page} size={ROWS_PER_PAGE} total={total} onPage={onPage} noun="billing month" />
+      </div>
     </div>
   );
+}
+
+/** The SQL reason, with the closest method and gap shown in words and rupees for the unexplained queue. */
+function reason(r: any): string {
+  if (r.closest_convention_id && r.closest_diff_paise !== null && r.closest_diff_paise !== undefined && String(r.reason).startsWith("No known")) {
+    const off = inr(String(r.closest_diff_paise).replace("-", ""));
+    return `No known calculation method reproduces the posted amount. Closest: ${describeConvention(r.closest_convention_id).toLowerCase()}, off by ${off}.${r.has_manual ? " A manual journal entry was posted for this month." : ""}`;
+  }
+  return r.reason;
 }

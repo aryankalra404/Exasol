@@ -86,7 +86,7 @@ def resolve_run(run_id: str) -> str:
         r = one(f"SELECT run_id FROM {OUT}.audit_runs WHERE status = 'DONE' AND dataset_id = "
                 f"(SELECT MAX(dataset_id) FROM {RAW}.dataset_info) ORDER BY started_at DESC LIMIT 1")
         if not r:
-            raise HTTPException(404, "no completed audit run yet: run `make demo`")
+            raise HTTPException(404, "No audit has been run on the loaded book yet. Run `make demo` (or `make audit`) and refresh.")
         return r["run_id"]
     if not re.fullmatch(r"[0-9a-f-]{36}", run_id):
         raise HTTPException(400, "bad run id")
@@ -171,19 +171,21 @@ def ledger_csv(run_id: str, practice: str = "", branch: str = "", product: str =
 
 
 @app.get("/api/runs/{run_id}/queue/{status}")
-def work_queue(run_id: str, status: str, limit: int = Query(200, le=2000)):
+def work_queue(run_id: str, status: str, page: int = Query(1, ge=1), size: int = Query(50, le=500)):
     rid = resolve_run(run_id)
     if status not in ("UNEXPLAINED", "AMBIGUOUS", "PERMITTED", "UNDERCHARGE", "EVIDENCE_GAP"):
         raise HTTPException(400, "unknown queue")
     return rows(f"""SELECT f.loan_id, b.display_name, f.branch_id, f.product, f.period_start, f.practice_code,
                            f.excess_paise, f.days_affected, f.reason, fp.posted_paise, fp.fair_paise,
-                           fp.closest_convention_id, fp.closest_diff_paise, fp.tied_convention_ids, fp.has_manual
+                           fp.closest_convention_id, fp.closest_diff_paise, fp.tied_convention_ids, fp.has_manual,
+                           COUNT(*) OVER () AS total_rows
                     FROM {OUT}.findings f
                     JOIN {RAW}.borrowers b ON b.borrower_id = f.borrower_id
                     JOIN {OUT}.fingerprints fp ON fp.run_id = f.run_id AND fp.loan_id = f.loan_id
                                                AND fp.period_start = f.period_start
                     WHERE f.run_id = {{r}} AND f.status = {{s}}
-                    ORDER BY ABS(f.excess_paise) DESC LIMIT {limit}""", {"r": rid, "s": status})
+                    ORDER BY ABS(f.excess_paise) DESC, f.loan_id, f.period_start
+                    LIMIT {size} OFFSET {(page - 1) * size}""", {"r": rid, "s": status})
 
 
 @app.get("/api/runs/{run_id}/gaps")

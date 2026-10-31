@@ -78,7 +78,7 @@ export default function Ledger({ runId, params }: { runId: string; params: URLSe
       {data && Number(data.total.n) > 50 && (
         <div className="filters" style={{ marginTop: 14, justifyContent: "flex-end" }}>
           <button className="btn ghost" disabled={page === 1} onClick={() => setPage(page - 1)}>Previous</button>
-          <span className="small muted">Page {page}</span>
+          <span className="small muted">Page {page} of {Math.ceil(Number(data.total.n) / 50)}</span>
           <button className="btn ghost" disabled={data.rows.length < 50} onClick={() => setPage(page + 1)}>Next</button>
         </div>
       )}
