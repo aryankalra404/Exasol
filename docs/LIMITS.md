@@ -16,6 +16,7 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 - **Weekends only, no holiday calendar.** The generator shifts rail credits past weekends; RBI's holiday list is not loaded
 - **Days affected** for a finding is the calendar days on which the matched convention's balance differed from fair in that month; when one finding is split across several practices, each row shows the same days
 - **Fallback dates can produce undercharges.** With no rail credit record, the LMS date is used (policy setting); if the money actually landed later, fair interest is overstated and the month can show as UNDERCHARGE. These are listed, never refunded
+- **Broken-period interest is not a separate case.** Interest from disbursal to the first EMI is part of the fair path; there is no separately disclosed broken-period charge to test as a false positive
 - **A wrong day count in the LMS** (30E/360 against a KFS that says ACT/365) is not one of the 33 conventions, so it lands in UNEXPLAINED or UNDERCHARGE, by design
 - **AMBIGUOUS months remain** where no month of the same loan separates the candidates (often single-month differences). Their excess is known and counted by default (policy setting)
 - **`findings.tranche_no` is not filled yet**; the loan page shows which tranche from the evidence timeline

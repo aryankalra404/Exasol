@@ -1,5 +1,7 @@
 # Sahi Byaaj
 
+[![ci](https://github.com/aryankalra404/Exasol/actions/workflows/ci.yml/badge.svg)](https://github.com/aryankalra404/Exasol/actions/workflows/ci.yml)
+
 **A full-book interest audit for Indian lenders, built on Exasol Personal.**
 ExaThon India 2026, Track 01: Money, Risk & Regulation.
 

@@ -52,7 +52,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | T1 | Oracle (independent recompute + fingerprint) | Aashman | done | `oracle/oracle.py`, day by day, no shared code. Ideally re-reviewed by a teammate who did not write the SQL |
 | T2 | Oracle agreement test on 10k+ loans | Aashman | done | 232,890 / 232,890 periods |
 | T3 | RBI worked-example fixtures | Aryan | doing | need the exact rate behind the ₹969.73 fact-sheet example from the RBI source before encoding it |
-| T4 | False-positive suite | Aryan | doing | disclosed commitment fee (PERMITTED) and disclosed 30E/360 (FAIR) are generated and checked by the oracle; a dedicated pytest file is still to do |
+| T4 | False-positive suite | Aryan | done | `tests/test_false_positives.py`: disclosed commitment fee, disclosed 30E/360, fairly posted periods; oracle on a clean book plus SQL on the loaded run |
 | T5 | Fingerprint accuracy vs truth | Aashman | done | measured below; script still inline, move to `eval/` |
 | T6 | Scale run, measured | Aashman | done | 100k loans |
 | T7 | CI (ruff + db-free tests) and README badge | Aryan | doing | |
@@ -103,7 +103,9 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Fingerprint accuracy | MATCHED 7,535: 6,612 exact hidden convention + 923 numerically identical; PERMITTED 2,072 exact | s42_n10000 | 30 Oct 2026 |
 | Undecided, held out | EVIDENCE_GAP 252 periods, UNEXPLAINED 454, AMBIGUOUS 385 (counted by default), UNDERCHARGE 577 | s42_n10000 | 30 Oct 2026 |
 | Policy flip (commitment fee not permitted) | refund +₹30,68,322.19, 250 more borrowers; re-run 16.5 s | s42_n10000 | 30 Oct 2026 |
-| Tests | 12 passed | | 30 Oct 2026 |
+| False positives (oracle, clean book) | 0 wrongly flagged: 519 disclosed-fee periods (151 PERMITTED, 368 FAIR), 131 disclosed 30E/360 periods FAIR, 13,632 fairly posted periods FAIR | s23_n1200, defect scale 0 | 31 Oct 2026 |
+| False positives (SQL) | 0 wrongly flagged: 1,826 disclosed-fee periods on loans without planted defects all PERMITTED, no fairly posted period in findings | s42_n10000 | 31 Oct 2026 |
+| Tests | 16 passed | | 31 Oct 2026 |
 
 ## Blockers and open questions
 
