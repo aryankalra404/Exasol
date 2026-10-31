@@ -48,4 +48,4 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 - One LMS configuration per branch and period, with the "fixed for new loans only" story at BR001 to BR003 (July 2024). Real books will have more variety; anything outside the 33 conventions shows as UNEXPLAINED rather than a wrong label
 - Pre-EMI interest is collected on the 5th; EMIs are fixed after the last tranche; no re-amortisation on rate change (tenure absorbs it)
 - APR is disclosed as the loan rate (fees not modelled); the APR check (Tier 2) is not built
-- Letters: English and Hindi. Tamil-preferring borrowers get English for now
+- Letters: English, Hindi and Tamil. The Hindi and Tamil wording has not been reviewed by a native-speaking compliance writer; month names stay in English

@@ -86,7 +86,7 @@ make ask-setup && make ask-smoke
 - **Work queues**: evidence gaps with drafted branch queries, unexplained, ambiguous, permitted, undercharge
 - **Fixed for new loans?**: sanction-cohort × charge-quarter heatmap. A fix that covered only new loans shows as old cohorts still being charged
 - **Policy & runs**: flip an interpretation, re-run the whole book in Exasol, compare runs loan by loan
-- **Letter**: borrower refund letter in English or Hindi, every figure from the ledger, rejected by the checker if any figure differs
+- **Letter**: borrower refund letter in English, Hindi or Tamil, every figure from the ledger, rejected by the checker if any figure differs
 - **Method**: each SQL step with its file, SHA-256 and timing
 - **Ask the book** (any MCP client): "how much do we owe borrowers disbursed by cheque in 2024?" answered by SQL over read-only views through Exasol's MCP server, SQL shown. The assistant's database user cannot read the truth tables or borrower names, or write anything. See [ASK](docs/ASK.md)
 

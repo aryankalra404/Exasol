@@ -74,7 +74,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | # | Task | Owner | State | Notes |
 |---|---|---|---|---|
 | L1 | English letter template + checker | Aashman | done | `letters/letter.py`, tests in `tests/test_letters.py` |
-| L2 | Hindi + Tamil (Tier 1) | Aryan | doing | Hindi done, Tamil todo |
+| L2 | Hindi + Tamil (Tier 1) | Aryan | done | Tamil template, UI toggle, checker test in `tests/test_letters.py` |
 | G1 | Ask-the-book via Exasol MCP (Tier 2) | Aryan | done | `docs/ASK.md`: `SAHI_ASK` views, read-only `ASK_READER`, `scripts/ask_mcp.py`, `.mcp.json`, `make ask-smoke` |
 
 ### Submission

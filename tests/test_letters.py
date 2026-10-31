@@ -23,10 +23,17 @@ def test_inr_indian_grouping():
 
 
 def test_faithful_letter_passes():
-    for lang in ("en", "hi"):
+    for lang in ("en", "hi", "ta"):
         letter = render(ROWS, lang)
         assert "₹2,301.37" in letter.text
         assert check(letter, ROWS)["ok"]
+
+
+def test_tamil_letter_is_tamil_and_checked():
+    letter = render(ROWS, "ta")
+    assert letter.lang == "ta" and "அன்புள்ள Meena Iyer" in letter.text and "8 நாட்கள்" in letter.text
+    bad = replace(letter, text=letter.text.replace("₹2,301.37", "₹2,301.73", 1))
+    assert check(letter, ROWS)["ok"] and not check(bad, ROWS)["ok"]
 
 
 def test_tampered_amount_is_rejected():

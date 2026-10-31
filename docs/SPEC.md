@@ -52,7 +52,7 @@ What we build, in priority order. Tiers are cut lines: finish a tier fully (test
 - **Config regression mode:** diff two audit runs, group changes by loan-system config period, surface "fixed for new loans, old loans never migrated"
 - **P6:** amortisation changes after part-disbursement not communicated (needs KFS amortisation schedule and a communications log)
 - **Loan against property** as a third product
-- **Letters in Hindi and Tamil,** same checker
+- **Letters in Hindi and Tamil,** same checker (built)
 - **Evidence-gap branch query** auto-drafted per gap ("handover ack missing for tranche 2")
 - CI running tests on every push, badge in README
 

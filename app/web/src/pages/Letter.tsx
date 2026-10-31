@@ -17,6 +17,7 @@ export default function Letter({ runId, loanId, lang }: { runId: string; loanId?
         <div className="filters" style={{ margin: 0 }}>
           <button className={`btn ${data.lang === "en" ? "" : "ghost"}`} onClick={() => go(`/letter/${loanId}?lang=en`)}>English</button>
           <button className={`btn ${data.lang === "hi" ? "" : "ghost"}`} onClick={() => go(`/letter/${loanId}?lang=hi`)}>हिन्दी</button>
+          <button className={`btn ${data.lang === "ta" ? "" : "ghost"}`} onClick={() => go(`/letter/${loanId}?lang=ta`)}>தமிழ்</button>
         </div>
       </div>
       <div className="grid" style={{ gridTemplateColumns: "1fr 320px", alignItems: "start" }}>

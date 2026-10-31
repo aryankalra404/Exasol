@@ -83,9 +83,9 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 - Why: the UI is a static single-page app served by the FastAPI process; Vite builds it in under a second with no server runtime. Fonts are bundled (`@fontsource`) so the demo works offline
 - Gave up: Next.js routing conventions (not needed; hash routing)
 
-**D20. Letters in English and Hindi; Tamil not yet** (accepted)
+**D20. Letters in English and Hindi; Tamil not yet** (superseded 31 Oct: Tamil added, same template and checker)
 - Why: time. A Tamil-preferring borrower gets the English letter and the UI says so
-- Gave up: Tamil (Tier 1 item, still open)
+- Gave up: Tamil (Tier 1 item, done 31 Oct)
 
 **D21. RBI worked example as a one-loan fixture run through the real pipeline** (accepted)
 - Why: a public anchor the generator did not produce. RBI's illustration (Rs 20,000, 24 months, EMI Rs 969.73, interest Rs 3,274, fee Rs 400, APR 17.07%) does not quote the rate in the excerpts we could read; 15% p.a. reproduces all four figures at once, and the test asserts that. 30E/360 is disclosed in the fixture so each whole month is balance x rate / 12, as in RBI's schedule. The SQL test loads it into separate `RBIFIX_*` schemas and drops them after, so demo data is untouched
