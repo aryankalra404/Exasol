@@ -50,7 +50,7 @@ export default function Loan({ runId, loanId, period }: { runId: string; loanId?
         <header>
           <div>
             <h2>When did the money actually reach them?</h2>
-            <p>Every date source for each tranche, side by side. The resolved date follows the precedence rules in Policy; conflicts are flagged, not hidden.</p>
+            <p>All recorded dates for each tranche. The money-in-hand date follows the precedence rules in Policy, and disagreeing dates are flagged.</p>
           </div>
         </header>
         <div className="grid">
@@ -184,7 +184,7 @@ function Tranche({ t, loan, evidence, extra }: { t: any; loan: any; evidence: an
       </svg>
       <div className="small" style={{ marginTop: 6 }}>
         {t.confidence === "GAP" ? (
-          <span>No defensible money-in-hand date. Missing: <b>{sources(t.missing_sources)}</b>. Months between {day(t.gap_window_start)} and {day(t.gap_window_end)} are held out of the refund total.</span>
+          <span>Money-in-hand date cannot be confirmed. Missing: <b>{sources(t.missing_sources)}</b>. Months between {day(t.gap_window_start)} and {day(t.gap_window_end)} are held out of the refund total.</span>
         ) : (
           <span>Money in hand <b>{day(t.resolved_date)}</b> (green ring), from the <b>{sources(t.resolved_source)}</b>{t.confidence === "FALLBACK" ? ", using the LMS date because no rail credit record exists" : ""}.
             {bands.length > 0 && <span style={{ color: "var(--accent-ink)" }}> Shaded: interest charged before the money was in hand, {plural(bands.reduce((a, b) => a + Number(b.days), 0), "day")}.</span>}</span>
@@ -204,7 +204,7 @@ function Proof({ sel, proof, findings }: { sel: any; proof: any; findings: any[]
       <header>
         <div>
           <h2>Why this figure: {month(sel.period_start)}</h2>
-          <p>The working behind the number, interval by interval, as computed by Exasol. Each interval's interest is exact; the month is rounded half up once.</p>
+          <p>How Exasol arrived at this month's figure, interval by interval. Interest is kept exact until the monthly total, which is rounded half up once.</p>
         </div>
         <a className="btn ghost" href="#/method/S70_FINGERPRINT">{status === "MATCHED" || status === "PERMITTED" ? "SQL that matched it" : "View the SQL"}</a>
       </header>
@@ -215,7 +215,7 @@ function Proof({ sel, proof, findings }: { sel: any; proof: any; findings: any[]
       </div>
       <div className={`verdict ${tone}`} style={{ marginTop: 14 }}>
         {status === "MATCHED" && <>The posting is reproduced <b>exactly, to the paisa</b>, by one convention: <b>{describeConvention(sel.matched_convention_id)}</b>. {codes.map((c) => <span key={c} className="tag code" style={{ marginRight: 4 }}>{c}</span>)} {codes.map((c) => PRACTICE[c]).join("; ")}.</>}
-        {status === "FAIR" && <>The posting equals fair interest to the paisa. Nothing to refund.</>}
+        {status === "FAIR" && <>The posted amount equals fair interest. Nothing to refund.</>}
         {status === "PERMITTED" && <>{findings[0]?.reason}</>}
         {status === "EVIDENCE_GAP" && <>{findings[0]?.reason} The provisional figures below are shown for context only.</>}
         {status === "UNEXPLAINED" && <>{findings[0]?.reason} This goes to the unexplained queue for a human, rather than being forced into a practice.</>}

@@ -18,12 +18,12 @@ export default function Book({ runId }: { runId: string }) {
     <>
       <section className="hero">
         <div>
-          <div className="upper">Owed back to borrowers, defensible line by line</div>
+          <div className="upper">Refund owed to borrowers</div>
           <div className="big num">{inr(s.refund_paise)}</div>
           <p className="lede">
             <b>{n(s.refund_loans)} borrowers</b> were charged interest for days before their money reached them,
             or on money they did not have yet. Every loan, tranche and billing period in the book was recomputed
-            inside Exasol and compared, to the paisa, with what the loan system posted.
+            inside Exasol and compared with the interest the loan system posted.
           </p>
         </div>
         <div className="facts">
@@ -37,8 +37,8 @@ export default function Book({ runId }: { runId: string }) {
       <section className="section">
         <header>
           <div>
-            <h2>Kept out of the total, on purpose</h2>
-            <p>An auditor has to defend every rupee. Anything the evidence cannot settle is listed separately, not guessed.</p>
+            <h2>Not included in the refund total</h2>
+            <p>These need missing evidence or a reviewer's decision before any refund is made.</p>
           </div>
         </header>
         <div className="grid g4">
@@ -58,9 +58,9 @@ export default function Book({ runId }: { runId: string }) {
             <div className="d">{plural(s.permitted_loans, "loan")} charging a commitment fee the KFS disclosed. Policy allows it.</div>
           </a>
           <a className="tile" href="#/queues/ambiguous">
-            <div className="upper">Ambiguous, counted</div>
+            <div className="upper">Ambiguous, included</div>
             <div className="v">{inr(s.ambiguous_paise, { paise: false })}</div>
-            <div className="d">The excess is certain; which practice caused it is not. Included by policy setting.</div>
+            <div className="d">The overcharge is certain, but more than one practice explains it. Counted in the total by policy.</div>
           </a>
         </div>
       </section>
@@ -69,7 +69,7 @@ export default function Book({ runId }: { runId: string }) {
         <div className="card pad">
           <header style={{ marginBottom: 16 }}>
             <h2>By RBI practice</h2>
-            <p className="muted small" style={{ margin: "4px 0 0" }}>Excess split exactly across practices; the parts add up to the total to the paisa.</p>
+            <p className="muted small" style={{ margin: "4px 0 0" }}>Each overcharge is attributed to an RBI practice. The parts add up exactly to the total.</p>
           </header>
           <div className="bars">
             {practiceRows.map((r) => (
@@ -111,7 +111,7 @@ export default function Book({ runId }: { runId: string }) {
         <header>
           <div>
             <h2>What the loan system was actually doing</h2>
-            <p>Each row is one behaviour of the lender's system, identified only from its own postings: the convention that reproduces them to the paisa. One configuration fix closes the whole row.</p>
+            <p>Each row is a calculation method found in the lender's own postings. Correcting that one setting in the loan system fixes every loan in the row.</p>
           </div>
         </header>
         <div className="card">

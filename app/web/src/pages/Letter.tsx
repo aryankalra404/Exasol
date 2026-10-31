@@ -18,7 +18,7 @@ export default function Letter({ runId, loanId, lang }: { runId: string; loanId?
         <div>
           <a href={`#/loan/${loanId}`} className="small muted">← Back to loan {loanId}</a>
           <h1 style={{ marginTop: 6 }}>Refund letter</h1>
-          <p>Wording is a template. Every figure is substituted from the refund ledger, then a checker reads the letter back and compares each figure with the ledger before it can be sent.</p>
+          <p>The wording is a fixed template. Every amount comes from the refund ledger, and a checker compares each one with the ledger before the letter can be sent.</p>
         </div>
         <div className="filters" style={{ margin: 0 }}>
           <button className={`btn ${data.lang === "en" ? "" : "ghost"}`} onClick={() => go(`/letter/${loanId}?lang=en`)}>English</button>

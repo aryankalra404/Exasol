@@ -56,7 +56,7 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
       <div className="page-head">
         <div>
           <h1>Policy and re-runs</h1>
-          <p>Interpretations are settings, not verdicts. Change one, re-run the whole book inside Exasol, and see exactly which loans and rupees move.</p>
+          <p>Each interpretation is a setting. Change one, re-run the whole book in Exasol, and see which loans and amounts change.</p>
         </div>
         <button className="btn" onClick={rerun} disabled={busy}>{busy ? "Running in Exasol…" : "Re-run audit with this policy"}</button>
       </div>

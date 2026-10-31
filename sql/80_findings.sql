@@ -80,12 +80,12 @@ JOIN (
                     || 'policy setting for disclosed commitment fees; no refund.'
                WHEN 'EVIDENCE_GAP' THEN 'Money-in-hand date cannot be decided for tranche ' || fp2.gap_tranches ||
                     '. Kept out of the refund total until the branch supplies the missing record.'
-               WHEN 'UNEXPLAINED' THEN 'No candidate convention reproduces the posting. Closest is ' ||
-                    fp2.closest_convention_id || ', off by ' || TO_CHAR(fp2.closest_diff_paise) || ' paise.' ||
+               WHEN 'UNEXPLAINED' THEN 'No known calculation method reproduces the posted amount. Closest is ' ||
+                    fp2.closest_convention_id || ', off by ' || TO_CHAR(ABS(fp2.closest_diff_paise)) || ' paise.' ||
                     CASE WHEN fp2.has_manual THEN ' A manual journal entry was posted for this period.' ELSE '' END
                WHEN 'UNDERCHARGE' THEN 'Posted interest is below the fair figure. Not refundable; noted for completeness.'
-               WHEN 'AMBIGUOUS' THEN 'Excess is known but several conventions reproduce the posting: ' ||
-                    fp2.tied_convention_ids || '. Practice not uniquely named.'
+               WHEN 'AMBIGUOUS' THEN 'The overcharge is certain, but several calculation methods reproduce the posting (' ||
+                    fp2.tied_convention_ids || '), so no single practice can be named.'
            END AS reason
     FROM {WORK}.fp fp2
     JOIN {WORK}.loan_base lb2 ON lb2.loan_id = fp2.loan_id

@@ -3,10 +3,10 @@ import { day, go, inr, MODE_WORDS, month, n, plural, sources, useApi } from "../
 
 const TABS: [string, string, string][] = [
   ["gaps", "Evidence gaps", "The money-in-hand date cannot be decided. A query to the branch is drafted for each."],
-  ["unexplained", "Unexplained", "No recognised convention reproduces the posting. Needs a person, not a guess."],
+  ["unexplained", "Unexplained", "No known calculation method reproduces the posted amount. Needs manual review."],
   ["ambiguous", "Ambiguous", "Excess is known; more than one practice explains it equally well."],
   ["permitted", "Permitted", "The posting matches a term the KFS disclosed, and policy allows it. No refund."],
-  ["undercharge", "Undercharge", "Posted less than fair. Not refundable; listed so nothing is silently dropped."],
+  ["undercharge", "Undercharge", "The lender posted less than the fair amount. Nothing to refund; listed for completeness."],
 ];
 
 export default function Queues({ runId, tab }: { runId: string; tab: string }) {
@@ -20,7 +20,7 @@ export default function Queues({ runId, tab }: { runId: string; tab: string }) {
       <div className="page-head">
         <div>
           <h1>Work queues</h1>
-          <p>What the audit could not settle on its own. Each item says what is missing and why it is held out of the refund total.</p>
+          <p>Items the audit could not resolve automatically. Each one says what is missing and why it is not in the refund total.</p>
         </div>
       </div>
       <div className="tabs">

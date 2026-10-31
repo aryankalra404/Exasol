@@ -45,12 +45,12 @@ export default function Method({ runId, step }: { runId: string; step?: string }
       <section className="section card pad">
         <h2>Rules the SQL implements</h2>
         <ul className="small" style={{ lineHeight: 1.7, color: "var(--ink-2)" }}>
-          <li>Money is integer paise. Each interval's interest is an exact integer numerator, balance × rate × days. Each month is divided and rounded half up once. No floating point anywhere.</li>
-          <li>Interest accrues from the money-in-hand date: for cheques, the later of handover and cheque date; for NEFT/RTGS/IMPS, the rail credit date. Missing proof makes the period an evidence gap, not a guess.</li>
-          <li>33 candidate conventions: 4 start dates × 2 principal bases × 2 advance-EMI treatments × 2 month roundings, plus a disclosed commitment fee. Each differs from fair only on the days where balances differ, so they are computed side by side, all at once.</li>
+          <li>Money is integer paise. Each interval's interest is an exact integer numerator, balance × rate × days. Each month is divided and rounded half up once. No floating-point arithmetic.</li>
+          <li>Interest accrues from the money-in-hand date: for cheques, the later of handover and cheque date; for NEFT, RTGS and IMPS, the rail credit date. Without that evidence the period becomes an evidence gap.</li>
+          <li>33 candidate conventions: 4 start dates × 2 principal bases × 2 advance-EMI treatments × 2 month roundings, plus a disclosed commitment fee. Each differs from fair only on the days its balance differs, so all of them are computed side by side in one pass.</li>
           <li>The convention that reproduces the lender's posting to the paisa names the practice. Ties are broken by the loan's own posting history, then by the fewest unfair dimensions. A posting nothing reproduces is unexplained.</li>
           <li>Excess is always posted minus fair. Attribution only labels it, splitting it across practices in a fixed order so the parts sum to the excess exactly.</li>
-          <li>An independent Python oracle, sharing no code with the SQL, re-walks every loan day by day and must agree to the paisa.</li>
+          <li>An independent Python oracle, sharing no code with the SQL, recomputes every loan day by day and must agree to the paisa.</li>
         </ul>
       </section>
     </>
