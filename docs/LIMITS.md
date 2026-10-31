@@ -24,7 +24,8 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 ## Interpretation
 
 - **Not legal advice.** Contested interpretations (for example a commitment fee from sanction date, or what counts as disbursement for a cheque to a builder) are policy settings, not verdicts
-- **RBI worked example read through excerpts.** rbi.org.in served a CAPTCHA to scripted requests, so the illustration's figures (EMI, total interest, fee, APR) come from RBI's annex as quoted in search results, not a direct read. The rate (15%) is derived as the one that reproduces all of them. Open the annex in a browser before quoting it
+- **RBI worked example checked against the annex.** Annex B and C of the KFS circular (15 Apr 2024), read in a browser on 31 Oct 2026, print ₹20,000, 24 months, 15% fixed, ₹400 fees, ₹19,600 net, EMI ₹970, total interest ₹3,274, APR 17.07%, all in whole rupees. Our exact EMI (₹969.73) and interest (₹3,273.58) round to those; RBI does not print paise
+- **The 29 Apr 2024 interest circular now shows as withdrawn** on rbi.org.in, consistent with its practices moving into the 31 Jul 2026 directions. Quote it as what RBI found in 2024, not as the current instruction
 - RBI's 31 Jul 2026 directions were verified for the RRB text; NBFC, co-op and commercial bank versions were read through summaries
 
 ## Ask the book

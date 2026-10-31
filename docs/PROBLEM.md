@@ -65,7 +65,7 @@ Often small. Five extra days on ₹5,00,000 at 10% a year is ₹684.93. That is 
 
 - [ExaThon India 2026 event page](https://www.exasol.com/events/exathon-india-2026/)
 - [Exasol Personal](https://www.exasol.com/personal/) and [GitHub](https://github.com/exasol/exasol-personal)
-- [RBI, Fair Practices Code for Lenders: Charging of Interest, 29 Apr 2024](https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12678) ([PDF](https://website.rbi.org.in/documents/87730/39710850/Fair+Practices+Code+for+Lenders+Charging+of+Interest.pdf))
+- [RBI, Fair Practices Code for Lenders: Charging of Interest, 29 Apr 2024](https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12678) ([PDF](https://website.rbi.org.in/documents/87730/39710850/Fair+Practices+Code+for+Lenders+Charging+of+Interest.pdf)). Wording of the cheque-date sentence checked on 31 Oct 2026; the page now marks the circular withdrawn (see `LIMITS.md`)
 - RBI Miscellaneous Supervisory Directions, 31 Jul 2026 (RRB text verified; NBFC, co-op and commercial bank versions from summaries, verify before quoting)
 - [RBI Key Facts Statement for Loans and Advances, 15 Apr 2024](https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12663)
 - RBI Ombudsman Annual Report 2024-25 (loans and advances the largest complaint category)

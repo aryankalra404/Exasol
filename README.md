@@ -36,7 +36,7 @@ Exasol Personal local, single node, VM with 2 vCPU. Demo and 100k books: VM 8 GB
 
 Fingerprint accuracy against the generator's hidden configuration (demo book): every one of 7,535 MATCHED periods names either the hidden convention (6,612) or one that produces the identical figure (923); all 2,072 PERMITTED periods are exact. Periods the tool could not decide go to EVIDENCE_GAP (252), UNEXPLAINED (454) or AMBIGUOUS (385); every UNEXPLAINED period traces to a planted defect.
 
-False positives: 0 wrongly flagged. Disclosed commitment fees, a disclosed 30E/360 basis and fairly posted months are never sent to the ledger (`tests/test_false_positives.py`). Public anchor: RBI's own KFS illustration (₹20,000 over 24 months, EMI ₹969.73, APR 17.07%) runs through the full SQL pipeline and every month reproduces to the paisa (`tests/test_rbi_fixtures.py`).
+False positives: 0 wrongly flagged. Disclosed commitment fees, a disclosed 30E/360 basis and fairly posted months are never sent to the ledger (`tests/test_false_positives.py`). Public anchor: RBI's own KFS illustration (₹20,000 at 15% over 24 months; RBI prints EMI ₹970, interest ₹3,274, APR 17.07%) runs through the full SQL pipeline: the exact EMI is ₹969.73, every month comes out fair, and the printed figures match (`tests/test_rbi_fixtures.py`).
 
 Robustness (`make robustness`): the same 10,000-loan book with no defects, the default level and three times that. With no defects the refund total equals the true unfair excess exactly; with 1,338 and 4,057 planted defects it recovers 98.37% and 96.82%, and the rest waits in the gap and unexplained queues. No level refunds a single fair or permitted month.
 
@@ -131,6 +131,7 @@ Details: [DOMAIN](docs/DOMAIN.md) (rules), [WHY_EXASOL](docs/WHY_EXASOL.md) (ste
 | [LIMITS](docs/LIMITS.md) | Limitations and assumptions |
 | [DEMO](docs/DEMO.md) | Demo script |
 | [STATUS](docs/STATUS.md) | Task board and measured results |
+| [Pitch deck](docs/Sahi-Byaaj-pitch.pdf) | 15-slide pitch (PDF) |
 
 ## Licence
 
