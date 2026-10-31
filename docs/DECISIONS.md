@@ -94,3 +94,8 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 **D22. Ask-the-book through Exasol's MCP server, a dedicated user and latest-run views** (accepted)
 - Why: the audit committee asks ad-hoc questions the screens do not anticipate. Exasol's own MCP server does the plumbing; a separate `ASK_READER` with `SELECT` on `SAHI_ASK` only means the database, not the prompt, keeps the assistant away from `SAHI_TRUTH`, raw evidence and borrower names, and off every write. Views pinned to the latest completed run stop an assistant from summing across runs. The starter kit's MCP user reads every schema, so it was not used
 - Gave up: the kit's one-command `exakit mcp-setup`; an in-app chat box (would need an API key in the demo)
+
+**D23. Generator streams rows to CSV instead of holding the book in memory** (accepted)
+- Why: peak memory was 3.6 GB at 100k loans, so 1M would not fit beside the Exasol VM. Rows are written per table in the same order, so output is byte-identical (checked on s42_n10000: every CSV and the manifest match); peak memory at 100k is now 277 MB
+- Gave up: nothing
+

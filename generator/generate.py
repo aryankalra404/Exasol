@@ -150,11 +150,30 @@ class LoanSpec:
 
 
 class Book:
-    def __init__(self) -> None:
-        self.rows: dict[str, list[dict]] = {}
+    """Writes each row straight to its table's CSV, in insertion order, so memory stays flat at any book size."""
+
+    def __init__(self, out: Path) -> None:
+        self.out = out
+        self.counts: dict[str, int] = {}
+        self._files: dict = {}
+        self._writers: dict = {}
+        for sub in ("raw", "truth"):
+            (out / sub).mkdir(parents=True, exist_ok=True)
+        for table in TABLES_RAW + TABLES_TRUTH:
+            sub = "raw" if table in TABLES_RAW else "truth"
+            fh = open(out / sub / f"{table}.csv", "w", newline="")
+            self._files[table] = fh
+            self._writers[table] = csv.writer(fh, lineterminator="\n")
+            self._writers[table].writerow(COLUMNS[table])
+            self.counts[table] = 0
 
     def add(self, table: str, row: dict) -> None:
-        self.rows.setdefault(table, []).append(row)
+        self._writers[table].writerow([fmt(row.get(c)) for c in COLUMNS[table]])
+        self.counts[table] += 1
+
+    def close(self) -> None:
+        for fh in self._files.values():
+            fh.close()
 
 
 def make_bulk_loan(rng: random.Random, i: int, as_of: date, defect_scale: float) -> LoanSpec:
@@ -396,7 +415,7 @@ def _write_static(spec: LoanSpec, book: Book, emi: int, emi_start: date) -> None
             book.add("disbursement_evidence", dict(evidence_id=f"E{spec.loan_id[1:]}{t.no}{j}", loan_id=spec.loan_id,
                                                    tranche_no=t.no, evidence_source=src, event_date=d, reference=ref, recorded_in=rec))
     for tranche_no, kind, detail in spec.defects:
-        book.add("planted_defects", dict(defect_id=f"D{spec.loan_id[1:]}{len(book.rows.get('planted_defects', []))}",
+        book.add("planted_defects", dict(defect_id=f"D{spec.loan_id[1:]}{book.counts['planted_defects']}",
                                          loan_id=spec.loan_id, tranche_no=tranche_no, kind=kind, detail=detail))
 
 
@@ -452,7 +471,9 @@ def fmt(v) -> str:
 
 def generate(seed: int, loans: int, as_of: date, defect_scale: float, out_root: Path) -> Path:
     rng = random.Random(seed)
-    book = Book()
+    dataset_id = f"s{seed}_n{loans}"
+    out = out_root / dataset_id
+    book = Book(out)
     for b in BRANCHES:
         book.add("branches", dict(branch_id=b[0], branch_name=b[1], state_name=b[2], region=b[3]))
     specs: list[tuple[LoanSpec, str, str]] = demo_loans()
@@ -478,21 +499,8 @@ def generate(seed: int, loans: int, as_of: date, defect_scale: float, out_root: 
     for b, vf, applies, conv in LMS_CONFIG:
         book.add("lms_config", dict(branch_id=b, valid_from=vf, valid_to=None, applies_to=applies, convention_id=conv))
 
-    dataset_id = f"s{seed}_n{loans}"
-    out = out_root / dataset_id
-    (out / "raw").mkdir(parents=True, exist_ok=True)
-    (out / "truth").mkdir(parents=True, exist_ok=True)
-    counts = {}
-    for table in TABLES_RAW + TABLES_TRUTH:
-        rows = book.rows.get(table, [])
-        sub = "raw" if table in TABLES_RAW else "truth"
-        cols = COLUMNS[table]
-        with open(out / sub / f"{table}.csv", "w", newline="") as fh:
-            w = csv.writer(fh, lineterminator="\n")
-            w.writerow(cols)
-            for r in rows:
-                w.writerow([fmt(r.get(c)) for c in cols])
-        counts[table] = len(rows)
+    book.close()
+    counts = dict(book.counts)
     manifest = dict(dataset_id=dataset_id, seed=seed, loans=loans + 3, bulk_loans=loans, as_of=as_of.isoformat(),
                     defect_scale=defect_scale, generator_version=GENERATOR_VERSION, row_counts=counts,
                     generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"))
