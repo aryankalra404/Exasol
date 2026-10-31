@@ -90,3 +90,7 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 **D21. RBI worked example as a one-loan fixture run through the real pipeline** (accepted)
 - Why: a public anchor the generator did not produce. RBI's illustration (Rs 20,000, 24 months, EMI Rs 969.73, interest Rs 3,274, fee Rs 400, APR 17.07%) does not quote the rate in the excerpts we could read; 15% p.a. reproduces all four figures at once, and the test asserts that. 30E/360 is disclosed in the fixture so each whole month is balance x rate / 12, as in RBI's schedule. The SQL test loads it into separate `RBIFIX_*` schemas and drops them after, so demo data is untouched
 - Gave up: comparing row by row with RBI's printed schedule (the RBI PDF host served a CAPTCHA, so rows were not read directly)
+
+**D22. Ask-the-book through Exasol's MCP server, a dedicated user and latest-run views** (accepted)
+- Why: the audit committee asks ad-hoc questions the screens do not anticipate. Exasol's own MCP server does the plumbing; a separate `ASK_READER` with `SELECT` on `SAHI_ASK` only means the database, not the prompt, keeps the assistant away from `SAHI_TRUTH`, raw evidence and borrower names, and off every write. Views pinned to the latest completed run stop an assistant from summing across runs. The starter kit's MCP user reads every schema, so it was not used
+- Gave up: the kit's one-command `exakit mcp-setup`; an in-app chat box (would need an API key in the demo)

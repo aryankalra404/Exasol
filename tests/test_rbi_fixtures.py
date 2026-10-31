@@ -130,7 +130,8 @@ def test_sql_reproduces_rbi_schedule(tmp_path, monkeypatch):
     from scripts.db import connect, schemas
     from scripts.load import load
 
-    for key in ("RAW", "POLICY", "OUT", "TRUTH", "WORK"):
+    keys = ("RAW", "POLICY", "OUT", "TRUTH", "WORK")
+    for key in keys:
         monkeypatch.setenv(f"EXASOL_SCHEMA_{key}", f"RBIFIX_{key}")
     s = schemas()
     load(build_book(tmp_path))
@@ -141,8 +142,8 @@ def test_sql_reproduces_rbi_schedule(tmp_path, monkeypatch):
                             f"WHERE run_id = {{r}} AND loan_id = {{l}} ORDER BY period_start", {"r": run, "l": LOAN}).fetchall()
         findings = conn.execute(f"SELECT COUNT(*) FROM {s['OUT']}.findings WHERE run_id = {{r}}", {"r": run}).fetchval()
     finally:
-        for schema in s.values():
-            conn.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
+        for key in keys:
+            conn.execute(f"DROP SCHEMA IF EXISTS {s[key]} CASCADE")
         conn.close()
     assert [int(f) for _, f, _, _ in rows] == [i for _, i, _ in schedule()]
     assert sum(int(f) for _, f, _, _ in rows) == 327358

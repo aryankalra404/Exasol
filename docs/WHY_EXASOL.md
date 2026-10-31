@@ -20,6 +20,7 @@ Rows out are from the 10,003-loan demo book (seed 42), run on 30 Oct 2026; see `
 | S80 Findings | Status per month, excess split across practices so the parts sum exactly, evidence ids, step id | `sql/80_findings.sql` | telescoping attribution in one statement |
 | S90 Ledger | Refund ledger, gap queue with drafted queries, rollups, root causes, cohorts, letter figures, interval proof, run summary | `sql/90_ledger_and_rollups.sql` | `GROUPING SETS`, string building in SQL |
 | Lineage | Step id, file, SHA-256 of each SQL file; per-step timings; policy snapshot per run | `scripts/audit.py` writes `SAHI_OUT.lineage`, `step_timings`, `audit_runs` | `MERGE` |
+| Ask the book | Latest-run views and a read-only user for Exasol's MCP server | `sql/ask/ask_views.sql`, `scripts/ask_setup.py` | views with owner rights, `GRANT SELECT ON SCHEMA`, `exasol-mcp-server` |
 
 The runner (`scripts/audit.py`) only orders the files and records timings. It does no arithmetic.
 

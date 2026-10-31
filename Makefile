@@ -3,7 +3,7 @@ SEED ?= 42
 LOANS ?= 10000
 DATASET := data/s$(SEED)_n$(LOANS)
 
-.PHONY: setup generate load audit demo test oracle robustness app web clean
+.PHONY: setup generate load audit demo test oracle robustness ask-setup ask-smoke app web clean
 
 setup:            ## python venv + dependencies, web build tools
 	python3 -m venv .venv
@@ -29,6 +29,12 @@ oracle:           ## independent oracle vs latest run, all loans
 
 robustness:       ## same book at defect levels 0, 1, 3 in separate ROB_* schemas, scored against truth
 	$(PY) -m eval.robustness --seed $(SEED) --loans $(LOANS)
+
+ask-setup:        ## SAHI_ASK views + read-only ASK_READER user for the MCP server (password into .env)
+	$(PY) -m scripts.ask_setup
+
+ask-smoke:        ## start the MCP server as ASK_READER, run example questions, check it cannot read SAHI_TRUTH
+	uvx --from exasol-mcp-server@2.3.0 python -m eval.ask_smoke
 
 web:              ## build the auditor UI into app/web/dist
 	cd app/web && npm run build

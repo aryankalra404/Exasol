@@ -34,6 +34,7 @@ def schemas(env: dict[str, str] | None = None) -> dict[str, str]:
         "OUT": env.get("EXASOL_SCHEMA_OUT", "SAHI_OUT"),
         "TRUTH": env.get("EXASOL_SCHEMA_TRUTH", "SAHI_TRUTH"),
         "WORK": env.get("EXASOL_SCHEMA_WORK", "SAHI_WORK"),
+        "ASK": env.get("EXASOL_SCHEMA_ASK", "SAHI_ASK"),
     }
 
 

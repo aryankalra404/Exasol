@@ -1,0 +1,59 @@
+{
+  "tools": [
+    "describe_exasol_built_in_function",
+    "describe_exasol_custom_functions",
+    "describe_exasol_statistics_table",
+    "describe_exasol_system_table",
+    "describe_exasol_tables_and_views",
+    "describe_exasol_user_defined_functions",
+    "execute_exasol_query",
+    "find_exasol_schemas",
+    "find_exasol_tables_and_views",
+    "list_exasol_built_in_function_categories",
+    "list_exasol_built_in_functions",
+    "list_exasol_keywords",
+    "list_exasol_schemas",
+    "list_exasol_sql_types",
+    "list_exasol_statistics_tables",
+    "list_exasol_system_tables",
+    "list_exasol_tables_and_views"
+  ],
+  "examples": [
+    {
+      "question": "How much do we owe borrowers in total, and how many loans?",
+      "sql": "SELECT refund_rupees, refund_loans, gap_loans, unexplained_loans FROM SAHI_ASK.run_summary",
+      "result": "{\"columns\":[\"REFUND_RUPEES\",\"REFUND_LOANS\",\"GAP_LOANS\",\"UNEXPLAINED_LOANS\"],\"rows\":[[\"88323995.69\",3063,232,81]]}",
+      "is_error": false
+    },
+    {
+      "question": "How much do we owe borrowers whose money was disbursed by cheque in 2024?",
+      "sql": "SELECT CAST(SUM(l.excess_paise) / 100 AS DECIMAL(18,2)) AS owed_rupees, COUNT(DISTINCT l.loan_id) AS loans FROM SAHI_ASK.refund_ledger l WHERE l.loan_id IN (SELECT m.loan_id FROM SAHI_ASK.money_in_hand m WHERE m.payment_mode = 'CHEQUE' AND YEAR(m.resolved_date) = 2024)",
+      "result": "{\"columns\":[\"OWED_RUPEES\",\"LOANS\"],\"rows\":[[\"22361602.76\",555]]}",
+      "is_error": false
+    },
+    {
+      "question": "Which RBI practice accounts for the most refund?",
+      "sql": "SELECT l.practice_code, p.title, CAST(SUM(l.excess_paise) / 100 AS DECIMAL(18,2)) AS owed_rupees, COUNT(DISTINCT l.loan_id) AS loans FROM SAHI_ASK.refund_ledger l LEFT JOIN SAHI_ASK.practices p ON p.practice_code = l.practice_code GROUP BY l.practice_code, p.title ORDER BY 3 DESC",
+      "result": "{\"columns\":[\"PRACTICE_CODE\",\"TITLE\",\"OWED_RUPEES\",\"LOANS\"],\"rows\":[[\"P5\",\"Interest on the sanctioned instead of the disbursed amount\",\"55016055.06\",303],[\"P1\",\"Interest from sanction or agreement date instead of disbursement\",\"15558505.21\",1203],[\"P3\",\"Full-month interest on mid-month disbursal or repayment\",\"11879350.09\",881],[\"AMB\",null,\"4797684.92\",353],[\"P2\",\"Interest from the cheque date when the cheque was handed over later\",\"990218.78\",224],[\"P4\",\"Interest on the full amount despite advance instalments collected\",\"82181.63\",111]]}",
+      "is_error": false
+    },
+    {
+      "question": "At BR001, are loans sanctioned after the July 2024 fix still being overcharged?",
+      "sql": "SELECT CASE WHEN sanction_quarter >= '2024-Q3' THEN 'sanctioned from Jul 2024' ELSE 'sanctioned before' END AS cohort, SUM(loans_overcharged) AS loan_quarters_overcharged, CAST(SUM(excess_paise) / 100 AS DECIMAL(18,2)) AS excess_rupees FROM SAHI_ASK.cohorts WHERE branch_id = 'BR001' AND period_quarter >= '2024-Q3' GROUP BY 1 ORDER BY 1",
+      "result": "{\"columns\":[\"COHORT\",\"LOAN_QUARTERS_OVERCHARGED\",\"EXCESS_RUPEES\"],\"rows\":[[\"sanctioned before\",\"38\",\"92754.07\"],[\"sanctioned from Jul 2024\",\"0\",\"0\"]]}",
+      "is_error": false
+    },
+    {
+      "question": "How much posted interest is waiting on evidence from branches?",
+      "sql": "SELECT COUNT(*) AS tranches, CAST(SUM(posted_paise_at_stake) / 100 AS DECIMAL(18,2)) AS posted_rupees_at_stake FROM SAHI_ASK.evidence_gaps",
+      "result": "{\"columns\":[\"TRANCHES\",\"POSTED_RUPEES_AT_STAKE\"],\"rows\":[[234,\"5486201.28\"]]}",
+      "is_error": false
+    },
+    {
+      "question": "(boundary) read SAHI_TRUTH",
+      "sql": "SELECT 1 FROM SAHI_TRUTH.expected LIMIT 1",
+      "result": "Error calling tool 'execute_exasol_query': The database rejected the query: insufficient privileges: SELECT on table EXPECTED (Session: 1880485881978552320)",
+      "is_error": true
+    }
+  ]
+}

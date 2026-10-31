@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sahi-byaaj-ask": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "scripts.ask_mcp"]
+    }
+  }
+}

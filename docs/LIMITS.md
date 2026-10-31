@@ -27,6 +27,11 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 - **RBI worked example read through excerpts.** rbi.org.in served a CAPTCHA to scripted requests, so the illustration's figures (EMI, total interest, fee, APR) come from RBI's annex as quoted in search results, not a direct read. The rate (15%) is derived as the one that reproduces all of them. Open the annex in a browser before quoting it
 - RBI's 31 Jul 2026 directions were verified for the RRB text; NBFC, co-op and commercial bank versions were read through summaries
 
+## Ask the book
+
+- **The assistant writes the SQL, so it can ask the wrong question.** Exasol computes every number, and the SQL is always shown, but a mis-joined query gives a wrong answer. The refund ledger and the screens remain the record; answers are for exploration
+- Only the latest completed run is visible; comparing runs is done in the app
+
 ## Assumptions not yet validated
 
 - **How auditors test interest charging today.** We found no public account. "They sample" is an assumption, not a finding

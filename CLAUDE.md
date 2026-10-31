@@ -104,6 +104,7 @@ docs/
   WHY_EXASOL.md      pipeline step -> SQL file map, what stays outside Exasol and why
   LIMITS.md          limitations, assumptions, known gaps
   DEMO.md            3-min video script and live demo plan
+  ASK.md             ask the book over MCP (read-only)
   SUBMISSION.md      submission checklist
 generator/           synthetic loan book (Python, fixed seeds)
 sql/                 numbered pipeline steps, one step per file
@@ -152,6 +153,8 @@ make demo LOANS=10000       # generate + load + audit
 make test                   # pytest; db tests skip without .env
 make oracle LOANS=10000     # independent oracle vs latest run, every loan
 make robustness LOANS=10000 # defect levels 0/1/3 in ROB_* schemas, report in eval/reports/robustness.json
+make ask-setup              # SAHI_ASK views + read-only ASK_READER user for MCP (password into .env)
+make ask-smoke              # MCP server end to end as ASK_READER: tools, example questions, boundary check
 make app                    # build UI and serve API + UI on http://127.0.0.1:8000
 ```
 

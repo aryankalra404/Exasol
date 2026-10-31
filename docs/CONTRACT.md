@@ -1,6 +1,6 @@
 # Contract
 
-**Version 0.2.0** (30 Oct 2026)
+**Version 0.3.0** (31 Oct 2026)
 
 The interface between components. Generator, SQL pipeline, oracle, app, letters and agent talk only through what is defined here. Build against this, not against each other's code.
 
@@ -12,7 +12,7 @@ The interface between components. Generator, SQL pipeline, oracle, app, letters 
 
 ## Global conventions
 
-- Schemas: `SAHI_RAW` (loaded extracts), `SAHI_POLICY` (editable rules), `SAHI_OUT` (pipeline results), `SAHI_TRUTH` (hidden generator truth, eval only), `SAHI_WORK` (pipeline intermediates, rebuilt every run, latest run only)
+- Schemas: `SAHI_RAW` (loaded extracts), `SAHI_POLICY` (editable rules), `SAHI_OUT` (pipeline results), `SAHI_TRUTH` (hidden generator truth, eval only), `SAHI_WORK` (pipeline intermediates, rebuilt every run, latest run only), `SAHI_ASK` (read-only views for ask-the-book, latest completed run)
 - Column names avoid Exasol reserved words (`STATE`, `SOURCE`, `VALUE`): hence `state_name` and `evidence_source`
 - Identifiers: uppercase in Exasol, documented here in lowercase for readability
 - Money: `*_paise DECIMAL(18,0)`. Rates: `*_rate_pct DECIMAL(9,6)`. Dates: `DATE`. Timestamps: `TIMESTAMP` (UTC)
@@ -167,6 +167,12 @@ Every table has `run_id` first. DDL lives in the SQL step that fills the table.
 
 Per-convention period interest is not persisted (it lives in `SAHI_WORK.candidates` for the latest run only); `excess_intervals` carries the proof for every finding.
 
+## SAHI_ASK (views for ask-the-book over MCP)
+
+Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Every view except `loans`, `practices` and `policy_settings` is filtered to `latest_run`. Columns are the `SAHI_OUT` columns of the same name without `run_id`, plus `*_rupees DECIMAL(18,2)` where noted. Readable only by user `ASK_READER` (`CREATE SESSION`, `SELECT ON SCHEMA SAHI_ASK`).
+
+`latest_run`, `run_summary` (+ `refund_rupees`), `refund_ledger` (+ `excess_rupees`), `findings`, `money_in_hand`, `evidence_gaps`, `rollups`, `root_causes`, `cohorts`, `loans` (RAW loans + branch name, state, region; no borrower names), `practices`, `policy_settings`
+
 ## SAHI_TRUTH (eval only, the pipeline must never read it)
 
 **lms_config**: `branch_id`, `valid_from DATE`, `valid_to DATE`, `applies_to VARCHAR(20)` (`NEW_LOANS`, `ALL_LOANS`), `convention_id`
@@ -198,3 +204,4 @@ Per-convention period interest is not persisted (it lives in `SAHI_WORK.candidat
 
 - 0.1.0 (30 Oct 2026): first draft
 - 0.2.0 (30 Oct 2026): renamed reserved-word columns (`state` → `state_name`, `source` → `evidence_source`); added `SAHI_WORK`, `RAW.dataset_info`, `conventions.practice_codes`, `audit_runs.label`; fingerprints gain `UNDERCHARGE`, `posting_ids`, `has_manual`, `gap_tranches`; findings gain `matched_convention_id` and use `AMB` for ambiguous; new OUT tables `root_causes`, `cohorts`, `letter_figures`, `excess_intervals`, `run_summary`; `period_interest` not persisted. Affects generator, loader, app
+- 0.3.0 (31 Oct 2026): additive. New schema `SAHI_ASK` (views, latest run) and user `ASK_READER`; env `EXASOL_SCHEMA_ASK`, `EXASOL_ASK_USER`, `EXASOL_ASK_PASSWORD`. Affects nobody else

@@ -15,6 +15,7 @@ Live task board. Update it when you start, finish, block or cut something. Keep 
 
 Breaking or notable changes to `CONTRACT.md` that others must react to. Newest first.
 
+- 0.3.0 (31 Oct): additive, `SAHI_ASK` views + `ASK_READER` user for ask-the-book. No action needed
 - 0.2.0 (30 Oct): reserved-word renames (`state_name`, `evidence_source`), `SAHI_WORK`, new OUT tables. See CONTRACT changelog
 
 ## Tasks
@@ -74,7 +75,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 |---|---|---|---|---|
 | L1 | English letter template + checker | Aashman | done | `letters/letter.py`, tests in `tests/test_letters.py` |
 | L2 | Hindi + Tamil (Tier 1) | Aryan | doing | Hindi done, Tamil todo |
-| G1 | Ask-the-book via Exasol MCP (Tier 2) | Aryan | doing | |
+| G1 | Ask-the-book via Exasol MCP (Tier 2) | Aryan | done | `docs/ASK.md`: `SAHI_ASK` views, read-only `ASK_READER`, `scripts/ask_mcp.py`, `.mcp.json`, `make ask-smoke` |
 
 ### Submission
 | # | Task | Owner | State | Notes |
@@ -110,6 +111,7 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Robustness, defects default (1) | 1,338 planted defects: refund 98.37% of true unfair excess, 0 wrongly refunded, 234 gap tranches, 454 unexplained, 577 undercharge | same | 31 Oct 2026 |
 | Robustness, defects heavy (3) | 4,057 planted defects: refund 96.82% of true unfair excess, 0 wrongly refunded, 683 gap tranches, 1,786 unexplained, 2,410 undercharge | same | 31 Oct 2026 |
 | Full audit inside Exasol, second machine | 7.1 to 7.2 s per run | s42_n10000 at defect levels 0/1/3, MacBook Air M4 24 GB, Exasol VM 2 vCPU / 12 GB | 31 Oct 2026 |
+| Ask-the-book over MCP | 5 of 5 example questions answered through `exasol-mcp-server` 2.3.0 as `ASK_READER`; read of `SAHI_TRUTH` refused by Exasol (insufficient privileges); no write tool exposed | s42_n10000 | 31 Oct 2026 |
 | Tests | 19 passed locally with Exasol; CI runs 16 (db tests skip) | | 31 Oct 2026 |
 
 ## Blockers and open questions

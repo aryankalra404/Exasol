@@ -34,6 +34,8 @@ scripts/load ──IMPORT──►  SAHI_RAW            SAHI_TRUTH (eval only)
                app/api (FastAPI)   letters/ (template + checker)
                app/web (React UI)
 
+ SAHI_OUT ──views──► SAHI_ASK ──(ASK_READER, read-only)──► exasol-mcp-server ──► any MCP client
+
 oracle/ (Python, day-by-day, independent) ──► eval/oracle_agreement compares with SAHI_OUT
 ```
 
@@ -50,6 +52,7 @@ The step map with files and Exasol features is in `WHY_EXASOL.md`.
 | oracle | Recomputes fair interest and fingerprints per loan in Python | CSVs in `data/` | test reports |
 | app | API + web UI for the auditor | `SAHI_OUT`, `SAHI_POLICY` | `SAHI_POLICY.settings`, triggers runs |
 | letters | Renders refund letters and checks every figure | `SAHI_OUT` | `letters/out/` |
+| ask | Read-only views and MCP server for plain-language questions (`ASK.md`) | `SAHI_OUT` via `SAHI_ASK` views | nothing |
 | eval | Fingerprint accuracy, robustness, red team, scale | `SAHI_OUT`, `SAHI_TRUTH` | `eval/reports/` |
 
 ## Design principles

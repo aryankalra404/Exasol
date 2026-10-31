@@ -73,6 +73,9 @@ make oracle LOANS=10000
 
 # 6. The auditor app on http://127.0.0.1:8000
 make app
+
+# 7. Optional: ask the book from an MCP client (read-only views, see docs/ASK.md)
+make ask-setup && make ask-smoke
 ```
 
 ## What you see
@@ -85,6 +88,7 @@ make app
 - **Policy & runs**: flip an interpretation, re-run the whole book in Exasol, compare runs loan by loan
 - **Letter**: borrower refund letter in English or Hindi, every figure from the ledger, rejected by the checker if any figure differs
 - **Method**: each SQL step with its file, SHA-256 and timing
+- **Ask the book** (any MCP client): "how much do we owe borrowers disbursed by cheque in 2024?" answered by SQL over read-only views through Exasol's MCP server, SQL shown. The assistant's database user cannot read the truth tables or borrower names, or write anything. See [ASK](docs/ASK.md)
 
 ## How it works
 
@@ -112,6 +116,7 @@ Details: [DOMAIN](docs/DOMAIN.md) (rules), [WHY_EXASOL](docs/WHY_EXASOL.md) (ste
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | Components and data flow |
 | [CONTRACT](docs/CONTRACT.md) | Tables and interfaces |
 | [WHY_EXASOL](docs/WHY_EXASOL.md) | What runs in Exasol and why |
+| [ASK](docs/ASK.md) | Ask the book over MCP, read-only |
 | [FEATURES](docs/FEATURES.md) | Feature thinking: built, next, rejected |
 | [DECISIONS](docs/DECISIONS.md) | Decision log |
 | [LIMITS](docs/LIMITS.md) | Limitations and assumptions |
