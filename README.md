@@ -19,6 +19,8 @@ Sahi Byaaj checks this for every loan, every tranche and every day, inside Exaso
 
 All data is synthetic. See [docs/LIMITS.md](docs/LIMITS.md).
 
+![Overview: the refund owed, what is held out of it and why, and what the loan system was actually doing](docs/img/overview.png)
+
 ## Results, as measured
 
 Exasol Personal local, single node, VM with 2 vCPU. Demo and 100k books: VM 8 GB on an Apple M4 MacBook (16 GB), 30 Oct 2026. 500k book: VM 12 GB on an Apple M4 MacBook Air (24 GB), 31 Oct 2026. Full table in [docs/STATUS.md](docs/STATUS.md).
@@ -47,6 +49,8 @@ Robustness (`make robustness`): the same 10,000-loan book with no defects, the d
 | **Asha**, home loan, `LDM0003` | Cheque tranche, no handover record, cheque date and rail credit 4 days apart | **EVIDENCE_GAP**: kept out of the total, query to the branch drafted |
 
 Check: 12,00,000 × 8.75% × 8 / 365 = 2,301.3698… → ₹2,301.37.
+
+![Meena's loan: every date source per tranche, the 8 days charged before the money was in hand, and the posting reproduced exactly by "from the cheque date"](docs/img/loan.png)
 
 ## Quick start
 
@@ -90,6 +94,10 @@ make ask-setup && make ask-smoke
 - **Method & lineage**: each SQL step with its file, SHA-256 and timing
 - **Data**: what book is loaded (synthetic sample or uploaded), a template with every column, and **upload your own extract as a ZIP**: each file is checked against the table definitions before Exasol changes, then loaded and audited
 - **Ask the book** (any MCP client): "how much do we owe borrowers disbursed by cheque in 2024?" answered by SQL over read-only views through Exasol's MCP server, SQL shown. The assistant's database user cannot read the truth tables or borrower names, or write anything. See [ASK](docs/ASK.md)
+
+| Work queues: what the audit cannot decide, with the query to each branch | Fix coverage: a fix that reached new loans only |
+|---|---|
+| ![Work queues](docs/img/queues.png) | ![Fix coverage](docs/img/coverage.png) |
 
 ## How it works
 
