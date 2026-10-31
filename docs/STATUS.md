@@ -106,7 +106,7 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | False positives (oracle, clean book) | 0 wrongly flagged: 519 disclosed-fee periods (151 PERMITTED, 368 FAIR), 131 disclosed 30E/360 periods FAIR, 13,632 fairly posted periods FAIR | s23_n1200, defect scale 0 | 31 Oct 2026 |
 | False positives (SQL) | 0 wrongly flagged: 1,826 disclosed-fee periods on loans without planted defects all PERMITTED, no fairly posted period in findings | s42_n10000 | 31 Oct 2026 |
 | RBI worked example | pass: EMI Rs 969.73 (Rs 970), total interest Rs 3,273.58 (Rs 3,274), APR 17.07% on Rs 19,600 net; oracle and SQL reproduce all 24 months to the paisa, all FAIR, 0 findings | fixture `rbi_kfs` | 31 Oct 2026 |
-| Robustness, defects none (0) | refund ₹92,94,89,665.45 = 100.00% of true unfair excess, 0 wrongly refunded, 0 unexplained, 1 gap (Asha, deliberate) | s42_n10000, MacBook Air M4 24 GB, Exasol VM 2 vCPU / 12 GB | 31 Oct 2026 |
+| Robustness, defects none (0) | refund ₹9,29,48,965.45 = 100.00% of true unfair excess, 0 wrongly refunded, 0 unexplained, 1 gap (Asha, deliberate) | s42_n10000, MacBook Air M4 24 GB, Exasol VM 2 vCPU / 12 GB | 31 Oct 2026 |
 | Robustness, defects default (1) | 1,338 planted defects: refund 98.37% of true unfair excess, 0 wrongly refunded, 234 gap tranches, 454 unexplained, 577 undercharge | same | 31 Oct 2026 |
 | Robustness, defects heavy (3) | 4,057 planted defects: refund 96.82% of true unfair excess, 0 wrongly refunded, 683 gap tranches, 1,786 unexplained, 2,410 undercharge | same | 31 Oct 2026 |
 | Full audit inside Exasol, second machine | 7.1 to 7.2 s per run | s42_n10000 at defect levels 0/1/3, MacBook Air M4 24 GB, Exasol VM 2 vCPU / 12 GB | 31 Oct 2026 |
