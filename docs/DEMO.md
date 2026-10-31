@@ -15,15 +15,18 @@ Do not open rbi.org.in on camera: the 29 Apr 2024 circular now carries a "Withdr
 | Time | On screen | Say |
 |---|---|---|
 | 0:00 to 0:15 | Deck slides 1 and 2 | "RBI found lenders charging interest from the date on a cheque handed over days later, and told them to refund it. Meena paid 8 days of interest on money she didn't have yet. She has no idea." |
-| 0:15 to 0:35 | App: Overview | "Sahi Byaaj audits the whole book inside Exasol. This test book: ₹8,83,23,995.69 owed to 3,063 borrowers. And everything it couldn't decide is shown here, not guessed." |
-| 0:35 to 1:15 | Search "Meena" (`LDM0001`) | "Every date for every payment, side by side. Cheque dated 3 March, handed over 11 March. The bank posted ₹21,904.97; fair is ₹19,603.60. One rule reproduces the bank's figure to the paisa: from the cheque date." Click "SQL that matched it" |
-| 1:15 to 1:45 | `LDM0002`, then `LDM0003`, then Work queues | "Raghav: his contract disclosed this fee, so no refund. Asha: her records don't settle the date, so it drafts a query to the branch instead of guessing." |
-| 1:45 to 2:00 | Policy & re-runs | "If the auditor decides that fee isn't fair, one switch re-runs the whole book in Exasol: ₹30.7 lakh more, 250 more borrowers." If the live re-run is slow on camera, show the run comparison |
-| 2:00 to 2:15 | Fix coverage | "This branch fixed its system in July 2024, but only for new loans. Older loans stayed overcharged into 2026." |
-| 2:15 to 2:30 | Borrower letter, switch to Hindi or Tamil | "The refund letter, in the borrower's language. Every figure comes from the ledger and is checked." |
+| 0:15 to 0:30 | App: Overview | "Sahi Byaaj audits the whole book inside Exasol. This test book: ₹8,83,23,995.69 owed to 3,063 borrowers. And everything it couldn't decide is shown here, not guessed." |
+| 0:30 to 1:05 | Search "Meena" (`LDM0001`) | "Every date for every payment, side by side. Cheque dated 3 March, handed over 11 March. The bank posted ₹21,904.97; fair is ₹19,603.60. One rule reproduces the bank's figure to the paisa: from the cheque date." Click "SQL that matched it" |
+| 1:05 to 1:30 | `LDM0002`, then `LDM0003`, then Work queues | "Raghav: his contract disclosed this fee, so no refund. Asha: her records don't settle the date, so it drafts a query to the branch instead of guessing." |
+| 1:30 to 1:45 | Policy & re-runs | "If the auditor decides that fee isn't fair, one switch re-runs the whole book in Exasol: ₹30.7 lakh more, 250 more borrowers." If the live re-run is slow, cut the wait |
+| 1:45 to 1:57 | Fix coverage | "This branch fixed its system in July 2024, but only for new loans. Older loans stayed overcharged into 2026." |
+| 1:57 to 2:10 | Borrower letter, switch to Hindi or Tamil | "The refund letter, in the borrower's language. Every figure comes from the ledger and is checked." |
+| 2:10 to 2:30 | Data: download the template, upload it as a ZIP, cut the wait, open Meena on the uploaded book | "A lender exports its own data with this template and uploads it. Every file is checked, then loaded and audited inside Exasol. Same answer: ₹2,301.37." |
 | 2:30 to 2:37 | Method & lineage | "Every step is SQL inside Exasol, with its timing and fingerprint." |
 | 2:37 to 2:55 | Deck slides 12 and 13 | "Half a million loans in under 8 minutes on a laptop. 0 paise off an independent checker. Zero false alarms. RBI's own example reproduced." |
 | 2:55 to 3:00 | GitHub repo | "Open source, MIT. Everything reproduces from the README." |
+
+The upload replaces the loaded book with the 3-loan template book, so record it after every screen that shows the 10,000-loan figures. Afterwards, reload the sample on the Data page (or `make demo LOANS=10000`) and check the overview shows ₹8,83,23,995.69 again. Cut the upload and audit waits in editing.
 
 Opening matters most: the date conflict and the matched rule must be on screen in the first minute so nobody files this under "interest calculator".
 
