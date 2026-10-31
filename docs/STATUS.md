@@ -51,10 +51,13 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 |---|---|---|---|---|
 | T1 | Oracle (independent recompute + fingerprint) | Aashman | done | `oracle/oracle.py`, day by day, no shared code. Ideally re-reviewed by a teammate who did not write the SQL |
 | T2 | Oracle agreement test on 10k+ loans | Aashman | done | 232,890 / 232,890 periods |
-| T3 | RBI worked-example fixtures | | todo | need the exact rate behind the ₹969.73 fact-sheet example from the RBI source before encoding it |
-| T4 | False-positive suite | Aashman | partial | disclosed commitment fee (PERMITTED) and disclosed 30E/360 (FAIR) are generated and checked by the oracle; a dedicated pytest file is still to do |
+| T3 | RBI worked-example fixtures | Aryan | doing | need the exact rate behind the ₹969.73 fact-sheet example from the RBI source before encoding it |
+| T4 | False-positive suite | Aryan | doing | disclosed commitment fee (PERMITTED) and disclosed 30E/360 (FAIR) are generated and checked by the oracle; a dedicated pytest file is still to do |
 | T5 | Fingerprint accuracy vs truth | Aashman | done | measured below; script still inline, move to `eval/` |
 | T6 | Scale run, measured | Aashman | done | 100k loans |
+| T7 | CI (ruff + db-free tests) and README badge | Aryan | doing | |
+| T8 | Robustness: defect levels none to heavy | Aryan | doing | |
+| T9 | Larger scale run (up to 1M loans) | Aryan | todo | |
 
 ### App
 | # | Task | Owner | State | Notes |
@@ -70,15 +73,15 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | # | Task | Owner | State | Notes |
 |---|---|---|---|---|
 | L1 | English letter template + checker | Aashman | done | `letters/letter.py`, tests in `tests/test_letters.py` |
-| L2 | Hindi + Tamil (Tier 1) | Aashman | partial | Hindi done, Tamil todo |
-| G1 | Ask-the-book via Exasol MCP (Tier 2) | | todo | |
+| L2 | Hindi + Tamil (Tier 1) | Aryan | doing | Hindi done, Tamil todo |
+| G1 | Ask-the-book via Exasol MCP (Tier 2) | Aryan | doing | |
 
 ### Submission
 | # | Task | Owner | State | Notes |
 |---|---|---|---|---|
 | S1 | README final, run guide, deployment instructions | Aashman | done | |
 | S2 | WHY_EXASOL, LIMITS, DECISIONS final | Aashman | done | |
-| S3 | Cold-start install test on a second machine | | todo | |
+| S3 | Cold-start install test (fresh clone) | Aryan | doing | |
 | S4 | Pitch deck (PDF) | | todo | |
 | S5 | Demo video under 3 min | | todo | |
 | S6 | Submit form, repo public, licence present | | todo | see SUBMISSION.md |
