@@ -7,20 +7,20 @@ Re-read the event page before submitting; dates have moved before.
 ## Rules
 
 - [ ] Team of 1 to 3
-- [ ] Exasol Personal is the data platform
-- [ ] Public GitHub repo, MIT licence file at root
-- [ ] Public or synthetic data only, stated in README
+- [x] Exasol Personal is the data platform
+- [x] Public GitHub repo, MIT licence file at root
+- [x] Public or synthetic data only, stated in README
 - [ ] Original work created during the challenge window
 
 ## Deliverables
 
-- [ ] Problem statement (who has it, why it matters), from `docs/PROBLEM.md`
-- [ ] Public code repository
+- [x] Problem statement (who has it, why it matters), from `docs/PROBLEM.md`
+- [x] Public code repository
 - [ ] Pitch deck (PDF or PPT)
 - [ ] Demo video, 3 minutes maximum
-- [ ] README: overview, setup, usage
-- [ ] Deployment instructions and run guide
-- [ ] Licence file
+- [x] README: overview, setup, usage
+- [x] Deployment instructions and run guide
+- [x] Licence file
 
 ## Judging, and where we show it
 
@@ -35,8 +35,8 @@ Re-read the event page before submitting; dates have moved before.
 
 ## Final pass
 
-- [ ] Fresh clone on a second machine: setup, load, run, test all work from README alone
-- [ ] No secrets, no `.env`, no large data files in git
+- [ ] Fresh clone on a second machine: setup, load, run, test all work from README alone (fresh clone on a second laptop, 31 Oct: see STATUS S3)
+- [x] No secrets, no `.env`, no large data files in git
 - [ ] Every number in README, deck and video is in `STATUS.md` "Measured results"
-- [ ] No "first"/"only" claims, no prevalence numbers
-- [ ] Repo visibility is public
+- [x] No "first"/"only" claims, no prevalence numbers
+- [x] Repo visibility is public
