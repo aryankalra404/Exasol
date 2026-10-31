@@ -1,4 +1,10 @@
-import { go, useApi } from "../lib";
+import { go, PRACTICE, useApi } from "../lib";
+
+const KIND: Record<string, string> = { excess: "amount", days: "days", periods: "billing periods" };
+const figureLabel = (key: string) => {
+  const [line, kind] = key.split(".");
+  return line === "TOTAL" ? `Total ${KIND[kind] ?? kind}` : `${line} ${KIND[kind] ?? kind}`;
+};
 
 export default function Letter({ runId, loanId, lang }: { runId: string; loanId?: string; lang: string }) {
   const { data, error } = useApi<any>(loanId ? `/runs/${runId}/letters/${loanId}?lang=${lang}` : null, [runId, loanId, lang]);
@@ -10,7 +16,7 @@ export default function Letter({ runId, loanId, lang }: { runId: string; loanId?
     <>
       <div className="page-head">
         <div>
-          <a href={`#/loan/${loanId}`} className="small muted">← back to {loanId}</a>
+          <a href={`#/loan/${loanId}`} className="small muted">← Back to loan {loanId}</a>
           <h1 style={{ marginTop: 6 }}>Refund letter</h1>
           <p>Wording is a template. Every figure is substituted from the refund ledger, then a checker reads the letter back and compares each figure with the ledger before it can be sent.</p>
         </div>
@@ -31,12 +37,12 @@ export default function Letter({ runId, loanId, lang }: { runId: string; loanId?
             {(data.check.figures as any[]).map((f) => (
               <div key={f.figure}>
                 <span className={f.ok ? "tick" : "cross"}>{f.ok ? "OK" : "NO"}</span>
-                <span className="mono small">{f.figure}</span>
+                <span className="small" title={PRACTICE[f.figure.split(".")[0]] ?? ""}>{figureLabel(f.figure)}</span>
                 <span className="mono small" style={{ marginLeft: "auto" }}>{f.shown}</span>
               </div>
             ))}
-            <div><span className={data.check.lines_sum_to_total ? "tick" : "cross"}>{data.check.lines_sum_to_total ? "OK" : "NO"}</span><span className="small">practice lines add up to the total, per the ledger</span></div>
-            <div><span className={data.check.stray_amounts.length ? "cross" : "tick"}>{data.check.stray_amounts.length ? "NO" : "OK"}</span><span className="small">no amount in the letter that the ledger does not hold</span></div>
+            <div><span className={data.check.lines_sum_to_total ? "tick" : "cross"}>{data.check.lines_sum_to_total ? "OK" : "NO"}</span><span className="small">Practice lines add up to the total, per the ledger</span></div>
+            <div><span className={data.check.stray_amounts.length ? "cross" : "tick"}>{data.check.stray_amounts.length ? "NO" : "OK"}</span><span className="small">No amount in the letter that the ledger does not hold</span></div>
           </div>
           {data.requested_lang && data.requested_lang !== data.lang && <p className="tiny muted">Preferred language {data.requested_lang} is not available yet; shown in English.</p>}
         </div>

@@ -43,7 +43,7 @@ export default function Ledger({ runId, params }: { runId: string; params: URLSe
           <option value="HOME">Home</option>
           <option value="PERSONAL">Personal</option>
         </select>
-        <input placeholder="Loan id or name" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && set("q", q)} />
+        <input placeholder="Loan ID or borrower name" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && set("q", q)} />
         <select value={sort} onChange={(e) => setSort(e.target.value)}>
           <option value="excess">Largest excess first</option>
           <option value="days">Most days first</option>

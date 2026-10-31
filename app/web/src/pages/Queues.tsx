@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { day, go, inr, month, n, useApi } from "../lib";
+import { day, go, inr, MODE_WORDS, month, n, plural, sources, useApi } from "../lib";
 
 const TABS: [string, string, string][] = [
   ["gaps", "Evidence gaps", "The money-in-hand date cannot be decided. A query to the branch is drafted for each."],
@@ -44,12 +44,12 @@ function Gaps({ runId }: { runId: string }) {
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
             <div>
               <a href={`#/loan/${g.loan_id}`} style={{ fontWeight: 600 }}>{g.display_name}</a>
-              <span className="mono small faint"> {g.loan_id} · tranche {g.tranche_no} · {g.payment_mode} · {inr(g.amount_paise, { paise: false })}</span>
+              <div className="mono small faint" style={{ marginTop: 2 }}>{g.loan_id} · tranche {g.tranche_no} · {MODE_WORDS[g.payment_mode] ?? g.payment_mode} · {inr(g.amount_paise, { paise: false })}</div>
             </div>
-            <span className="tag EVIDENCE_GAP">missing {String(g.missing_source).toLowerCase().replace(/_/g, " ")}</span>
+            <span className="tag EVIDENCE_GAP" style={{ whiteSpace: "nowrap", alignSelf: "flex-start" }}>Missing {sources(g.missing_source)}</span>
           </div>
           <div className="small muted" style={{ marginTop: 6 }}>
-            {g.branch_name} · uncertainty window {day(g.window_start)} to {day(g.window_end)} · {g.periods_affected} months held, {inr(g.posted_paise_at_stake)} posted interest at stake
+            {g.branch_name} · uncertainty window {day(g.window_start)} to {day(g.window_end)} · {plural(g.periods_affected, "month")} held, {inr(g.posted_paise_at_stake)} posted interest at stake
           </div>
           <div className="query">{g.suggested_query}</div>
           <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
@@ -69,6 +69,7 @@ function FindingQueue({ runId, status }: { runId: string; status: string }) {
   if (!data.length) return <div className="empty">Nothing in this queue for this run.</div>;
   return (
     <div className="card">
+      <div className="pad small muted" style={{ borderBottom: "1px solid var(--rule-2)" }}>{plural(data.length, "month")}{data.length >= 300 ? " (first 300 shown)" : ""}. Select a row to see the working.</div>
       <table className="t">
         <thead><tr><th>Borrower</th><th>Loan</th><th>Month</th><th className="r">Posted</th><th className="r">Fair</th><th className="r">Difference</th><th>Why it is here</th></tr></thead>
         <tbody>

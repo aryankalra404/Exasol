@@ -56,8 +56,11 @@ LEFT JOIN (
     SELECT loan_id, tranche_no, MIN(first_date) AS ev_min, MAX(last_date) AS ev_max,
            SUM(CASE WHEN n_records > 1 AND first_date <> last_date THEN 1 ELSE 0 END) AS dup_sources,
            GROUP_CONCAT(evidence_ids ORDER BY evidence_source SEPARATOR ',') AS evidence_ids,
-           GROUP_CONCAT(evidence_source || ' ' || TO_CHAR(first_date, 'YYYY-MM-DD')
-                        || CASE WHEN n_records > 1 AND first_date <> last_date THEN ' and ' || TO_CHAR(last_date, 'YYYY-MM-DD') ELSE '' END
+           -- readable for the branch query: "cheque dated 31 Jul 2024; payment-rail credit 02 Aug 2024"
+           GROUP_CONCAT(CASE evidence_source WHEN 'LMS_DISB' THEN 'loan-system disbursal' WHEN 'CHEQUE_DATE' THEN 'cheque dated'
+                                             WHEN 'HANDOVER_ACK' THEN 'handover acknowledged' WHEN 'RAIL_CREDIT' THEN 'payment-rail credit'
+                                             ELSE evidence_source END || ' ' || TO_CHAR(first_date, 'DD Mon YYYY')
+                        || CASE WHEN n_records > 1 AND first_date <> last_date THEN ' and ' || TO_CHAR(last_date, 'DD Mon YYYY') ELSE '' END
                         ORDER BY first_date, evidence_source SEPARATOR '; ') AS available_sources
     FROM {WORK}.ev_src GROUP BY loan_id, tranche_no
 ) sp ON sp.loan_id = t.loan_id AND sp.tranche_no = t.tranche_no

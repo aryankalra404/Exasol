@@ -76,8 +76,8 @@ JOIN (
                 WHEN fp2.match_status = 'PERMITTED' THEN 'P1' END AS practice_code,
            CASE fp2.match_status
                WHEN 'PERMITTED' THEN 'KFS discloses a commitment fee of ' || TO_CHAR(lb2.commitment_fee_rate_pct) ||
-                    '% a year on the undisbursed amount and the posting reproduces it exactly. Permitted because policy '
-                    || 'commitment_fee_permitted_if_disclosed is on.'
+                    '% a year on the undisbursed amount and the posting reproduces it exactly. Permitted under the current '
+                    || 'policy setting for disclosed commitment fees; no refund.'
                WHEN 'EVIDENCE_GAP' THEN 'Money-in-hand date cannot be decided for tranche ' || fp2.gap_tranches ||
                     '. Kept out of the refund total until the branch supplies the missing record.'
                WHEN 'UNEXPLAINED' THEN 'No candidate convention reproduces the posting. Closest is ' ||

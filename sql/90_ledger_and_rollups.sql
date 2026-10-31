@@ -36,10 +36,13 @@ SELECT '{RUN_ID}', m.loan_id, m.tranche_no, lb.branch_id, m.payment_mode, m.amou
        (SELECT COUNT(*) FROM {WORK}.fp f WHERE f.loan_id = m.loan_id AND f.match_status = 'EVIDENCE_GAP'),
        (SELECT COALESCE(SUM(f.posted_paise), 0) FROM {WORK}.fp f WHERE f.loan_id = m.loan_id AND f.match_status = 'EVIDENCE_GAP'),
        SUBSTR('To ' || b.branch_name || ' branch (' || lb.branch_id || '): for loan ' || m.loan_id || ', tranche ' ||
-       TO_CHAR(m.tranche_no) || ' (' || m.payment_mode || '), please send the ' ||
-       REPLACE(LOWER(m.missing_sources), '_', ' ') || ' record showing the date the funds reached the ' ||
+       TO_CHAR(m.tranche_no) || ' (' || CASE m.payment_mode WHEN 'CHEQUE' THEN 'cheque' WHEN 'DD' THEN 'demand draft' ELSE m.payment_mode END ||
+       '), please send the ' ||
+       REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(m.missing_sources, ',', ' or '), 'HANDOVER_ACK', 'handover acknowledgement'),
+               'RAIL_CREDIT', 'payment-rail credit'), 'LMS_DISB', 'loan-system disbursal'), 'CHEQUE_DATE', 'cheque') ||
+       ' record showing the date the funds reached the ' ||
        CASE WHEN m.payment_mode IN ('CHEQUE', 'DD') THEN 'payee' ELSE 'beneficiary account' END ||
-       '. Our records show ' || m.available_sources || '.', 1, 1000)
+       '. Our records show: ' || m.available_sources || '.', 1, 1000)
 FROM {WORK}.mih m
 JOIN {WORK}.loan_base lb ON lb.loan_id = m.loan_id
 JOIN {RAW}.branches b ON b.branch_id = lb.branch_id

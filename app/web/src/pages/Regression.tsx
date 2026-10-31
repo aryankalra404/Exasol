@@ -46,7 +46,7 @@ export default function Regression({ runId, branch }: { runId: string; branch?: 
         {!data ? <div className="loading">Loading…</div> : (
           <table className="heat">
             <thead>
-              <tr><th>sanctioned \ charged</th>{pq.map((q) => <th key={q}>{q.replace("-", " ")}</th>)}</tr>
+              <tr><th>Sanctioned ↓ · charged →</th>{pq.map((q) => <th key={q}>{q.replace("-", " ")}</th>)}</tr>
             </thead>
             <tbody>
               {sq.map((s) => (

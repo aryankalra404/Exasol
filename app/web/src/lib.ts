@@ -100,9 +100,9 @@ export function seconds(ms: number | null | undefined): string {
 export const PRACTICE: Record<string, string> = {
   P1: "Interest from sanction or agreement date",
   P2: "Interest from the cheque date, cheque handed over later",
-  P3: "Full-month interest on a mid-month movement",
-  P4: "Advance instalment ignored",
-  P5: "Interest on sanctioned, not disbursed, amount",
+  P3: "Full-month interest on a mid-month disbursal or repayment",
+  P4: "Interest on the full amount despite an advance instalment",
+  P5: "Interest on the sanctioned instead of the disbursed amount",
   P6: "Amortisation change not communicated",
   AMB: "Practice not uniquely identifiable",
 };
@@ -137,6 +137,29 @@ export const SOURCE_WORDS: Record<string, string> = {
   AGREEMENT: "Agreement",
   LMS_DISB: "LMS disbursal",
   CHEQUE_DATE: "Cheque date",
-  HANDOVER_ACK: "Handover ack",
+  HANDOVER_ACK: "Handover receipt",
   RAIL_CREDIT: "Rail credit",
 };
+
+/** Long form for sentences: "handover acknowledgement", "payment-rail credit". */
+export const SOURCE_LONG: Record<string, string> = {
+  LMS_DISB: "loan-system disbursal date",
+  CHEQUE_DATE: "cheque date",
+  HANDOVER_ACK: "handover acknowledgement",
+  RAIL_CREDIT: "payment-rail credit",
+};
+export const sources = (codes: string | null | undefined) =>
+  String(codes ?? "").split(",").filter(Boolean).map((c) => SOURCE_LONG[c.trim()] ?? c.trim().toLowerCase().replace(/_/g, " ")).join(", ");
+
+export const MODE_WORDS: Record<string, string> = { CHEQUE: "Cheque", DD: "Demand draft", NEFT: "NEFT", RTGS: "RTGS", IMPS: "IMPS" };
+export const CONFIDENCE_WORDS: Record<string, string> = { CONFIRMED: "Confirmed", FALLBACK: "Fallback date", GAP: "Cannot decide" };
+export const DAYCOUNT_WORDS: Record<string, string> = { ACT_365: "Actual/365", "30E_360": "30E/360" };
+export const LOAN_STATUS_WORDS: Record<string, string> = { ACTIVE: "Active", CLOSED: "Closed" };
+
+/** "1 month" / "2 months". */
+export function plural(count: number | string, one: string, many = `${one}s`): string {
+  return `${n(count)} ${Number(count) === 1 ? one : many}`;
+}
+
+/** Capitalise the first letter of a sentence stored in lower case (step descriptions). */
+export const sentence = (s: string | null | undefined) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");

@@ -1,6 +1,20 @@
 import { useState } from "react";
 import type { Run } from "../App";
-import { api, day, inr, n, PRACTICE, seconds, useApi } from "../lib";
+import { api, day, inr, MODE_WORDS, n, PRACTICE, seconds, SOURCE_WORDS, useApi } from "../lib";
+
+const HELP: Record<string, string> = {
+  commitment_fee_permitted_if_disclosed: "If on, a fee from the sanction date that the Key Facts Statement disclosed is listed as permitted, not refunded.",
+  include_ambiguous_in_refund_total: "The excess is certain but more than one practice explains it. If on, it is counted in the refund total.",
+  allow_lms_fallback_electronic: "For NEFT, RTGS and IMPS with no payment-rail record, use the loan system's date instead of holding the tranche as a gap.",
+  conflict_tolerance_days: "Evidence dates further apart than this from the resolved date are flagged as a conflict.",
+  match_tolerance_paise: "A convention counts as reproducing a posting if it is within this many paise. 0 means exact.",
+};
+
+const SHORT_OFF: Record<string, string> = {
+  commitment_fee_permitted_if_disclosed: "commitment fee not permitted",
+  include_ambiguous_in_refund_total: "ambiguous excluded",
+  allow_lms_fallback_electronic: "no LMS fallback",
+};
 
 const NICE: Record<string, string> = {
   commitment_fee_permitted_if_disclosed: "Commitment fee from sanction is permitted when the KFS discloses it",
@@ -30,8 +44,8 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
   const rerun = async () => {
     setBusy(true); setErr(null);
     try {
-      const off = (data?.settings ?? []).filter((s: any) => s.setting_value === "false").map((s: any) => (NICE[s.setting_key] ?? s.setting_key).split(" ").slice(0, 3).join(" ").toLowerCase());
-      const label = off.length ? `re-run, off: ${off.join("; ")}` : "re-run, all permissions on";
+      const off = (data?.settings ?? []).filter((s: any) => s.setting_value === "false").map((s: any) => SHORT_OFF[s.setting_key] ?? s.setting_key);
+      const label = off.length ? `Re-run: ${off.join(", ")}` : "Re-run: default policy";
       const r = await api<any>("/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label: label.slice(0, 190) }) });
       setLast(r); setA(""); setB(""); onRun(r.run_id);
     } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
@@ -58,7 +72,7 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
               <div key={s.setting_key} className="toggle">
                 <div>
                   <div style={{ fontWeight: 500 }}>{NICE[s.setting_key] ?? s.setting_key}</div>
-                  <div className="small muted">{s.description}</div>
+                  <div className="small muted">{HELP[s.setting_key] ?? s.description}</div>
                 </div>
                 {bool ? (
                   <button className={`switch ${s.setting_value === "true" ? "on" : ""}`} aria-label={s.setting_key}
@@ -73,13 +87,13 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
         </div>
         <div className="card pad">
           <h2>Money-in-hand precedence</h2>
-          <p className="small muted">Which record decides the day money reached the borrower, by payment mode. Stored as data in SAHI_POLICY.date_precedence.</p>
+          <p className="small muted">Which record decides the day money reached the borrower, by payment mode. Stored as data in Exasol, so compliance can change it without code.</p>
           <table className="t">
             <thead><tr><th>Mode</th><th>Rank</th><th>Evidence</th><th>Rule</th></tr></thead>
             <tbody>
               {(data?.date_precedence ?? []).map((r: any) => (
-                <tr key={r.payment_mode + r.rank}><td className="mono small">{r.payment_mode}</td><td>{r.rank}</td><td className="mono small">{r.evidence_source}</td>
-                  <td className="small">{r.rule === "MAX_WITH_CHEQUE_DATE" ? "later of this and the cheque date" : r.rule === "FALLBACK" ? "only if allowed above" : "use as is"}</td></tr>
+                <tr key={r.payment_mode + r.rank}><td className="small">{MODE_WORDS[r.payment_mode] ?? r.payment_mode}</td><td>{r.rank}</td><td className="small">{SOURCE_WORDS[r.evidence_source] ?? r.evidence_source}</td>
+                  <td className="small">{r.rule === "MAX_WITH_CHEQUE_DATE" ? "Later of this and the cheque date" : r.rule === "FALLBACK" ? "Only if the setting allows it" : "Use as is"}</td></tr>
               ))}
             </tbody>
           </table>

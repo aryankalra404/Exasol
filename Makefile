@@ -17,7 +17,7 @@ load:             ## create schemas and IMPORT the CSVs into Exasol
 	$(PY) -m scripts.load $(DATASET)
 
 audit:            ## run the SQL pipeline inside Exasol
-	$(PY) -m scripts.audit --label "make audit"
+	$(PY) -m scripts.audit --label "Baseline audit"
 
 demo: generate load audit   ## everything: generate, load, audit
 

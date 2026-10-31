@@ -1,4 +1,4 @@
-import { describeConvention, inr, month, n, PRACTICE, seconds, useApi } from "../lib";
+import { describeConvention, inr, month, n, plural, PRACTICE, seconds, sentence, useApi } from "../lib";
 
 export default function Book({ runId }: { runId: string }) {
   const { data, error } = useApi<any>(`/runs/${runId}/summary`, [runId]);
@@ -7,7 +7,8 @@ export default function Book({ runId }: { runId: string }) {
   const s = data.summary;
   const run = data.run;
   const practiceRows = (data.rollups as any[])
-    .filter((r) => r.dimension === "practice" && (r.status === "REFUND" || r.status === "AMBIGUOUS"));
+    .filter((r) => r.dimension === "practice" && (r.status === "REFUND" || r.status === "AMBIGUOUS"))
+    .sort((a, b) => (a.dim_value === "AMB" ? 1 : 0) - (b.dim_value === "AMB" ? 1 : 0) || String(a.dim_value).localeCompare(String(b.dim_value)));
   const practiceTitles: Record<string, string> = Object.fromEntries((data.practices as any[]).map((p) => [p.practice_code, p.title]));
   const maxPractice = Math.max(1, ...practiceRows.map((r) => Number(r.excess_paise)));
   const branchRows = (data.rollups as any[]).filter((r) => r.dimension === "branch" && r.status === "REFUND");
@@ -21,8 +22,8 @@ export default function Book({ runId }: { runId: string }) {
           <div className="big num">{inr(s.refund_paise)}</div>
           <p className="lede">
             <b>{n(s.refund_loans)} borrowers</b> were charged interest for days before their money reached them,
-            or on money they did not have yet. Every loan, every tranche and every billing period in the book was
-            recomputed inside Exasol and matched to the paisa against what the loan system posted.
+            or on money they did not have yet. Every loan, tranche and billing period in the book was recomputed
+            inside Exasol and compared, to the paisa, with what the loan system posted.
           </p>
         </div>
         <div className="facts">
@@ -43,23 +44,23 @@ export default function Book({ runId }: { runId: string }) {
         <div className="grid g4">
           <a className="tile warn" href="#/queues/gaps">
             <div className="upper">Evidence gaps</div>
-            <div className="v">{n(s.gap_tranches)} tranches</div>
+            <div className="v">{plural(s.gap_tranches, "tranche")}</div>
             <div className="d">{inr(s.gap_posted_paise, { paise: false })} posted interest at stake. Branch queries drafted.</div>
           </a>
           <a className="tile" href="#/queues/unexplained">
             <div className="upper">Unexplained postings</div>
-            <div className="v">{n(s.unexplained_periods)} periods</div>
-            <div className="d">{n(s.unexplained_loans)} loans where no known convention reproduces the posting.</div>
+            <div className="v">{plural(s.unexplained_periods, "period")}</div>
+            <div className="d">{plural(s.unexplained_loans, "loan")} where no known convention reproduces the posting. Needs a person.</div>
           </a>
           <a className="tile slate" href="#/queues/permitted">
             <div className="upper">Permitted, not refunded</div>
             <div className="v">{inr(s.permitted_paise, { paise: false })}</div>
-            <div className="d">{n(s.permitted_loans)} loans charging a fee the KFS disclosed. Policy allows it.</div>
+            <div className="d">{plural(s.permitted_loans, "loan")} charging a commitment fee the KFS disclosed. Policy allows it.</div>
           </a>
           <a className="tile" href="#/queues/ambiguous">
             <div className="upper">Ambiguous, counted</div>
             <div className="v">{inr(s.ambiguous_paise, { paise: false })}</div>
-            <div className="d">Excess is certain, practice is not unique. Toggle in Policy.</div>
+            <div className="d">The excess is certain; which practice caused it is not. Included by policy setting.</div>
           </a>
         </div>
       </section>
@@ -89,7 +90,7 @@ export default function Book({ runId }: { runId: string }) {
         <div className="card pad">
           <header style={{ marginBottom: 12 }}>
             <h2>By branch</h2>
-            <p className="muted small" style={{ margin: "4px 0 0" }}>Refundable excess. Click a branch to see its cohorts.</p>
+            <p className="muted small" style={{ margin: "4px 0 0" }}>Refundable excess. Select a branch to see whether its fix reached older loans.</p>
           </header>
           <table className="t">
             <thead><tr><th>Branch</th><th className="r">Loans</th><th className="r">Excess</th></tr></thead>
@@ -141,7 +142,7 @@ export default function Book({ runId }: { runId: string }) {
         <header>
           <div>
             <h2>How this run was computed</h2>
-            <p>Nine SQL steps in Exasol, timed on this machine. Click a step to read the statement that produced its numbers.</p>
+            <p>Nine SQL steps in Exasol, timed on this machine. Select a step to read the statement that produced its numbers.</p>
           </div>
           <a className="btn ghost" href="#/method">Open method</a>
         </header>
@@ -152,7 +153,7 @@ export default function Book({ runId }: { runId: string }) {
               {(data.steps as any[]).map((st) => (
                 <tr key={st.sql_step_id} className="click" onClick={() => (window.location.hash = `#/method/${st.sql_step_id}`)}>
                   <td className="mono small">{st.sql_step_id}</td>
-                  <td className="small muted">{String(st.description).split(". ")[0]}</td>
+                  <td className="small muted">{sentence(String(st.description).split(". ")[0])}</td>
                   <td className="r">{n(st.duration_ms)} ms</td>
                 </tr>
               ))}

@@ -1,4 +1,4 @@
-import { go, useApi } from "../lib";
+import { go, sentence, useApi } from "../lib";
 
 export default function Method({ runId, step }: { runId: string; step?: string }) {
   const sum = useApi<any>(`/runs/${runId}/summary`, [runId]).data;
@@ -16,7 +16,7 @@ export default function Method({ runId, step }: { runId: string; step?: string }
           </p>
         </div>
       </div>
-      <div className="grid" style={{ gridTemplateColumns: "300px 1fr", alignItems: "start" }}>
+      <div className="grid" style={{ gridTemplateColumns: "300px minmax(0, 1fr)", alignItems: "start" }}>
         <div className="card">
           <table className="t">
             <tbody>
@@ -34,7 +34,7 @@ export default function Method({ runId, step }: { runId: string; step?: string }
             <>
               <div className="card pad" style={{ marginBottom: 12 }}>
                 <h3 className="mono">{data.sql_step_id} · {data.file_path}</h3>
-                <p className="small muted" style={{ margin: "6px 0" }}>{data.description}</p>
+                <p className="small muted" style={{ margin: "6px 0" }}>{sentence(data.description)}</p>
                 <div className="tiny faint mono">sha256 {data.statement_sha}</div>
               </div>
               <pre className="sql">{data.sql}</pre>

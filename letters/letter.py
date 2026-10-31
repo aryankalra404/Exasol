@@ -49,7 +49,7 @@ before the money actually reached you, or on an amount you did not yet have. Thi
 be charged, and we are refunding the difference.
 
 Amount we will refund: {{{{figure:TOTAL.excess}}}}
-Billing periods affected: {{{{figure:TOTAL.periods}}}}, from {first} to {last}
+Billing periods affected: {{{{figure:TOTAL.periods}}}}, {span}
 
 What happened:
 {lines}
@@ -72,7 +72,7 @@ Grievance Redressal Officer
 आप तक पहुँची ही नहीं थी, या ऐसी राशि पर ब्याज लिया जो आपको अभी मिली नहीं थी। यह अंतर हम लौटा रहे हैं।
 
 वापसी की राशि: {{{{figure:TOTAL.excess}}}}
-प्रभावित बिलिंग अवधियाँ: {{{{figure:TOTAL.periods}}}}, {first} से {last} तक
+प्रभावित बिलिंग अवधियाँ: {{{{figure:TOTAL.periods}}}}, {span}
 
 क्या हुआ:
 {lines}
@@ -95,7 +95,7 @@ Grievance Redressal Officer
 வேறுபாட்டை நாங்கள் திருப்பித் தருகிறோம்.
 
 திருப்பித் தரப்படும் தொகை: {{{{figure:TOTAL.excess}}}}
-பாதிக்கப்பட்ட பில்லிங் காலங்கள்: {{{{figure:TOTAL.periods}}}}, {first} முதல் {last} வரை
+பாதிக்கப்பட்ட பில்லிங் காலங்கள்: {{{{figure:TOTAL.periods}}}}, {span}
 
 என்ன நடந்தது:
 {lines}
@@ -111,6 +111,28 @@ Grievance Redressal Officer
 (செயற்கை உதாரணம். உண்மையான கடன் வழங்குநர், கடன் பெற்றவர் அல்லது கடன் அல்ல.)
 """,
 }
+
+def _reflow(text: str) -> str:
+    """Join lines wrapped mid-sentence in the source so each paragraph is one line; keep labels, list items
+    and the signature block on their own lines."""
+    out: list[str] = []
+    for line in text.split("\n"):
+        prev = out[-1] if out else ""
+        joinable = (prev and line and not line.startswith(("  -", "(")) and "{{{{figure" not in prev
+                    and not prev.rstrip().endswith((".", ":", "।", ")"))
+                    and not (prev.rstrip().endswith(",") and len(prev) < 30))  # salutation, sign-off
+        if joinable:
+            out[-1] = prev.rstrip() + " " + line.lstrip()
+        else:
+            out.append(line)
+    return "\n".join(out)
+
+
+TEMPLATES = {k: _reflow(v) for k, v in TEMPLATES.items()}
+
+# (one month, a range of months)
+SPAN = {"en": ("in {first}", "from {first} to {last}"), "hi": ("{first} में", "{first} से {last} तक"),
+        "ta": ("{first} இல்", "{first} முதல் {last} வரை")}
 
 LINE = {
     "en": "  - {text}: {{{{figure:{key}.excess}}}} over {{{{figure:{key}.days}}}} days",
@@ -140,6 +162,10 @@ def inr(paise: int) -> str:
     return f"{'-' if neg else ''}₹{s}.{p:02d}"
 
 
+def _cap(t: str) -> str:
+    return t[:1].upper() + t[1:]
+
+
 def month_name(d: date) -> str:
     return d.strftime("%b %Y")
 
@@ -162,12 +188,13 @@ def render(rows: list[dict], lang: str = "en") -> Letter:
         values[f"{key}.excess"] = inr(int(r["excess_paise"]))
         values[f"{key}.days"] = str(int(r["days_affected"]))
         values[f"{key}.periods"] = str(int(r["periods"]))
-    lines = "\n".join(LINE[lang].format(text=PRACTICE_TEXT[lang].get(k, k), key=k)
+    lines = "\n".join(LINE[lang].format(text=_cap(PRACTICE_TEXT[lang].get(k, k)), key=k)
                       for k in sorted(by_key) if k != "TOTAL")
+    first, last = month_name(total["first_period"]), month_name(total["last_period"])
+    span = SPAN[lang][0 if first == last else 1].format(first=first, last=last)
     body = TEMPLATES[lang].format(name=total["display_name"], loan_id=total["loan_id"],
                                   product=PRODUCT[lang].get(total["product"], total["product"]),
-                                  branch=total["branch_name"], first=month_name(total["first_period"]),
-                                  last=month_name(total["last_period"]), lines=lines)
+                                  branch=total["branch_name"], span=span, lines=lines)
     used: dict[str, str] = {}
 
     def sub(m: re.Match) -> str:

@@ -68,7 +68,7 @@ export default function App() {
             <span className="dot" />
             <span>Audit run</span>
             <select value={runId} onChange={(e) => pickRun(e.target.value)}>
-              <option value="latest">latest</option>
+              <option value="latest">Latest run</option>
               {runs.map((r) => (
                 <option key={r.run_id} value={r.run_id}>
                   {r.run_id.slice(0, 8)} · {r.label || r.dataset_id} · {inr(r.refund_paise, { paise: false })}

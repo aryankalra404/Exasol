@@ -81,6 +81,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | # | Task | Owner | State | Notes |
 |---|---|---|---|---|
 | S1 | README final, run guide, deployment instructions | Aashman | done | |
+| S7 | UI copy and polish pass (every screen) | Aryan | done | plain words instead of codes, plurals, letter reflow, readable branch queries, timeline label overlap, Method panel overflow |
 | S2 | WHY_EXASOL, LIMITS, DECISIONS final | Aashman | done | |
 | S3 | Cold-start install test (fresh clone) | Aryan | done | fresh GitHub clone on a second laptop (MacBook Air M4): setup, demo, test, oracle from the README, separate `COLD_*` schemas |
 | S4 | Pitch deck (PDF) | | todo | |

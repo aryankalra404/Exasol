@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { day, describeConvention, go, inr, inrExact, month, n, PRACTICE, SOURCE_WORDS, STATUS_WORDS, useApi } from "../lib";
+import { CONFIDENCE_WORDS, DAYCOUNT_WORDS, day, describeConvention, go, inr, inrExact, LOAN_STATUS_WORDS, MODE_WORDS, month, plural, PRACTICE, SOURCE_WORDS, sources, STATUS_WORDS, useApi } from "../lib";
 
 const DAY_MS = 86400000;
 const toT = (d: string) => Date.parse(d.slice(0, 10) + "T00:00:00Z");
@@ -33,15 +33,15 @@ export default function Loan({ runId, loanId, period }: { runId: string; loanId?
             <span>Sanctioned <b>{inr(L.sanctioned_paise, { paise: false })}</b></span>
             <span>Sanction <b>{day(L.sanction_date)}</b></span>
             <span>Rate (KFS) <b>{L.annual_rate_pct}%</b></span>
-            <span>Day count <b>{L.day_count_basis}</b></span>
+            <span>Day count <b>{DAYCOUNT_WORDS[L.day_count_basis] ?? L.day_count_basis}</b></span>
             {L.commitment_fee_rate_pct && <span>Commitment fee disclosed <b>{L.commitment_fee_rate_pct}% p.a.</b></span>}
-            <span>Status <b>{L.status}</b></span>
+            <span>Status <b>{LOAN_STATUS_WORDS[L.status] ?? L.status}</b></span>
           </div>
         </div>
         <div className="card pad" style={{ minWidth: 260 }}>
           <div className="upper">Refund owed on this loan</div>
           <div className="num" style={{ fontSize: 28, fontWeight: 600, color: Number(total.excess_paise) > 0 ? "var(--accent)" : "var(--ink)" }}>{inr(total.excess_paise)}</div>
-          <div className="small muted">{data.ledger.length ? data.ledger.map((r: any) => `${r.practice_code} ${inr(r.excess_paise)}`).join(" · ") : "Nothing refundable"}</div>
+          <div className="small muted">{data.ledger.length ? data.ledger.map((r: any) => `${r.practice_code} ${inr(r.excess_paise)}`).join(" · ") : flaggedNote(periods)}</div>
           {data.ledger.length > 0 && <a className="btn" style={{ marginTop: 12 }} href={`#/letter/${loanId}`}>Borrower letter</a>}
         </div>
       </div>
@@ -66,7 +66,7 @@ export default function Loan({ runId, loanId, period }: { runId: string; loanId?
         <header>
           <div>
             <h2>Every billing month, posted vs recomputed</h2>
-            <p>{n(periods.length)} months audited, {flagged.length} differ from fair interest. Click a month to see the working.</p>
+            <p>{plural(periods.length, "month")} audited, {flagged.length} {flagged.length === 1 ? "differs" : "differ"} from fair interest. Select a month to see the working.</p>
           </div>
           <Legend />
         </header>
@@ -97,7 +97,7 @@ export default function Loan({ runId, loanId, period }: { runId: string; loanId?
                   <tr key={p.period_start} className={`click ${selected?.period_start === p.period_start ? "sel" : ""}`} onClick={() => pickPeriod(p.period_start)}>
                     <td>{month(p.period_start)}</td>
                     <td><span className={`tag ${p.match_status}`}>{STATUS_WORDS[p.match_status]}</span></td>
-                    <td className="small">{p.matched_convention_id ? describeConvention(p.matched_convention_id) : <span className="faint">{p.match_status === "UNEXPLAINED" ? `none (closest ${p.closest_convention_id})` : "-"}</span>}</td>
+                    <td className="small">{p.matched_convention_id ? describeConvention(p.matched_convention_id) : <span className="faint">{p.match_status === "UNEXPLAINED" ? `None (closest: ${describeConvention(p.closest_convention_id).toLowerCase()})` : "-"}</span>}</td>
                     <td className="r">{inr(p.posted_paise)}</td>
                     <td className="r">{inr(p.fair_paise)}</td>
                     <td className="r">{inr(p.excess_paise)}</td>
@@ -110,6 +110,12 @@ export default function Loan({ runId, loanId, period }: { runId: string; loanId?
       )}
     </>
   );
+}
+
+function flaggedNote(periods: any[]): string {
+  if (periods.some((p) => p.match_status === "EVIDENCE_GAP")) return "Nothing refundable yet: evidence pending from the branch";
+  if (periods.some((p) => p.match_status === "PERMITTED")) return "Nothing refundable: charges match disclosed terms";
+  return "Nothing refundable";
 }
 
 function Legend() {
@@ -146,10 +152,10 @@ function Tranche({ t, loan, evidence, extra }: { t: any; loan: any; evidence: an
   return (
     <div className="card pad">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16 }}>
-        <h3>Tranche {t.tranche_no} · {inr(t.amount_paise, { paise: false })} · {t.payment_mode} to {String(t.payee_type).toLowerCase()}</h3>
+        <h3>Tranche {t.tranche_no} · {inr(t.amount_paise, { paise: false })} · {MODE_WORDS[t.payment_mode] ?? t.payment_mode} to {String(t.payee_type).toLowerCase()}</h3>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span className={`tag ${t.confidence}`}>{t.confidence}</span>
-          {t.conflict_flag && <span className="tag AMBIGUOUS">sources disagree by {t.max_spread_days} days</span>}
+          <span className={`tag ${t.confidence}`}>{CONFIDENCE_WORDS[t.confidence] ?? t.confidence}</span>
+          {t.conflict_flag && <span className="tag AMBIGUOUS">Sources disagree by {plural(t.max_spread_days, "day")}</span>}
         </div>
       </div>
       <svg className="tl" viewBox={`0 0 ${W} 122`} preserveAspectRatio="none" style={{ height: 122, marginTop: 10 }}>
@@ -157,7 +163,6 @@ function Tranche({ t, loan, evidence, extra }: { t: any; loan: any; evidence: an
         {bands.map((b, i) => (
           <g key={i}>
             <rect x={x(b.interval_start)} y={60} width={Math.max(2, x(b.interval_end) - x(b.interval_start))} height={20} fill="var(--accent)" opacity={0.18} />
-            <text x={x(b.interval_start) + 4} y={96} style={{ fill: "var(--accent-ink)" }}>charged before money in hand: {b.days} days</text>
           </g>
         ))}
         {rows.map((m, i) => {
@@ -179,11 +184,12 @@ function Tranche({ t, loan, evidence, extra }: { t: any; loan: any; evidence: an
       </svg>
       <div className="small" style={{ marginTop: 6 }}>
         {t.confidence === "GAP" ? (
-          <span>No defensible money-in-hand date. Missing: <b>{t.missing_sources}</b>. Periods between {day(t.gap_window_start)} and {day(t.gap_window_end)} are held out of the refund total.</span>
+          <span>No defensible money-in-hand date. Missing: <b>{sources(t.missing_sources)}</b>. Months between {day(t.gap_window_start)} and {day(t.gap_window_end)} are held out of the refund total.</span>
         ) : (
-          <span>Money in hand <b>{day(t.resolved_date)}</b> (green ring), from <b>{SOURCE_WORDS[t.resolved_source] ?? t.resolved_source}</b>{t.confidence === "FALLBACK" ? ", using the LMS date because no rail credit record exists" : ""}.</span>
+          <span>Money in hand <b>{day(t.resolved_date)}</b> (green ring), from the <b>{sources(t.resolved_source)}</b>{t.confidence === "FALLBACK" ? ", using the LMS date because no rail credit record exists" : ""}.
+            {bands.length > 0 && <span style={{ color: "var(--accent-ink)" }}> Shaded: interest charged before the money was in hand, {plural(bands.reduce((a, b) => a + Number(b.days), 0), "day")}.</span>}</span>
         )}
-        <span className="faint"> Evidence ids: <span className="mono">{t.evidence_ids}</span></span>
+        <span className="faint"> Evidence IDs: <span className="mono">{t.evidence_ids}</span></span>
       </div>
     </div>
   );
@@ -200,12 +206,12 @@ function Proof({ sel, proof, findings }: { sel: any; proof: any; findings: any[]
           <h2>Why this figure: {month(sel.period_start)}</h2>
           <p>The working behind the number, interval by interval, as computed by Exasol. Each interval's interest is exact; the month is rounded half up once.</p>
         </div>
-        <a className="btn ghost" href="#/method/S70_FINGERPRINT">SQL that matched it</a>
+        <a className="btn ghost" href="#/method/S70_FINGERPRINT">{status === "MATCHED" || status === "PERMITTED" ? "SQL that matched it" : "View the SQL"}</a>
       </header>
       <div className="proof">
         <div><div className="upper">Posted by the loan system</div><div className="v">{inr(sel.posted_paise)}</div><div className="tiny faint mono">{sel.posting_ids}</div></div>
         <div><div className="upper">Fair, recomputed</div><div className="v">{inr(sel.fair_paise)}</div><div className="tiny faint">from the money-in-hand date, KFS rate and day count</div></div>
-        <div className="excess"><div className="upper">Excess</div><div className="v">{inr(sel.excess_paise)}</div><div className="tiny faint">posted minus fair</div></div>
+        <div className="excess"><div className="upper">{status === "EVIDENCE_GAP" ? "Provisional difference" : "Excess"}</div><div className="v">{inr(sel.excess_paise)}</div><div className="tiny faint">{status === "EVIDENCE_GAP" ? "posted minus provisional fair, not refunded" : "posted minus fair"}</div></div>
       </div>
       <div className={`verdict ${tone}`} style={{ marginTop: 14 }}>
         {status === "MATCHED" && <>The posting is reproduced <b>exactly, to the paisa</b>, by one convention: <b>{describeConvention(sel.matched_convention_id)}</b>. {codes.map((c) => <span key={c} className="tag code" style={{ marginRight: 4 }}>{c}</span>)} {codes.map((c) => PRACTICE[c]).join("; ")}.</>}
@@ -264,7 +270,7 @@ function Proof({ sel, proof, findings }: { sel: any; proof: any; findings: any[]
                   <tr><td colSpan={5} className="small"><b>Excess for the month (posted − fair)</b></td><td className="r"><b>{inr(sel.excess_paise)}</b></td></tr>
                 </tbody>
               </table>
-            ) : <div className="pad small muted">{status === "UNEXPLAINED" ? `Closest candidate ${sel.closest_convention_id} is off by ${inr(sel.closest_diff_paise)}.` : "Nothing charged on top."}</div>}
+            ) : <div className="pad small muted">{status === "UNEXPLAINED" ? `Closest candidate (${describeConvention(sel.closest_convention_id).toLowerCase()}) is off by ${inr(sel.closest_diff_paise)}.` : "Nothing charged on top."}</div>}
             <div className="pad small" style={{ borderTop: "1px solid var(--rule-2)" }}>
               <div className="upper" style={{ marginBottom: 6 }}>Postings in the loan system</div>
               {proof.postings.map((p: any) => (
