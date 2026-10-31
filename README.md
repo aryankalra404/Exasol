@@ -1,5 +1,9 @@
 # Sahi Byaaj
 
+> **ExaThon India 2026 submission**
+> - Pitch deck: https://drive.google.com/file/d/1v10LGziEamFKlyzJWvKxxAMamGbhpRfG/view?usp=sharing
+> - Demo video: https://drive.google.com/file/d/1V9NrbypIhyThks5st7lm19ksZvIW5QiB/view?usp=sharing
+
 [![ci](https://github.com/aryankalra404/Exasol/actions/workflows/ci.yml/badge.svg)](https://github.com/aryankalra404/Exasol/actions/workflows/ci.yml)
 
 **A full-book interest audit for Indian lenders, built on Exasol Personal.**

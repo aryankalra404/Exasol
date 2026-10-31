@@ -17,7 +17,7 @@ Re-read the event page before submitting; dates have moved before.
 - [x] Problem statement (who has it, why it matters), from `docs/PROBLEM.md`
 - [x] Public code repository
 - [x] Pitch deck (PDF or PPT): `docs/Sahi-Byaaj-pitch.pdf`
-- [ ] Demo video, 3 minutes maximum
+- [x] Demo video, 3 minutes maximum: linked at the top of `README.md`
 - [x] README: overview, setup, usage
 - [x] Deployment instructions and run guide
 - [x] Licence file
