@@ -16,11 +16,7 @@ export default function Regression({ runId, branch }: { runId: string; branch?: 
       <div className="page-head">
         <div>
           <h1>Was it fixed for everyone, or only for new loans?</h1>
-          <p>
-            Rows are loans grouped by the quarter they were sanctioned; columns are the quarter interest was charged. A dark cell
-            means loans in that cohort were still being overcharged then. A fix applied only to new loans shows as old cohorts
-            that stay dark after newer ones turn clear.
-          </p>
+          <p>Shows whether a loan-system fix reached loans already on the book, or only loans sanctioned after it.</p>
         </div>
         <select value={br} onChange={(e) => go(`/regression/${e.target.value}`)}
           style={{ font: "inherit", padding: "7px 10px", border: "1px solid var(--rule)", borderRadius: 6, background: "var(--card)", minWidth: 260 }}>
@@ -34,8 +30,8 @@ export default function Regression({ runId, branch }: { runId: string; branch?: 
         <div className="grid" style={{ marginBottom: 20 }}>
           {causes.map((c: any) => (
             <div key={c.convention_id} className="verdict">
-              <b>{name}</b>: {describeConvention(c.convention_id).toLowerCase()} on <b>{plural(c.loans, "loan")}</b> sanctioned
-              {" "}{month(c.earliest_sanction)} to {month(c.latest_sanction)}, still charged up to <b>{month(c.last_period)}</b>.
+              <b>{plural(c.loans, "loan")}</b> sanctioned {month(c.earliest_sanction) === month(c.latest_sanction) ? `in ${month(c.earliest_sanction)}` : `${month(c.earliest_sanction)} to ${month(c.latest_sanction)}`}
+              {" "}charged interest {describeConvention(c.convention_id).toLowerCase()}, last in <b>{month(c.last_period)}</b>.
               {" "}Excess {inr(c.excess_paise)}.
             </div>
           ))}
@@ -69,7 +65,13 @@ export default function Regression({ runId, branch }: { runId: string; branch?: 
             </tbody>
           </table>
         )}
-        <div className="tiny muted" style={{ marginTop: 12 }}>Cell number: loans overcharged in that quarter. Green: billed, nothing overcharged. Hover for amounts.</div>
+        <div className="legend-row small muted">
+          <span><b>Rows</b> quarter the loans were sanctioned</span>
+          <span><b>Columns</b> quarter interest was charged</span>
+          <span><i className="sw" style={{ background: "rgba(180, 56, 31, 0.75)" }} /> loans overcharged (number shown, hover for amount)</span>
+          <span><i className="sw" style={{ background: "var(--ok-soft)" }} /> charged correctly</span>
+        </div>
+        <div className="small" style={{ marginTop: 6 }}>If older rows stay red after newer rows turn green, the fix covered only new loans.</div>
       </div>
     </>
   );
