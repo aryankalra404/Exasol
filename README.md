@@ -52,7 +52,7 @@ Check: 12,00,000 × 8.75% × 8 / 365 = 2,301.3698… → ₹2,301.37.
 
 ![Meena's loan: every date source per tranche, the 8 days charged before the money was in hand, and the posting reproduced exactly by "from the cheque date"](docs/img/loan.png)
 
-## Quick start
+## Quick start (deploy and run locally)
 
 Needs macOS on Apple Silicon (or Linux/WSL), Python 3.11+, Node 18+.
 

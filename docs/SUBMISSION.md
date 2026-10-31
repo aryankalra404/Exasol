@@ -16,7 +16,7 @@ Re-read the event page before submitting; dates have moved before.
 
 - [x] Problem statement (who has it, why it matters), from `docs/PROBLEM.md`
 - [x] Public code repository
-- [ ] Pitch deck (PDF or PPT)
+- [x] Pitch deck (PDF or PPT): `docs/Sahi-Byaaj-pitch.pdf`
 - [ ] Demo video, 3 minutes maximum
 - [x] README: overview, setup, usage
 - [x] Deployment instructions and run guide
@@ -37,6 +37,6 @@ Re-read the event page before submitting; dates have moved before.
 
 - [x] Fresh clone on a second machine: setup, load, run, test all work from README alone (31 Oct, see STATUS S3)
 - [x] No secrets, no `.env`, no large data files in git
-- [ ] Every number in README, deck and video is in `STATUS.md` "Measured results"
+- [x] Every number in README, deck and video is in `STATUS.md` "Measured results" (deck rounds some: ₹8.83 crore, under 8 min, 11.6M); RBI KFS figures checked against the annex (31 Oct)
 - [x] No "first"/"only" claims, no prevalence numbers
 - [x] Repo visibility is public
