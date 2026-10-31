@@ -1,0 +1,61 @@
+{
+  "seed": 42,
+  "loans": 10000,
+  "date": "2026-10-31",
+  "levels": {
+    "0": {
+      "planted_defects": 1,
+      "periods_audited": 232441,
+      "refund_paise": 9294896545,
+      "refund_loans": 3099,
+      "ambiguous_paise": 517115243,
+      "true_unfair_excess_paise": 9294896545,
+      "refund_share_of_true_excess_pct": 100.0,
+      "wrongly_refunded_periods": 0,
+      "wrongly_refunded_paise": 0,
+      "evidence_gap_tranches": 1,
+      "evidence_gap_loans": 1,
+      "unexplained_periods": 0,
+      "undercharge_periods": 0,
+      "conflict_tranches": 7244,
+      "audit_ms": 7242,
+      "wall_s": 14.6
+    },
+    "1": {
+      "planted_defects": 1338,
+      "periods_audited": 232890,
+      "refund_paise": 8832399569,
+      "refund_loans": 3063,
+      "ambiguous_paise": 479768492,
+      "true_unfair_excess_paise": 8978769174,
+      "refund_share_of_true_excess_pct": 98.37,
+      "wrongly_refunded_periods": 0,
+      "wrongly_refunded_paise": 0,
+      "evidence_gap_tranches": 234,
+      "evidence_gap_loans": 232,
+      "unexplained_periods": 454,
+      "undercharge_periods": 577,
+      "conflict_tranches": 7175,
+      "audit_ms": 7181,
+      "wall_s": 14.4
+    },
+    "3": {
+      "planted_defects": 4057,
+      "periods_audited": 233334,
+      "refund_paise": 8503048960,
+      "refund_loans": 3019,
+      "ambiguous_paise": 510614237,
+      "true_unfair_excess_paise": 8782445989,
+      "refund_share_of_true_excess_pct": 96.82,
+      "wrongly_refunded_periods": 0,
+      "wrongly_refunded_paise": 0,
+      "evidence_gap_tranches": 683,
+      "evidence_gap_loans": 653,
+      "unexplained_periods": 1786,
+      "undercharge_periods": 2410,
+      "conflict_tranches": 6871,
+      "audit_ms": 7133,
+      "wall_s": 14.5
+    }
+  }
+}

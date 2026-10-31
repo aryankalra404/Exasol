@@ -3,7 +3,7 @@ SEED ?= 42
 LOANS ?= 10000
 DATASET := data/s$(SEED)_n$(LOANS)
 
-.PHONY: setup generate load audit demo test oracle app web clean
+.PHONY: setup generate load audit demo test oracle robustness app web clean
 
 setup:            ## python venv + dependencies, web build tools
 	python3 -m venv .venv
@@ -26,6 +26,9 @@ test:             ## unit + acceptance tests (db tests skip without .env)
 
 oracle:           ## independent oracle vs latest run, all loans
 	$(PY) -m eval.oracle_agreement $(DATASET)
+
+robustness:       ## same book at defect levels 0, 1, 3 in separate ROB_* schemas, scored against truth
+	$(PY) -m eval.robustness --seed $(SEED) --loans $(LOANS)
 
 web:              ## build the auditor UI into app/web/dist
 	cd app/web && npm run build

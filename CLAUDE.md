@@ -151,6 +151,7 @@ make audit                  # run the SQL pipeline in Exasol (records run, timin
 make demo LOANS=10000       # generate + load + audit
 make test                   # pytest; db tests skip without .env
 make oracle LOANS=10000     # independent oracle vs latest run, every loan
+make robustness LOANS=10000 # defect levels 0/1/3 in ROB_* schemas, report in eval/reports/robustness.json
 make app                    # build UI and serve API + UI on http://127.0.0.1:8000
 ```
 

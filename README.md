@@ -36,6 +36,8 @@ Fingerprint accuracy against the generator's hidden configuration (demo book): e
 
 False positives: 0 wrongly flagged. Disclosed commitment fees, a disclosed 30E/360 basis and fairly posted months are never sent to the ledger (`tests/test_false_positives.py`). Public anchor: RBI's own KFS illustration (₹20,000 over 24 months, EMI ₹969.73, APR 17.07%) runs through the full SQL pipeline and every month reproduces to the paisa (`tests/test_rbi_fixtures.py`).
 
+Robustness (`make robustness`): the same 10,000-loan book with no defects, the default level and three times that. With no defects the refund total equals the true unfair excess exactly; with 1,338 and 4,057 planted defects it recovers 98.37% and 96.82%, and the rest waits in the gap and unexplained queues. No level refunds a single fair or permitted month.
+
 ## The three demo loans
 
 | Loan | What happened | What Sahi Byaaj says |
