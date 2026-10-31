@@ -8,25 +8,28 @@ Have open before recording, one tab or window each:
 
 1. `docs/Sahi-Byaaj-pitch.pdf` (slides 1, 2, 12, 13)
 2. The app at http://127.0.0.1:8000 (`make app`), browser zoom ~125%
-3. https://github.com/aryankalra404/Exasol (README, CI badge)
+3. An MCP client in the repo folder with the `sahi-byaaj-ask` MCP server approved (`make ask-setup` first; see `docs/ASK.md`), large terminal font
+4. https://github.com/aryankalra404/Exasol (README, CI badge)
 
 Do not open rbi.org.in on camera: the 29 Apr 2024 circular now carries a "Withdrawn" stamp (its practices moved into the 31 Jul 2026 directions). Slide 1 quotes its exact words.
 
+About 410 words at a calm pace. Say "inside Exasol" in scenes 2, 9 and 10.
+
 | Time | On screen | Say |
 |---|---|---|
-| 0:00 to 0:15 | Deck slides 1 and 2 | "RBI found lenders charging interest from the date on a cheque handed over days later, and told them to refund it. Meena paid 8 days of interest on money she didn't have yet. She has no idea." |
-| 0:15 to 0:30 | App: Overview | "Sahi Byaaj audits the whole book inside Exasol. This test book: ₹8,83,23,995.69 owed to 3,063 borrowers. And everything it couldn't decide is shown here, not guessed." |
-| 0:30 to 1:05 | Search "Meena" (`LDM0001`) | "Every date for every payment, side by side. Cheque dated 3 March, handed over 11 March. The bank posted ₹21,904.97; fair is ₹19,603.60. One rule reproduces the bank's figure to the paisa: from the cheque date." Click "SQL that matched it" |
-| 1:05 to 1:30 | `LDM0002`, then `LDM0003`, then Work queues | "Raghav: his contract disclosed this fee, so no refund. Asha: her records don't settle the date, so it drafts a query to the branch instead of guessing." |
-| 1:30 to 1:45 | Policy & re-runs | "If the auditor decides that fee isn't fair, one switch re-runs the whole book in Exasol: ₹30.7 lakh more, 250 more borrowers." If the live re-run is slow, cut the wait |
-| 1:45 to 1:57 | Fix coverage | "This branch fixed its system in July 2024, but only for new loans. Older loans stayed overcharged into 2026." |
-| 1:57 to 2:10 | Borrower letter, switch to Hindi or Tamil | "The refund letter, in the borrower's language. Every figure comes from the ledger and is checked." |
-| 2:10 to 2:30 | Data: download the template, upload it as a ZIP, cut the wait, open Meena on the uploaded book | "A lender exports its own data with this template and uploads it. Every file is checked, then loaded and audited inside Exasol. Same answer: ₹2,301.37." |
-| 2:30 to 2:37 | Method & lineage | "Every step is SQL inside Exasol, with its timing and fingerprint." |
-| 2:37 to 2:55 | Deck slides 12 and 13 | "Half a million loans in under 8 minutes on a laptop. 0 paise off an independent checker. Zero false alarms. RBI's own example reproduced." |
-| 2:55 to 3:00 | GitHub repo | "Open source, MIT. Everything reproduces from the README." |
+| 0:00 to 0:15 | Deck slides 1 and 2 | "In 2024, the Reserve Bank of India found lenders charging interest from the date on a cheque, even when it reached the customer days later, and told them to refund it. This is Meena. She paid eight days of interest on money she didn't have yet. She has no idea." |
+| 0:15 to 0:30 | App: Overview, point at the total, then the "Not included" cards | "Her lender's auditor should catch this. But the dates disagree, and the only thing calculating interest is the loan system she's auditing. Sahi Byaaj checks the whole book inside Exasol. On this synthetic book: eight crore eighty-three lakh rupees owed to 3,063 borrowers. And what it couldn't decide is listed separately, not guessed." |
+| 0:30 to 1:05 | Search "Meena" (`LDM0001`), hover tranche 2, scroll to "Why this figure: Mar 2025", click "SQL that matched it" | "Here's Meena. Every date for every payment, side by side. The cheque is dated 3 March. The builder received it on 11 March. That month the loan system charged ₹21,904.97; the fair figure is ₹19,603.60. We recalculate the month thirty-three different ways, and exactly one reproduces the bank's figure to the paisa: interest from the cheque date. That's ₹2,301.37 back to Meena. And here is the exact SQL that matched it." |
+| 1:05 to 1:27 | `LDM0002` ("Permitted"), `LDM0003`, then Work queues → Evidence gaps | "Equally important: when not to refund. Raghav was charged from his sanction date, but his contract disclosed that fee: zero refund, reason shown. Asha's records don't settle the date, so instead of guessing, it holds her out and drafts a query to her branch." |
+| 1:27 to 1:40 | Policy & re-runs: switch off "commitment fee permitted", re-run, cut the wait | "Whether that fee is fair is the auditor's call. Flip one setting and Exasol re-runs the whole book: thirty lakh rupees more, for 250 more borrowers." |
+| 1:40 to 1:50 | Fix coverage, BR001 | "And it catches a fix that only reached new loans. This branch fixed its system in July 2024; older loans stayed overcharged into 2026." |
+| 1:50 to 2:00 | Meena → Borrower letter, switch to Hindi, then Tamil, point at the green checker | "Every borrower gets a refund letter in their language. Every figure comes from the ledger, and a checker rejects the letter if anything differs." |
+| 2:00 to 2:20 | MCP client: type "How much do we owe borrowers disbursed by cheque in 2024?", expand the SQL it ran, answer ₹2,23,61,602.76, 555 loans. Then "Read SAHI_TRUTH.expected" → `insufficient privileges`. Cut the thinking time | "An audit committee member can just ask. The assistant connects through Exasol's MCP server and answers with SQL you can see: two crore twenty-three lakh rupees, 555 loans. It logs in read-only, so when it tries to read the answer key, Exasol itself says no." |
+| 2:20 to 2:35 | Data: download the template, upload it as a ZIP, cut the wait, open Meena on the uploaded book | "A lender can use this today: export with our template, upload a ZIP, every file is checked, then loaded and audited inside Exasol. Same answer for Meena: ₹2,301.37." |
+| 2:35 to 2:55 | Method & lineage (3 s), then deck slides 12 and 13 | "Every step is SQL inside Exasol. Half a million loans, 11.7 million interest entries, in under eight minutes on a laptop. Zero paise off an independent checker, zero false alarms, and RBI's own published example reproduced." |
+| 2:55 to 3:00 | GitHub repo | "Sahi Byaaj. Correct interest, for every borrower. Open source, on GitHub." |
 
-The upload replaces the loaded book with the 3-loan template book, so record it after every screen that shows the 10,000-loan figures. Afterwards, reload the sample on the Data page (or `make demo LOANS=10000`) and check the overview shows ₹8,83,23,995.69 again. Cut the upload and audit waits in editing.
+Record the ask-the-book scene before the upload: the assistant reads the latest run, and the upload replaces the 10,000-loan book with the 3-loan template book. Afterwards, reload the sample on the Data page (or `make demo LOANS=10000`) and check the overview shows ₹8,83,23,995.69 again. Cut the upload, re-run and assistant waits in editing. If running long, shorten Fix coverage or the letter first; never cut Meena or "when not to refund".
 
 Opening matters most: the date conflict and the matched rule must be on screen in the first minute so nobody files this under "interest calculator".
 
