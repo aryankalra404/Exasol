@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Run } from "../App";
 import { api, day, inr, MODE_WORDS, n, PRACTICE, seconds, SOURCE_WORDS, useApi, useReviewer } from "../lib";
-import { LiveStrip } from "./Live";
+import { LivePanel } from "./Live";
 import { ActorFields } from "./Review";
 
 const HELP: Record<string, string> = {
@@ -29,6 +29,7 @@ const NICE: Record<string, string> = {
 export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: string) => void }) {
   const { data, setData } = useApi<any>(`/policy/settings`, []);
   const [busy, setBusy] = useState(false);
+  const [showLive, setShowLive] = useState(false);
   const [name, setName] = useReviewer();
   const [why, setWhy] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
     } catch (e: any) { setErr(e.message); }
   };
   const rerun = async () => {
-    setBusy(true); setErr(null);
+    setBusy(true); setErr(null); setShowLive(true);
     try {
       const off = (data?.settings ?? []).filter((s: any) => s.setting_value === "false").map((s: any) => SHORT_OFF[s.setting_key] ?? s.setting_key);
       const label = off.length ? `Re-run: ${off.join(", ")}` : "Re-run: default policy";
@@ -65,7 +66,7 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
         <button className="btn" onClick={rerun} disabled={busy}>{busy ? "Running in Exasol…" : "Re-run audit with this policy"}</button>
       </div>
       {err && <div className="verdict warn" style={{ marginBottom: 16 }}>{err}</div>}
-      {(busy || last) && <LiveStrip running={busy} />}
+      {showLive && <LivePanel running={busy} onClose={() => setShowLive(false)} />}
       {last &&<div className="verdict ok" style={{ marginBottom: 16 }}>New run <span className="mono">{last.run_id.slice(0, 8)}</span> finished in {seconds(last.duration_ms)}. It is now selected; the comparison below shows what changed.</div>}
 
       <div className="grid g2" style={{ alignItems: "start" }}>

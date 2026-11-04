@@ -49,7 +49,7 @@ Opening matters most: the date conflict and the matched rule must be on screen i
 - Overview: download the inspection pack, open its README, and show `review_decisions.csv`
 - If asked how we know it is right: say the blind round was machine-written, with no code access, not a person. Say plainly that it found a real bug the oracle shared (`RED_TEAM.md`), that we fixed it, and that a person's review is the next step
 - Have ready: SQL for money-in-hand and fingerprint steps, `tests/test_rbi_fixtures.py`, `eval/reports/robustness.json`, `LIMITS.md`, answers on interpretation, data realism, and what a real lender would need to connect
-- Exasol live: on a re-run, the step strip on the Policy page moves as each step finishes. To show the engine, open Exasol live and click re-run: the SQL executing now and its operators with row counts come from Exasol's own system tables. A run on seed 42 takes under 10 s, so start it while talking about it. Restart `make app` after pulling, or the page has no API
+- Exasol live: re-run on the Policy page opens a panel under the button: steps moving as each finishes, the SQL executing now, and its operators with row counts, all from Exasol's own system tables. The comparison is further down the same page. A run on seed 42 takes under 10 s, so start it while talking about it. Restart `make app` after pulling, or the panel has no API
 - Backup: recorded video and screenshots if the laptop or network fails
 
 Before each rehearsal on the same book, run `make review-reset` so Meena starts as a draft. A fresh seed starts clean by itself.
