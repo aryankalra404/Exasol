@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, day, go, inr, seconds, useApi, useRoute } from "./lib";
+import { api, go, inr, useApi, useRoute } from "./lib";
 import Book from "./pages/Book";
 import Ledger from "./pages/Ledger";
 import Loan from "./pages/Loan";
@@ -41,7 +41,6 @@ export default function App() {
     setRunId(id);
     try { localStorage.setItem("run", id); } catch { /* private mode */ }
   };
-  const current = runs.find((r) => r.run_id === runId) ?? runs[0];
   const rid = runId === "latest" ? "latest" : runId;
   const page = parts[0] ?? "book";
   const empty = status && (!status.loaded || !status.latest_run);
@@ -90,8 +89,6 @@ export default function App() {
                 </option>
               ))}
             </select>
-            {current && <span className="faint">{current.dataset_id} · {day(current.started_at)} · {seconds(current.duration_ms)} in Exasol</span>}
-            {status?.loaded && <a href="#/data" className={`tag ${status.synthetic ? "PERMITTED" : "FAIR"}`} style={{ textDecoration: "none" }}>{status.synthetic ? "Synthetic sample" : "Uploaded extract"}</a>}
           </div>
           <Search />
         </div>

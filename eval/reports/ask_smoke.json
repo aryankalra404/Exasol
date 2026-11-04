@@ -52,7 +52,7 @@
     {
       "question": "(boundary) read SAHI_TRUTH",
       "sql": "SELECT 1 FROM SAHI_TRUTH.expected LIMIT 1",
-      "result": "Error calling tool 'execute_exasol_query': The database rejected the query: insufficient privileges: SELECT on table EXPECTED (Session: 1880485881978552320)",
+      "result": "Error calling tool 'execute_exasol_query': The database rejected the query: insufficient privileges: SELECT on table EXPECTED (Session: 1880658050751528960)",
       "is_error": true
     }
   ]

@@ -118,7 +118,7 @@ h3 { font-size: 15px; font-family: var(--sans); font-weight: 600; letter-spacing
 .hero .lede b { color: var(--ink); font-weight: 600; }
 .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
 .facts div { background: var(--card); padding: 12px 14px; }
-.facts .v { font: 600 18px var(--mono); }
+.facts .v { font: 600 26px var(--mono); }
 .facts .k { font-size: 12px; color: var(--ink-2); }
 .facts.f4 { grid-template-columns: repeat(4, 1fr); }
 .facts.f4 > div:last-child:nth-child(4n+2) { grid-column: span 3; }
