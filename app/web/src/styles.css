@@ -285,3 +285,19 @@ pre.sql {
 .query { font-size: 13px; background: var(--paper-2); border-radius: 6px; padding: 10px 12px; margin-top: 8px; line-height: 1.5; }
 .delta-up { color: var(--accent); }
 .delta-down { color: var(--ok); }
+
+/* exasol live */
+.live-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.live-dot.on { background: var(--accent); animation: live-pulse 1.1s ease-in-out infinite; }
+@keyframes live-pulse { 50% { opacity: 0.35; } }
+.live-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 6px; }
+.live-steps li { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; color: var(--ink-3); min-width: 0; }
+.live-steps b { font-size: 12.5px; font-weight: 500; line-height: 1.25; flex: 1; }
+.live-steps .done { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.live-steps .running { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); animation: live-pulse 1.1s ease-in-out infinite; }
+.live-steps .failed { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.live-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.live-sql { margin: 0; padding: 12px; background: var(--paper-2); border-radius: 8px; font: 12px/1.5 var(--mono); max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.live-line { overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .live-dot.on, .live-steps .running { animation: none; } }

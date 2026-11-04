@@ -15,6 +15,7 @@ Live task board. Update it when you start, finish, block or cut something. Keep 
 
 Breaking or notable changes to `CONTRACT.md` that others must react to. Newest first.
 
+- 0.8.0 (5 Nov): additive, `GET /api/live`. No table changes
 - 0.7.0 (4 Nov): loan outcomes, evidence level, refund instructions. No table changes
 - 0.6.0 (4 Nov): `SAHI_POLICY.evidence_additions`, new input to S20 and the oracle. No action needed
 - 0.5.0 (4 Nov): review log and release endpoints; `PUT /api/policy/settings` now requires `changed_by` and `reason`. App only
@@ -89,7 +90,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | R4 | Close the evidence gap: enter branch replies, re-run | Aryan | done | `evidence_additions`, S20, oracle, Work queues, `tests/test_evidence.py` |
 | R5 | Usable review: loan outcomes, review by root cause, evidence level, refund instructions | Aryan | done | Overview, All loans, Review & release, `tests/test_review.py` |
 | R2 | Human checks: letters, oracle, auditor, RBI text | | todo | sheets in `docs/HUMAN_CHECKS.md`; only people can do these |
-| R6 | Exasol live view: running SQL, operators and step progress during a run | Aryan | doing | read-only, system tables only, no pipeline change |
+| R6 | Exasol live view: running SQL, operators and step progress during a run | Aryan | done | `app/api/live.py`, Exasol live page, step strip on Policy and Work queues, `tests/test_live.py`. Read-only, no pipeline change. Run through the real buttons in headless Chrome |
 
 ### Submission
 | # | Task | Owner | State | Notes |
@@ -138,7 +139,8 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Entered evidence, whole book | Handover dates entered for all 234 gaps, re-run: gaps 0, refund ₹8,83,23,995.69 to ₹8,89,23,632.85; oracle 232,890 / 232,890, largest deviation 0 paise; entries removed and re-run: original total exactly. The months resolved to 91 refund, 48 unexplained, 47 fair, 47 undercharge, 15 ambiguous, 4 permitted. Dates were test values at the end of each window, so these are not findings | s42_n10000 | 4 Nov 2026 |
 | Blind red team, machine-written | 12 loans, 60 months, answers frozen first. First run 59 of 60; 1 real bug fixed (postings before the sanction month were not audited). After the fix 60 of 60, all 12 loan refund totals agree. 54 further months flagged Undercharge, none refunded. Demo book unchanged, oracle 232,890 / 232,890 | `tests/fixtures/red_team` | 4 Nov 2026 |
 | Loan outcomes | 10,003 audited: 6,400 correct, 3,063 refund owed, 230 permitted, 171 waiting on evidence, 61 needs investigation, 78 undercharged. Refund rows by evidence: 2,560 exact match and confirmed date, 92 fallback date, 70 other months open, 353 rule not unique | s42_n10000 | 4 Nov 2026 |
-| Tests | 49 passed locally with Exasol | | 4 Nov 2026 |
+| Live view polling | Audit 7.6, 7.7, 8.0 s without polling; 8.1, 8.2, 8.4 s with `/api/live` polled twice a second. Three runs each, so a small sample. Slowest poll 0.10 s | s42_n10000 in separate schemas | 5 Nov 2026 |
+| Tests | 57 passed locally with Exasol | separate schemas | 5 Nov 2026 |
 
 ## Blockers and open questions
 

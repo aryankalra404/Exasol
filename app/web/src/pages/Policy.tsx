@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Run } from "../App";
 import { api, day, inr, MODE_WORDS, n, PRACTICE, seconds, SOURCE_WORDS, useApi, useReviewer } from "../lib";
+import { LiveStrip } from "./Live";
 import { ActorFields } from "./Review";
 
 const HELP: Record<string, string> = {
@@ -64,7 +65,8 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
         <button className="btn" onClick={rerun} disabled={busy}>{busy ? "Running in Exasol…" : "Re-run audit with this policy"}</button>
       </div>
       {err && <div className="verdict warn" style={{ marginBottom: 16 }}>{err}</div>}
-      {last && <div className="verdict ok" style={{ marginBottom: 16 }}>New run <span className="mono">{last.run_id.slice(0, 8)}</span> finished in {seconds(last.duration_ms)}. It is now selected; the comparison below shows what changed.</div>}
+      {(busy || last) && <LiveStrip running={busy} />}
+      {last &&<div className="verdict ok" style={{ marginBottom: 16 }}>New run <span className="mono">{last.run_id.slice(0, 8)}</span> finished in {seconds(last.duration_ms)}. It is now selected; the comparison below shows what changed.</div>}
 
       <div className="grid g2" style={{ alignItems: "start" }}>
         <div className="card pad">

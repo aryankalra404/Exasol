@@ -67,3 +67,4 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 - Pre-EMI interest is collected on the 5th; EMIs are fixed after the last tranche; no re-amortisation on rate change (tenure absorbs it)
 - APR is disclosed as the loan rate (fees not modelled); the APR check (Tier 2) is not built
 - Letters: English, Hindi and Tamil. The Hindi and Tamil wording has not been reviewed by a native-speaking compliance writer; month names stay in English
+- Exasol live samples twice a second, so a statement that finishes between samples is not listed; step times come from the run log and are complete. It shows SQL text from every session on the database, so the app must stay bound to localhost. A run whose process was killed shows as running for up to an hour, until a newer run starts or the hour passes

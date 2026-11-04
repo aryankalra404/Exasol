@@ -127,3 +127,7 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 **D30. Every loan gets one outcome, and refunds show their evidence level, not a "correct" label** (accepted)
 - Why: the loans found correct were invisible, and an auditor needs "these are clean" as much as "these are wrong". Refunds are reviewed by root cause, because nobody clicks through thousands of rows. The level says what the evidence is ("exact match, confirmed date"), not that a refund is certain: a matching record can still be wrong. Disagreeing dates do not lower the level, because that disagreement is often what proves the overcharge
 - Gave up: a single confidence score, which would hide what the doubt actually is
+
+**D31. The live view reads Exasol's system tables rather than having the pipeline report progress** (accepted)
+- Why: judges should see the engine itself, not an animation we could have scripted. `EXA_DBA_SESSIONS` and `EXA_DBA_PROFILE_RUNNING` give the real statement and operators, and the existing run log gives step progress, so `scripts/audit.py` did not change. It also shows runs started from the terminal. Its own connection means a poll never waits on the app's pool
+- Gave up: a complete statement list, which needs auditing or profiling switched on; polling is a sample and the page says so

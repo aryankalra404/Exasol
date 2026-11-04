@@ -50,7 +50,7 @@ The step map with files and Exasol features is in `WHY_EXASOL.md`.
 | pipeline | All audit logic, including dates entered from branch replies (`SAHI_POLICY.evidence_additions`) | `SAHI_RAW`, `SAHI_POLICY` | `SAHI_OUT` |
 | runner | Runs pipeline steps in order, records `audit_runs` and `step_timings`, snapshots policy | `sql/` | `SAHI_OUT.audit_runs` |
 | oracle | Recomputes fair interest and fingerprints per loan in Python | CSVs in `data/` | test reports |
-| app | API + web UI for the auditor; Data page loads a checked extract or the sample; inspection pack export | `SAHI_OUT`, `SAHI_POLICY`, `SAHI_RAW` | `SAHI_POLICY.settings`, triggers runs, replaces `SAHI_RAW` through the loader on upload |
+| app | API + web UI for the auditor; Data page loads a checked extract or the sample; inspection pack export; live view of Exasol during a run | `SAHI_OUT`, `SAHI_POLICY`, `SAHI_RAW`, Exasol system tables (live view) | `SAHI_POLICY.settings`, triggers runs, replaces `SAHI_RAW` through the loader on upload |
 | review | People approve or hold refunds, clear unexplained months, release approved letters, and sign policy changes. Append-only; the pipeline never reads it | `SAHI_OUT` | `SAHI_POLICY.review_decisions`, `policy_changes`, `letter_releases`, `release_batches` |
 | letters | Renders refund letters and checks every figure | `SAHI_OUT` | `letters/out/` |
 | ask | Read-only views and MCP server for plain-language questions (`ASK.md`) | `SAHI_OUT` via `SAHI_ASK` views | nothing |

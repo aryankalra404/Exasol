@@ -21,6 +21,7 @@ from fastapi.responses import FileResponse, PlainTextResponse, Response, Streami
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from app.api import live as live_view
 from app.api import review as rv
 from app.api.book_io import inspection_pack, templates_zip, validate_extract, write_book
 from letters.letter import check, render
@@ -375,6 +376,15 @@ def start_run(body: RunIn):
             return run_audit(body.label or "re-run from app", conn=c)
     finally:
         _run_lock.release()
+
+
+@app.get("/api/live")
+def live():
+    """What Exasol is executing now and how far the latest run has got. System tables and the run log only."""
+    try:
+        return live_view.snapshot()
+    except Exception as exc:
+        raise HTTPException(503, f"Cannot read Exasol: {exc}")
 
 
 @app.get("/api/compare/{a}/{b}")

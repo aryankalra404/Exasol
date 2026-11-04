@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, day, describeConvention, go, inr, MODE_WORDS, month, n, plural, post, REVIEW_WORDS, seconds, sources, STATUS_WORDS, useApi, useReviewer } from "../lib";
+import { LiveStrip } from "./Live";
 import { ActorFields, missingActor, Toast } from "./Review";
 
 const TABS: [string, string, string][] = [
@@ -132,6 +133,7 @@ function Gaps({ runId, onRan }: { runId: string; onRan: () => void }) {
     <Toast err={err} msg={msg} onClose={() => { setErr(null); setMsg(null); }} />
     <p className="small muted" style={{ marginTop: 0 }}>When a branch replies, enter the date and document reference. You enter no amount: the re-run applies the same rules as every other tranche and decides whether a refund is due.</p>
     <ActorFields name={name} setName={setName} reason={why} setReason={setWhy} why="Reason for this entry" sticky />
+    {busy && <LiveStrip running />}
     {waiting.length > 0 && (
       <div className="verdict warn older-run">
         <span><b>{plural(waiting.length, "change")} to the evidence not in this run yet.</b></span>
