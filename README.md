@@ -118,6 +118,7 @@ Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues 
 | `make scale LOANS=500000` | Big book in separate `SCALE_*` schemas, report in `eval/reports/` |
 | `make robustness LOANS=10000` | Defect levels 0, 1, 3 in `ROB_*` schemas, report in `eval/reports/robustness.json` |
 | `make app` | Build the UI and serve API + UI on http://127.0.0.1:8000 |
+| `make red-team-template`, `make red-team` | Blind red team in `RT_*` schemas, see [RED_TEAM](docs/RED_TEAM.md) |
 | `make ask-setup && make ask-smoke` | Read-only views and user for MCP, then an end-to-end check |
 
 ### Ask the book (optional, any MCP client)

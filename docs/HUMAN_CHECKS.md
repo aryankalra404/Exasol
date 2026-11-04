@@ -2,7 +2,7 @@
 
 Checks software cannot do for us. Fill in each result here and only claim what is recorded. All names and figures below are synthetic.
 
-Priority for the finale: 1 and 2 first. If one is not done, say so if asked; `LIMITS.md` already does.
+Priority for the finale: the blind red team first (`RED_TEAM.md`), then 1 and 2. If one is not done, say so if asked; `LIMITS.md` already does.
 
 ## 1. Letter wording (native speakers of Hindi and Tamil)
 

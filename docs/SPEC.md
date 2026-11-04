@@ -36,7 +36,7 @@ What we build, in priority order. Tiers are cut lines: finish a tier fully (test
 **Proof**
 - Independent Python oracle (exact `Decimal`), agreement on 10,000+ loans, largest deviation reported
 - RBI worked examples as fixtures (digital lending fact-sheet: ₹20,000 over 24 months, instalment ₹969.73 rounded to ₹970)
-- False-positive suite: disclosed commitment fee, disclosed 30/360, disclosed broken-period interest
+- False-positive suite: disclosed commitment fee, disclosed 30/360, fairly posted periods. Broken-period interest is part of the fair path, not a separate case (`LIMITS.md`)
 - Fingerprint accuracy against the hidden configuration, including share sent to "unexplained"
 - Measured scale run on our laptop: rows, runtime, hardware
 
@@ -55,18 +55,19 @@ What we build, in priority order. Tiers are cut lines: finish a tier fully (test
 - **Letters in Hindi and Tamil,** same checker (built)
 - **Evidence-gap branch query** auto-drafted per gap ("handover ack missing for tranche 2")
 - CI running tests on every push, badge in README
+- **Human review and release (built, added for the finale):** approve or hold each refund with a name and reason, record outcomes on unexplained months, sign policy changes, release approved letters as a ZIP and manifest. Decisions never change a figure. See `DECISIONS.md` D26, D27
 
 ## Tier 2: stretch
 
 - **Ask the book (built, see `ASK.md`):** assistant over Exasol's MCP server, read-only on the `SAHI_ASK` views. Shows the SQL it ran. Never computes a number itself
 - **APR check** against KFS disclosed APR via a Python UDF (IRR is iterative, the one place a UDF is justified)
-- **Blind red team:** someone who did not write the generator builds ~20 adversarial loans from the RBI text alone. Report results including misses
+- **Blind red team (harness built, loans not yet written, see `RED_TEAM.md`):** someone who did not write the generator builds about 10 adversarial loans from the RBI text. Report results including misses
 - Robustness curve: defect level from none to heavy vs refund totals and gap counts
 - Cloud deployment guide (Exasol Personal on AWS)
 
 ## Explicitly out
 
-Penal charges, prepayment charges, floating-rate pass-through and reset lags, GST, NPA classification, restructured loans and moratoria, credit cards, co-lending, OCR of real documents, posting refunds back into a loan system, any legal opinion on contested interpretations.
+Sending letters to borrowers (`DECISIONS.md` D27), penal charges, prepayment charges, floating-rate pass-through and reset lags, GST, NPA classification, restructured loans and moratoria, credit cards, co-lending, OCR of real documents, posting refunds back into a loan system, any legal opinion on contested interpretations.
 
 ## Acceptance criteria for the demo loans
 

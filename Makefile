@@ -3,7 +3,7 @@ SEED ?= 42
 LOANS ?= 10000
 DATASET := data/s$(SEED)_n$(LOANS)
 
-.PHONY: setup generate load audit demo review-reset test oracle robustness scale ask-setup ask-smoke app web clean
+.PHONY: setup generate load audit demo review-reset test oracle robustness red-team red-team-template scale ask-setup ask-smoke app web clean
 
 setup:            ## python venv + dependencies, web build tools
 	python3 -m venv .venv
@@ -35,6 +35,12 @@ scale:            ## generate, load and audit a big book in SCALE_* schemas, rep
 
 robustness:       ## same book at defect levels 0, 1, 3 in separate ROB_* schemas, scored against truth
 	$(PY) -m eval.robustness --seed $(SEED) --loans $(LOANS)
+
+red-team-template: ## blank-format CSVs for the blind red team, in tests/fixtures/red_team
+	$(PY) -m eval.red_team --template
+
+red-team:         ## audit the blind red-team book in separate RT_* schemas and score it, see docs/RED_TEAM.md
+	$(PY) -m eval.red_team
 
 ask-setup:        ## SAHI_ASK views + read-only ASK_READER user for the MCP server (password into .env)
 	$(PY) -m scripts.ask_setup

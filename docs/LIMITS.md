@@ -44,6 +44,7 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 
 ## Assumptions not yet validated
 
+- **Blind testing has not been done yet.** The generator, the SQL and the oracle share an author, so agreement on generated books proves less than it appears to. `RED_TEAM.md` is how we test on loans we did not design
 - **How auditors test interest charging today.** We found no public account. "They sample" is an assumption, not a finding
 - **Prevalence.** RBI has not published how many lenders, loans or rupees were involved. We do not state a number
 

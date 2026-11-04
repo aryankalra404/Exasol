@@ -64,4 +64,4 @@ Flow: Overview → root causes → Meena (search) → Raghav (`LDM0002`) → Ash
 - [x] Demo dataset id and seed fixed, documented (`s42_n10000`)
 - [x] Meena, Raghav, Asha present in every dataset (fixtures)
 - [x] Measured numbers for the overview screen
-- [ ] Screen recording at 1080p, readable font sizes
+- [x] Screen recording at 1080p, readable font sizes

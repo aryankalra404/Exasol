@@ -104,6 +104,7 @@ docs/
   WHY_EXASOL.md      pipeline step -> SQL file map, what stays outside Exasol and why
   LIMITS.md          limitations, assumptions, known gaps
   DEMO.md            3-min video script and live demo plan
+  RED_TEAM.md        brief for the blind red team, and its results
   ASK.md             ask the book over MCP (read-only)
   HUMAN_CHECKS.md    checks only people can do, with sheets to fill in
   SUBMISSION.md      submission checklist
@@ -156,6 +157,8 @@ make test                   # pytest; db tests skip without .env
 make oracle LOANS=10000     # independent oracle vs latest run, every loan
 make scale LOANS=500000     # SCALE_* schemas, timings + row counts into eval/reports/scale_*.json
 make robustness LOANS=10000 # defect levels 0/1/3 in ROB_* schemas, report in eval/reports/robustness.json
+make red-team-template      # blank-format CSVs for the blind red team (docs/RED_TEAM.md)
+make red-team               # audit that book in RT_* schemas, score against expected.csv, report in eval/reports/red_team.json
 make ask-setup              # SAHI_ASK views + read-only ASK_READER user for MCP (password into .env)
 make ask-smoke              # MCP server end to end as ASK_READER: tools, example questions, boundary check
 make app                    # build UI and serve API + UI on http://127.0.0.1:8000

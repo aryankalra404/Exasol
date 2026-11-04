@@ -115,3 +115,7 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 **D27. Release letters, do not send them** (accepted)
 - Why: a lender sends through its own approved channels, under its own compliance controls, and the demo data has no real recipients. Release re-runs the checker on every letter, stores the exact text with its SHA-256, and produces a ZIP and manifest. The status says "Released" because this tool cannot know whether a letter was delivered
 - Gave up: delivery tracking, bounces, consent handling
+
+**D28. Red-team loans are written outside the team's code, and answers come first** (accepted)
+- Why: agreement on generated books is partly circular, because one author wrote the generator, the SQL and the oracle. Answers written before the first run cannot be fitted to the result. The harness reports disagreements and never decides who is right. `RT_*` schemas are dropped each run, so results always use default policy and the demo book stays untouched
+- Gave up: speed; this needs a person who has not read the code
