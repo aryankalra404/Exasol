@@ -89,6 +89,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | R4 | Close the evidence gap: enter branch replies, re-run | Aryan | done | `evidence_additions`, S20, oracle, Work queues, `tests/test_evidence.py` |
 | R5 | Usable review: loan outcomes, review by root cause, evidence level, refund instructions | Aryan | done | Overview, All loans, Review & release, `tests/test_review.py` |
 | R2 | Human checks: letters, oracle, auditor, RBI text | | todo | sheets in `docs/HUMAN_CHECKS.md`; only people can do these |
+| R6 | Exasol live view: running SQL, operators and step progress during a run | Aryan | doing | read-only, system tables only, no pipeline change |
 
 ### Submission
 | # | Task | Owner | State | Notes |
