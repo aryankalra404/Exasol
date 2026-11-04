@@ -107,3 +107,11 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 - Why: what an inspector needs is the rows and the means to check them: the ledger, every finding with its evidence ids, the branch queries, the policy snapshot, and the SQL files whose SHA-256 must match `lineage`. A ZIP of CSVs and SQL is what an audit file holds; nothing is recalculated
 - Gave up: a formatted PDF
 
+
+**D26. Human review is a separate append-only log; a decision can never change a figure** (accepted)
+- Why: the app told people to review items but could not record the outcome, and nobody signed off before a letter could leave. A decision stores who, why and the figure seen, copied from the ledger by SQL. If a re-run changes the figure, the decision goes stale and the row needs a fresh look. To change a refund, a person changes evidence or policy and re-runs, which keeps "every number is computed by SQL" true
+- Gave up: reviewer-entered adjustments; real identity (names are self-declared until a lender puts the app behind its sign-on)
+
+**D27. Release letters, do not send them** (accepted)
+- Why: a lender sends through its own approved channels, under its own compliance controls, and the demo data has no real recipients. Release re-runs the checker on every letter, stores the exact text with its SHA-256, and produces a ZIP and manifest. The status says "Released" because this tool cannot know whether a letter was delivered
+- Gave up: delivery tracking, bounces, consent handling

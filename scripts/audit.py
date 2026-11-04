@@ -43,6 +43,7 @@ def run_audit(label: str = "", conn=None) -> dict:
     own = conn is None
     conn = conn or connect()
     run_file(conn, SQL_DIR / "05_policy_and_out_schema.sql")
+    run_file(conn, SQL_DIR / "06_review_schema.sql")
     run_id = str(uuid.uuid4())
     settings = conn.execute(f"SELECT setting_key, setting_value FROM {s['POLICY']}.settings ORDER BY 1").fetchall()
     precedence = conn.execute(f"SELECT payment_mode, rank, evidence_source, rule FROM {s['POLICY']}.date_precedence "

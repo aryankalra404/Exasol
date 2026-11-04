@@ -1,7 +1,8 @@
 """Sahi Byaaj API. Reads result tables in Exasol; never computes an interest or refund figure itself.
 
-Writes are limited to policy settings, starting a new audit run (which runs the SQL pipeline in Exasol), and
-replacing the loaded loan book with a validated extract or the synthetic sample (Data page).
+Writes are limited to policy settings, starting a new audit run (which runs the SQL pipeline in Exasol), replacing
+the loaded loan book with a validated extract or the synthetic sample (Data page), and the human review log
+(decisions, policy changes, released letters), which the pipeline never reads.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ import io
 import queue
 import re
 import threading
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -19,10 +21,12 @@ from fastapi.responses import FileResponse, PlainTextResponse, Response, Streami
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from app.api import review as rv
 from app.api.book_io import inspection_pack, templates_zip, validate_extract, write_book
 from letters.letter import check, render
-from scripts.audit import run_audit
+from scripts.audit import now, run_audit
 from scripts.db import ROOT, connect, schemas
+from scripts.sqlrun import SQL_DIR, run_file
 
 S = schemas()
 RAW, POL, OUT = S["RAW"], S["POLICY"], S["OUT"]
@@ -46,6 +50,7 @@ def db():
             if _created < _pool_size:
                 _created += 1
                 conn = connect()
+                run_file(conn, SQL_DIR / "06_review_schema.sql")
             else:
                 conn = None
         if conn is None:
@@ -126,13 +131,18 @@ def summary(run_id: str):
     }
 
 
+_LEDGER_STATE = rv.state_case("l.excess_paise")
 LEDGER_SQL = f"""
     SELECT l.loan_id, l.borrower_id, b.display_name, l.branch_id, br.branch_name, l.product, l.practice_code,
-           l.periods, l.days_affected, l.excess_paise, l.first_period, l.last_period
+           l.periods, l.days_affected, l.excess_paise, l.first_period, l.last_period, {_LEDGER_STATE} AS review_state,
+           d.decided_by, d.reason AS review_reason, d.decided_at
     FROM {OUT}.refund_ledger l
     JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
     JOIN {RAW}.branches br ON br.branch_id = l.branch_id
+    LEFT JOIN ({rv.latest_decisions_sql(OUT, POL, 'LEDGER')}) d
+      ON d.loan_id = l.loan_id AND d.practice_code = l.practice_code AND d.rn = 1
     WHERE l.run_id = {{r}}
+      AND ({{review}} IS NULL OR {_LEDGER_STATE} = {{review}})
       AND ({{practice}} IS NULL OR l.practice_code = {{practice}})
       AND ({{branch}} IS NULL OR l.branch_id = {{branch}})
       AND ({{product}} IS NULL OR l.product = {{product}})
@@ -140,22 +150,22 @@ LEDGER_SQL = f"""
 """
 
 
-def _ledger_params(rid, practice, branch, product, q):
+def _ledger_params(rid, practice, branch, product, q, review=""):
     return {"r": rid, "practice": practice or None, "branch": branch or None, "product": product or None,
-            "q": f"%{q.upper()}%" if q else None}
+            "q": f"%{q.upper()}%" if q else None, "review": review or None}
 
 
 @app.get("/api/runs/{run_id}/ledger")
-def ledger(run_id: str, practice: str = "", branch: str = "", product: str = "", q: str = "",
+def ledger(run_id: str, practice: str = "", branch: str = "", product: str = "", q: str = "", review: str = "",
            sort: str = "excess", page: int = Query(1, ge=1), size: int = Query(50, le=500)):
     rid = resolve_run(run_id)
     order = {"excess": "l.excess_paise DESC", "loan": "l.loan_id", "days": "l.days_affected DESC",
              "period": "l.first_period"}.get(sort, "l.excess_paise DESC")
-    p = _ledger_params(rid, practice, branch, product, q)
+    p = _ledger_params(rid, practice, branch, product, q, review)
     total = one(f"SELECT COUNT(*) AS n, COALESCE(SUM(excess_paise), 0) AS excess_paise, "
                 f"COUNT(DISTINCT loan_id) AS loans FROM ({LEDGER_SQL}) x", p)
     data = rows(f"{LEDGER_SQL} ORDER BY {order}, l.loan_id, l.practice_code LIMIT {size} OFFSET {(page - 1) * size}", p)
-    return {"total": total, "rows": data, "page": page, "size": size}
+    return {"run_id": rid, "total": total, "rows": data, "page": page, "size": size}
 
 
 @app.get("/api/runs/{run_id}/ledger.csv")
@@ -177,14 +187,17 @@ def work_queue(run_id: str, status: str, page: int = Query(1, ge=1), size: int =
     rid = resolve_run(run_id)
     if status not in ("UNEXPLAINED", "AMBIGUOUS", "PERMITTED", "UNDERCHARGE", "EVIDENCE_GAP"):
         raise HTTPException(400, "unknown queue")
-    return rows(f"""SELECT f.loan_id, b.display_name, f.branch_id, f.product, f.period_start, f.practice_code,
+    return rows(f"""SELECT f.run_id, f.loan_id, b.display_name, f.branch_id, f.product, f.period_start, f.practice_code,
                            f.excess_paise, f.days_affected, f.reason, fp.posted_paise, fp.fair_paise,
                            fp.closest_convention_id, fp.closest_diff_paise, fp.tied_convention_ids, fp.has_manual,
+                           {rv.state_case('fp.excess_paise')} AS review_state, d.decided_by, d.reason AS review_reason,
                            COUNT(*) OVER () AS total_rows
                     FROM {OUT}.findings f
                     JOIN {RAW}.borrowers b ON b.borrower_id = f.borrower_id
                     JOIN {OUT}.fingerprints fp ON fp.run_id = f.run_id AND fp.loan_id = f.loan_id
                                                AND fp.period_start = f.period_start
+                    LEFT JOIN ({rv.latest_decisions_sql(OUT, POL, 'UNEXPLAINED')}) d
+                      ON d.loan_id = f.loan_id AND d.period_start = f.period_start AND d.rn = 1
                     WHERE f.run_id = {{r}} AND f.status = {{s}}
                     ORDER BY ABS(f.excess_paise) DESC, f.loan_id, f.period_start
                     LIMIT {size} OFFSET {(page - 1) * size}""", {"r": rid, "s": status})
@@ -219,6 +232,13 @@ def loan(run_id: str, loan_id: str):
     if not head:
         raise HTTPException(404, "loan not found")
     return {
+        "run_id": rid,
+        "review": rows(f"SELECT * FROM ({rv.ledger_review_sql(OUT, POL)}) x WHERE x.loan_id = {{l}} ORDER BY x.practice_code", p),
+        "review_history": rows(f"""SELECT practice_code, period_start, figure_paise, review_decision, decided_by, reason, decided_at
+                                   FROM {POL}.review_decisions
+                                   WHERE loan_id = {{l}} AND dataset_id = (SELECT dataset_id FROM {OUT}.audit_runs WHERE run_id = {{r}})
+                                   ORDER BY decision_seq DESC""", p),
+        "letter": one(f"SELECT * FROM ({rv.loan_states_sql(OUT, POL)}) x WHERE x.loan_id = {{l}}", p),
         "loan": head,
         "tranches": rows(f"""SELECT m.*, t.payee_type FROM {OUT}.money_in_hand m
                              JOIN {RAW}.tranches t ON t.loan_id = m.loan_id AND t.tranche_no = m.tranche_no
@@ -273,7 +293,9 @@ def letter(run_id: str, loan_id: str, lang: str = ""):
     lt = render(figs, lang)
     # the checker re-reads the ledger on its own, not the rows used to render
     result = check(lt, rows(q, {"r": rid, "l": loan_id}))
-    return {"loan_id": loan_id, "lang": lt.lang, "requested_lang": lang, "text": lt.text, "check": result}
+    state = one(f"SELECT * FROM ({rv.loan_states_sql(OUT, POL)}) x WHERE x.loan_id = {{l}}", {"r": rid, "l": loan_id})
+    return {"run_id": rid, "loan_id": loan_id, "lang": lt.lang, "requested_lang": lang, "text": lt.text, "check": result,
+            "state": state}
 
 
 @app.get("/api/lineage")
@@ -290,15 +312,26 @@ def lineage_step(step_id: str):
     return r
 
 
+def _actor(name: str, reason: str) -> tuple[str, str]:
+    try:
+        return rv.clean_actor(name, reason)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
 @app.get("/api/policy/settings")
 def get_settings():
     return {"settings": rows(f"SELECT * FROM {POL}.settings ORDER BY setting_key"),
-            "date_precedence": rows(f"SELECT * FROM {POL}.date_precedence ORDER BY payment_mode, rank")}
+            "date_precedence": rows(f"SELECT * FROM {POL}.date_precedence ORDER BY payment_mode, rank"),
+            "changes": rows(f"SELECT setting_key, old_value, new_value, changed_by, reason, changed_at "
+                            f"FROM {POL}.policy_changes ORDER BY change_seq DESC LIMIT 50")}
 
 
 class SettingIn(BaseModel):
     setting_key: str
     setting_value: str
+    changed_by: str
+    reason: str
 
 
 @app.put("/api/policy/settings")
@@ -307,9 +340,13 @@ def put_setting(s: SettingIn):
         raise HTTPException(404, "unknown setting")
     if not re.fullmatch(r"true|false|\d{1,6}", s.setting_value):
         raise HTTPException(400, "value must be true, false or a whole number")
+    who, why = _actor(s.changed_by, s.reason)
     with db() as c:
-        c.execute(f"UPDATE {POL}.settings SET setting_value = {{v}} WHERE setting_key = {{k}}",
-                  {"v": s.setting_value, "k": s.setting_key})
+        p = {"v": s.setting_value, "k": s.setting_key, "who": who, "why": why, "at": now()}
+        c.execute(f"""INSERT INTO {POL}.policy_changes (setting_key, old_value, new_value, changed_by, reason, changed_at)
+                      SELECT setting_key, setting_value, {{v}}, {{who}}, {{why}}, {{at}} FROM {POL}.settings
+                      WHERE setting_key = {{k}} AND setting_value <> {{v}}""", p)
+        c.execute(f"UPDATE {POL}.settings SET setting_value = {{v}} WHERE setting_key = {{k}}", p)
     return get_settings()
 
 
@@ -455,9 +492,214 @@ def run_inspection_pack(run_id: str):
     rid = resolve_run(run_id)
     if not one(f"SELECT run_id FROM {OUT}.run_summary WHERE run_id = {{r}}", {"r": rid}):
         raise HTTPException(404, "no such completed run")
-    data = inspection_pack(rid, rows, OUT, RAW)
+    data = inspection_pack(rid, rows, OUT, RAW, POL)
     return Response(data, media_type="application/zip",
                     headers={"Content-Disposition": f"attachment; filename=inspection_pack_{rid[:8]}.zip"})
+
+
+# ---------- review: human decisions and letter release; no figure is written from the browser ----------
+def _writable_run(run_id: str) -> str:
+    """Review actions apply to the latest run only, and not while a new run is being written."""
+    if _run_lock.locked():
+        raise HTTPException(409, "An audit run is in progress. Try again when it finishes.")
+    rid = resolve_run(run_id)
+    if rid != resolve_run("latest"):
+        raise HTTPException(409, "This is an older run. Switch to the latest run to review or release.")
+    return rid
+
+
+_DECISION_INSERT = f"""INSERT INTO {POL}.review_decisions (action_id, dataset_id, run_id, item_kind, loan_id, practice_code,
+                           period_start, figure_paise, review_decision, decided_by, reason, decided_at)"""
+
+
+@app.get("/api/runs/{run_id}/review/summary")
+def review_summary(run_id: str):
+    rid = resolve_run(run_id)
+    p = {"r": rid}
+    return {
+        "run_id": rid,
+        "is_latest": rid == resolve_run("latest"),
+        "ledger_total": one(f"SELECT COALESCE(SUM(excess_paise), 0) AS v FROM {OUT}.refund_ledger WHERE run_id = {{r}}", p)["v"],
+        "by_state": rows(f"""SELECT review_state, COUNT(*) AS row_count, COUNT(DISTINCT loan_id) AS loans,
+                                    SUM(excess_paise) AS excess_paise
+                             FROM ({rv.ledger_review_sql(OUT, POL)}) x GROUP BY review_state""", p),
+        "letters": rows(f"""SELECT letter_state, COUNT(*) AS loans, SUM(total_paise) AS total_paise
+                            FROM ({rv.loan_states_sql(OUT, POL)}) x GROUP BY letter_state""", p),
+        "changed_releases": rows(rv.changed_releases_sql(OUT, POL), p),
+        "unexplained": rows(f"""SELECT {rv.state_case('fp.excess_paise')} AS review_state, COUNT(*) AS periods
+                                FROM {OUT}.fingerprints fp
+                                LEFT JOIN ({rv.latest_decisions_sql(OUT, POL, 'UNEXPLAINED')}) d
+                                  ON d.loan_id = fp.loan_id AND d.period_start = fp.period_start AND d.rn = 1
+                                WHERE fp.run_id = {{r}} AND fp.match_status = 'UNEXPLAINED'
+                                GROUP BY 1""", p),
+        "batches": rows(f"""SELECT batch_id, run_id, released_by, batch_note, released_at, letter_count, total_paise
+                            FROM {POL}.release_batches
+                            WHERE dataset_id = (SELECT dataset_id FROM {OUT}.audit_runs WHERE run_id = {{r}})
+                            ORDER BY released_at DESC""", p),
+    }
+
+
+class DecisionIn(BaseModel):
+    loan_id: str
+    practice_code: str
+    decision: str
+    reviewer: str
+    reason: str
+
+
+@app.post("/api/runs/{run_id}/review/decisions")
+def review_decision(run_id: str, body: DecisionIn):
+    rid = _writable_run(run_id)
+    if body.decision not in rv.LEDGER_DECISIONS:
+        raise HTTPException(400, "decision must be APPROVED or HOLD")
+    who, why = _actor(body.reviewer, body.reason)
+    with db() as c:
+        st = c.execute(f"""{_DECISION_INSERT}
+                           SELECT {{a}}, r.dataset_id, l.run_id, 'LEDGER', l.loan_id, l.practice_code, CAST(NULL AS DATE),
+                                  l.excess_paise, {{d}}, {{who}}, {{why}}, {{at}}
+                           FROM {OUT}.refund_ledger l JOIN {OUT}.audit_runs r ON r.run_id = l.run_id
+                           WHERE l.run_id = {{r}} AND l.loan_id = {{l}} AND l.practice_code = {{p}}""",
+                       {"a": str(uuid.uuid4()), "d": body.decision, "who": who, "why": why, "at": now(), "r": rid,
+                        "l": body.loan_id, "p": body.practice_code})
+        if not st.rowcount():
+            raise HTTPException(404, "This row is not in the refund ledger of the latest run.")
+    return {"ok": True}
+
+
+class BulkApproveIn(BaseModel):
+    practice: str = ""
+    branch: str = ""
+    product: str = ""
+    q: str = ""
+    reviewer: str
+    reason: str
+
+
+@app.post("/api/runs/{run_id}/review/approve-filtered")
+def review_approve_filtered(run_id: str, body: BulkApproveIn):
+    """Approve the not-yet-reviewed rows matching a filter, so one reason covers one root cause. Rows on hold or
+    with a changed figure are left alone; they need looking at one by one."""
+    rid = _writable_run(run_id)
+    if not (body.practice or body.branch or body.product or body.q):
+        raise HTTPException(400, "Filter by practice, branch, product or search first. The whole book cannot be approved in one click.")
+    who, why = _actor(body.reviewer, body.reason)
+    action = str(uuid.uuid4())
+    p = {**_ledger_params(rid, body.practice, body.branch, body.product, body.q, "UNREVIEWED"),
+         "a": action, "who": who, "why": why, "at": now()}
+    with db() as c:
+        c.execute(f"""{_DECISION_INSERT}
+                      SELECT {{a}}, r.dataset_id, l.run_id, 'LEDGER', l.loan_id, l.practice_code, CAST(NULL AS DATE),
+                             l.excess_paise, 'APPROVED', {{who}}, {{why}}, {{at}}
+                      FROM {OUT}.refund_ledger l JOIN {OUT}.audit_runs r ON r.run_id = l.run_id
+                      JOIN ({LEDGER_SQL}) t ON t.loan_id = l.loan_id AND t.practice_code = l.practice_code
+                      WHERE l.run_id = {{r}}""", p)
+    return one(f"""SELECT COUNT(*) AS row_count, COALESCE(SUM(figure_paise), 0) AS excess_paise
+                   FROM {POL}.review_decisions WHERE action_id = {{a}}""", {"a": action})
+
+
+class QueueDecisionIn(BaseModel):
+    loan_id: str
+    period_start: str
+    decision: str
+    reviewer: str
+    reason: str
+
+
+@app.post("/api/runs/{run_id}/review/unexplained")
+def review_unexplained(run_id: str, body: QueueDecisionIn):
+    """Record the outcome of a manual look at an unexplained month. It moves no money: to change a refund, fix the
+    evidence or the policy and re-run."""
+    rid = _writable_run(run_id)
+    if body.decision not in rv.QUEUE_DECISIONS:
+        raise HTTPException(400, "decision must be CLEARED or HOLD")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", body.period_start):
+        raise HTTPException(400, "bad period")
+    who, why = _actor(body.reviewer, body.reason)
+    with db() as c:
+        st = c.execute(f"""{_DECISION_INSERT}
+                           SELECT {{a}}, r.dataset_id, f.run_id, 'UNEXPLAINED', f.loan_id, CAST(NULL AS VARCHAR(3)), f.period_start,
+                                  f.excess_paise, {{d}}, {{who}}, {{why}}, {{at}}
+                           FROM {OUT}.fingerprints f JOIN {OUT}.audit_runs r ON r.run_id = f.run_id
+                           WHERE f.run_id = {{r}} AND f.loan_id = {{l}} AND f.period_start = {{p}}
+                             AND f.match_status = 'UNEXPLAINED'""",
+                       {"a": str(uuid.uuid4()), "d": body.decision, "who": who, "why": why, "at": now(), "r": rid,
+                        "l": body.loan_id, "p": body.period_start})
+        if not st.rowcount():
+            raise HTTPException(404, "This month is not in the unexplained queue of the latest run.")
+    return {"ok": True}
+
+
+class ReleaseIn(BaseModel):
+    reviewer: str
+    reason: str
+    loan_ids: list[str] | None = None  # None releases every approved letter
+    lang: str = ""
+
+
+@app.post("/api/runs/{run_id}/releases")
+def release_letters(run_id: str, body: ReleaseIn):
+    """Hand approved letters over for dispatch. The checker runs again here; one failure stops the whole batch."""
+    rid = _writable_run(run_id)
+    who, why = _actor(body.reviewer, body.reason)
+    if body.lang and body.lang not in rv.LETTER_LANGS:
+        raise HTTPException(400, "unknown language")
+    states = {s["loan_id"]: s for s in rows(rv.loan_states_sql(OUT, POL), {"r": rid})}
+    if body.loan_ids is None:
+        ids = [k for k, s in states.items() if s["letter_state"] == "APPROVED"]
+    else:
+        ids = body.loan_ids
+        blocked = [i for i in ids if states.get(i, {}).get("letter_state") != "APPROVED"]
+        if blocked:
+            words = {"DRAFT": "it is still a draft: every refund row must be approved at its current figure first",
+                     "RELEASED": "this letter has already been released at this figure"}
+            why_blocked = words.get(states.get(blocked[0], {}).get("letter_state"), "it has no refund in this run")
+            raise HTTPException(409, f"Cannot release {blocked[0]}: {why_blocked}.")
+    if not ids:
+        raise HTTPException(409, "No approved letters are waiting to be released.")
+    wanted = set(ids)
+    q = f"SELECT * FROM {OUT}.letter_figures WHERE run_id = {{r}}"
+    figs = [f for f in rows(q, {"r": rid}) if f["loan_id"] in wanted]
+    recheck = [f for f in rows(q, {"r": rid}) if f["loan_id"] in wanted]  # separate read, as in the letter screen
+    letters, failed = rv.build_letters(figs, recheck, body.lang)
+    if failed:
+        raise HTTPException(409, f"Nothing was released. The checker rejected {len(failed)} letter(s), first {failed[0]}.")
+    mismatch = [x["loan_id"] for x in letters if str(x["excess_paise"]) != str(states[x["loan_id"]]["total_paise"])]
+    if mismatch or len(letters) != len(wanted):
+        raise HTTPException(409, "Nothing was released. The letter figures do not match the refund ledger for this run.")
+    batch, at = str(uuid.uuid4()), now()
+    dataset = one(f"SELECT dataset_id FROM {OUT}.audit_runs WHERE run_id = {{r}}", {"r": rid})["dataset_id"]
+    data = [(batch, dataset, rid, x["loan_id"], x["letter_lang"], x["excess_paise"], states[x["loan_id"]]["approved_by"],
+             who, at, x["text_sha256"], x["letter_text"]) for x in letters]
+    with db() as c:
+        c.set_autocommit(False)  # the letters and their batch row land together or not at all
+        c.import_from_iterable(data, (POL, "LETTER_RELEASES"), import_params={"columns": [
+            "BATCH_ID", "DATASET_ID", "RUN_ID", "LOAN_ID", "LETTER_LANG", "EXCESS_PAISE", "APPROVED_BY", "RELEASED_BY",
+            "RELEASED_AT", "TEXT_SHA256", "LETTER_TEXT"]})
+        c.execute(f"""INSERT INTO {POL}.release_batches (batch_id, dataset_id, run_id, released_by, batch_note, released_at,
+                                                         letter_count, total_paise)
+                      SELECT {{b}}, {{d}}, {{r}}, {{who}}, {{why}}, {{at}}, COUNT(*), SUM(excess_paise)
+                      FROM {POL}.letter_releases WHERE batch_id = {{b}}""",
+                  {"b": batch, "d": dataset, "r": rid, "who": who, "why": why, "at": at})
+        c.commit()
+        c.set_autocommit(True)
+    return one(f"SELECT * FROM {POL}.release_batches WHERE batch_id = {{b}}", {"b": batch})
+
+
+@app.get("/api/releases/{batch_id}/letters.zip")
+def release_download(batch_id: str):
+    if not re.fullmatch(r"[0-9a-f-]{36}", batch_id):
+        raise HTTPException(400, "bad batch id")
+    batch = one(f"SELECT * FROM {POL}.release_batches WHERE batch_id = {{b}}", {"b": batch_id})
+    if not batch:
+        raise HTTPException(404, "no such batch")
+    letters = rows(f"""SELECT r.loan_id, b.display_name, r.letter_lang, r.excess_paise, r.approved_by, r.released_by,
+                              r.released_at, r.text_sha256, r.letter_text
+                       FROM {POL}.letter_releases r
+                       LEFT JOIN {RAW}.loans l ON l.loan_id = r.loan_id
+                       LEFT JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
+                       WHERE r.batch_id = {{b}} ORDER BY r.loan_id""", {"b": batch_id})
+    return Response(rv.release_zip(batch, letters), media_type="application/zip",
+                    headers={"Content-Disposition": f"attachment; filename=letter_release_{batch_id[:8]}.zip"})
 
 
 @app.get("/api/health")

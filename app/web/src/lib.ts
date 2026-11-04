@@ -30,6 +30,20 @@ export function useApi<T = any>(path: string | null, deps: unknown[] = []) {
   return { data, error, loading, setData };
 }
 
+export const post = <T = any>(path: string, body: unknown) =>
+  api<T>(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+/** The reviewer's self-declared name, remembered in this browser. */
+export function useReviewer(): [string, (v: string) => void] {
+  const [name, setName] = useState(() => {
+    try { return localStorage.getItem("reviewer") ?? ""; } catch { return ""; }
+  });
+  return [name, (v: string) => {
+    setName(v);
+    try { localStorage.setItem("reviewer", v); } catch { /* private mode */ }
+  }];
+}
+
 // ---------- routing (hash based, so the static build works from any path) ----------
 export function useRoute() {
   const [hash, setHash] = useState(window.location.hash || "#/book");
@@ -131,6 +145,16 @@ export const STATUS_WORDS: Record<string, string> = {
   UNEXPLAINED: "Unexplained",
   UNDERCHARGE: "Undercharge",
 };
+
+export const REVIEW_WORDS: Record<string, string> = {
+  UNREVIEWED: "Not reviewed",
+  APPROVED: "Approved",
+  HOLD: "On hold",
+  STALE: "Needs re-review",
+  CLEARED: "Cleared, no refund",
+};
+
+export const LETTER_WORDS: Record<string, string> = { DRAFT: "Draft", APPROVED: "Approved", RELEASED: "Released" };
 
 export const SOURCE_WORDS: Record<string, string> = {
   SANCTION: "Sanction",

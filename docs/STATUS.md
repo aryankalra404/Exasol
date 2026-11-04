@@ -15,6 +15,7 @@ Live task board. Update it when you start, finish, block or cut something. Keep 
 
 Breaking or notable changes to `CONTRACT.md` that others must react to. Newest first.
 
+- 0.5.0 (4 Nov): review log and release endpoints; `PUT /api/policy/settings` now requires `changed_by` and `reason`. App only
 - 0.4.0 (31 Oct): additive, data and inspection-pack endpoints, uploaded books. No action needed
 - 0.3.0 (31 Oct): additive, `SAHI_ASK` views + `ASK_READER` user for ask-the-book. No action needed
 - 0.2.0 (30 Oct): reserved-word renames (`state_name`, `evidence_source`), `SAHI_WORK`, new OUT tables. See CONTRACT changelog
@@ -78,6 +79,12 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | L2 | Hindi + Tamil (Tier 1) | Aryan | done | Tamil template, UI toggle, checker test in `tests/test_letters.py` |
 | G1 | Ask-the-book via Exasol MCP (Tier 2) | Aryan | done | `docs/ASK.md`: `SAHI_ASK` views, read-only `ASK_READER`, `scripts/ask_mcp.py`, `.mcp.json`, `make ask-smoke` |
 
+### Finale (demo day Fri 6 Nov 2026, 10:00 am IST)
+| # | Task | Owner | State | Notes |
+|---|---|---|---|---|
+| R1 | Human review layer + letter release | Aryan | done | `sql/06`, `app/api/review.py`, Review & release page, `tests/test_review.py`. Run on Exasol through the API and through the real buttons in headless Chrome |
+| R2 | Human checks: letters, oracle, auditor, RBI text | | todo | sheets in `docs/HUMAN_CHECKS.md`; only people can do these |
+
 ### Submission
 | # | Task | Owner | State | Notes |
 |---|---|---|---|---|
@@ -120,7 +127,9 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Intermediate rows at 500k | 21.1M fair intervals, 56.5M difference intervals, 17.5M candidate figures | s7_n500000 | 31 Oct 2026 |
 | Oracle agreement | 69,895 / 69,895 periods (fair figure, status, matched convention), largest deviation 0 paise | s7_n500000, random 3,003 loans | 31 Oct 2026 |
 | Cold start from a fresh clone | `make setup`, `make demo LOANS=10000` (19.9 s), `make test` 20 passed, `make oracle` 232,890 / 232,890, 0 paise; refund total identical to the paisa to the original machine's run; working tree clean | s42_n10000, MacBook Air M4 24 GB | 31 Oct 2026 |
-| Tests | 26 passed locally with Exasol; CI runs 21 (db tests skip) | | 31 Oct 2026 |
+| Letter release, whole book | 3,062 letters checked and stored in 0.48 s, ZIP of the batch in 0.18 s; 3,075 ledger rows approved by filter in 0.2 s | s42_n10000, MacBook Exasol VM 2 vCPU / 12 GB | 4 Nov 2026 |
+| Stale approvals | All rows approved and released, then LMS fallback off and re-run: 41 rows needed re-review, 72 released letters flagged. Commitment fee off instead: 0 stale, 250 new draft letters | s42_n10000 | 4 Nov 2026 |
+| Tests | 34 passed locally with Exasol | | 4 Nov 2026 |
 
 ## Blockers and open questions
 

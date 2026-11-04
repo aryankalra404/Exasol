@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { day, describeConvention, go, inr, MODE_WORDS, month, n, plural, sources, useApi } from "../lib";
+import { day, describeConvention, go, inr, MODE_WORDS, month, n, plural, post, REVIEW_WORDS, sources, useApi, useReviewer } from "../lib";
+import { ActorFields } from "./Review";
 
 const TABS: [string, string, string][] = [
   ["gaps", "Evidence gaps", "The money-in-hand date cannot be decided. A query to the branch is drafted for each."],
   ["unexplained", "Unexplained", "No known calculation method reproduces the posted amount. Needs manual review."],
-  ["ambiguous", "Ambiguous", "The overcharge is certain, but more than one practice explains it equally well."],
+  ["ambiguous", "Ambiguous", "The overcharge is certain, but more than one practice explains it equally well. When counted in the total, approve these in Review and release, as practice AMB."],
   ["permitted", "Permitted", "The posting matches a term the KFS disclosed, and policy allows it. No refund."],
   ["undercharge", "Undercharge", "The lender posted less than the fair amount. Nothing to refund; listed for completeness."],
 ];
@@ -102,18 +103,38 @@ function Gaps({ runId }: { runId: string }) {
 function FindingQueue({ runId, status }: { runId: string; status: string }) {
   const [page, setPage] = useState(1);
   useEffect(() => setPage(1), [runId, status]);
-  const { data } = useApi<any[]>(`/runs/${runId}/queue/${status}?page=${page}&size=${ROWS_PER_PAGE}`, [runId, status, page]);
+  const [ver, setVer] = useState(0);
+  const [name, setName] = useReviewer();
+  const [why, setWhy] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const { data } = useApi<any[]>(`/runs/${runId}/queue/${status}?page=${page}&size=${ROWS_PER_PAGE}`, [runId, status, page, ver]);
+  const unexplained = status === "UNEXPLAINED";
+  const decide = async (r: any, decision: string) => {
+    setErr(null);
+    try {
+      await post(`/runs/${r.run_id}/review/unexplained`, { loan_id: r.loan_id, period_start: r.period_start, decision, reviewer: name, reason: why });
+      setVer((v) => v + 1);
+    } catch (e: any) { setErr(e.message); }
+  };
   if (!data) return <div className="loading">Loading…</div>;
   if (!data.length) return <div className="empty">Nothing in this queue for this run.</div>;
   const total = Number(data[0].total_rows ?? data.length);
   const onPage = (p: number) => { setPage(p); window.scrollTo({ top: 0 }); };
   return (
+    <>
+    {unexplained && (
+      <>
+        <p className="small muted" style={{ marginTop: 0 }}>Record the outcome of a manual look. This moves no money: to change a refund, correct the evidence or the policy and re-run.</p>
+        <ActorFields name={name} setName={setName} reason={why} setReason={setWhy} why="What did you find?" />
+        {err && <div className="verdict warn" style={{ marginBottom: 12 }}>{err}</div>}
+      </>
+    )}
     <div className="card">
       <div className="pad" style={{ borderBottom: "1px solid var(--rule-2)", paddingTop: 10, paddingBottom: 10 }}>
         <Pager page={page} size={ROWS_PER_PAGE} total={total} onPage={onPage} noun="billing month" />
       </div>
       <table className="t">
-        <thead><tr><th>Borrower</th><th>Loan</th><th>Month</th><th className="r">Posted</th><th className="r">Fair</th><th className="r">Difference</th><th>Why it is here</th></tr></thead>
+        <thead><tr><th>Borrower</th><th>Loan</th><th>Month</th><th className="r">Posted</th><th className="r">Fair</th><th className="r">Difference</th><th>Why it is here</th>{unexplained && <th>Review</th>}</tr></thead>
         <tbody>
           {data.map((r) => (
             <tr key={r.loan_id + r.period_start + (r.practice_code ?? "")} className="click" onClick={() => go(`/loan/${r.loan_id}?period=${r.period_start}`)}>
@@ -124,6 +145,16 @@ function FindingQueue({ runId, status }: { runId: string; status: string }) {
               <td className="r">{inr(r.fair_paise)}</td>
               <td className="r">{inr(r.excess_paise)}</td>
               <td className="small muted" style={{ maxWidth: 420 }}>{reason(r)}</td>
+              {unexplained && (
+                <td className="small" onClick={(e) => e.stopPropagation()}>
+                  <span className={`tag ${r.review_state}`}>{REVIEW_WORDS[r.review_state]}</span>
+                  {r.decided_by && <div className="tiny faint" title={r.review_reason}>{r.decided_by}: {r.review_reason}</div>}
+                  <div className="nowrap" style={{ marginTop: 4 }}>
+                    <button className="btn mini" onClick={() => decide(r, "CLEARED")}>Clear</button>{" "}
+                    <button className="btn ghost mini" onClick={() => decide(r, "HOLD")}>Hold</button>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -132,6 +163,7 @@ function FindingQueue({ runId, status }: { runId: string; status: string }) {
         <Pager page={page} size={ROWS_PER_PAGE} total={total} onPage={onPage} noun="billing month" />
       </div>
     </div>
+    </>
   );
 }
 

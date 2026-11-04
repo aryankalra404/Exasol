@@ -105,11 +105,12 @@ docs/
   LIMITS.md          limitations, assumptions, known gaps
   DEMO.md            3-min video script and live demo plan
   ASK.md             ask the book over MCP (read-only)
+  HUMAN_CHECKS.md    checks only people can do, with sheets to fill in
   SUBMISSION.md      submission checklist
 generator/           synthetic loan book (Python, fixed seeds)
 sql/                 numbered pipeline steps, one step per file
 oracle/              independent Python recompute (exact Decimal)
-app/api/             FastAPI over result tables (reads only; writes policy settings, starts runs)
+app/api/             FastAPI over result tables (reads figures; writes policy settings and the review log, starts runs)
 app/web/             React + Vite auditor UI (static build served by the API)
 letters/             borrower letter templates + number checker
 tests/               unit, oracle agreement, fixtures, false positives
@@ -150,6 +151,7 @@ make generate LOANS=10000   # synthetic book -> data/s42_n10000 (SEED=42 default
 make load LOANS=10000       # schemas + IMPORT into Exasol
 make audit                  # run the SQL pipeline in Exasol (records run, timings, lineage)
 make demo LOANS=10000       # generate + load + audit
+make review-reset           # clear review records for the loaded synthetic book, to rehearse the demo
 make test                   # pytest; db tests skip without .env
 make oracle LOANS=10000     # independent oracle vs latest run, every loan
 make scale LOANS=500000     # SCALE_* schemas, timings + row counts into eval/reports/scale_*.json

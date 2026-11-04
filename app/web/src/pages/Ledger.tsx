@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { go, inr, month, n, PRACTICE, useApi } from "../lib";
+import { go, inr, month, n, PRACTICE, REVIEW_WORDS, useApi } from "../lib";
 
 export default function Ledger({ runId, params }: { runId: string; params: URLSearchParams }) {
   const practice = params.get("practice") ?? "";
@@ -27,7 +27,10 @@ export default function Ledger({ runId, params }: { runId: string; params: URLSe
           <h1>Refund ledger</h1>
           <p>One row per loan and practice, refundable findings only. Gaps, unexplained and permitted postings are in Work queues.</p>
         </div>
-        <a className="btn" href={csv}>Export CSV</a>
+        <div className="filters" style={{ margin: 0 }}>
+          <a className="btn ghost" href="#/review">Review and release</a>
+          <a className="btn" href={csv}>Export CSV</a>
+        </div>
       </div>
       <div className="filters">
         <select value={practice} onChange={(e) => set("practice", e.target.value)}>
@@ -57,7 +60,7 @@ export default function Ledger({ runId, params }: { runId: string; params: URLSe
       {error && <div className="empty">{error}</div>}
       <div className="card">
         <table className="t">
-          <thead><tr><th>Borrower</th><th>Loan</th><th>Branch</th><th>Practice</th><th>Months</th><th className="r">Periods</th><th className="r">Days</th><th className="r">Excess</th></tr></thead>
+          <thead><tr><th>Borrower</th><th>Loan</th><th>Branch</th><th>Practice</th><th>Months</th><th className="r">Periods</th><th className="r">Days</th><th className="r">Excess</th><th>Review</th></tr></thead>
           <tbody>
             {(data?.rows ?? []).map((r: any) => (
               <tr key={r.loan_id + r.practice_code} className="click" onClick={() => go(`/loan/${r.loan_id}`)}>
@@ -69,6 +72,7 @@ export default function Ledger({ runId, params }: { runId: string; params: URLSe
                 <td className="r">{r.periods}</td>
                 <td className="r">{n(r.days_affected)}</td>
                 <td className="r">{inr(r.excess_paise)}</td>
+                <td><span className={`tag ${r.review_state}`} title={r.decided_by ? `${r.decided_by}: ${r.review_reason}` : ""}>{REVIEW_WORDS[r.review_state]}</span></td>
               </tr>
             ))}
           </tbody>

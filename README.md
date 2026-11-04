@@ -92,6 +92,7 @@ Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues 
 - **Overview**: the refund total, what is held out of it and why, excess by RBI practice and branch, *what the loan system was actually doing*, and a one-click **inspection pack** (ledger, findings, branch queries, policy used, SQL with SHA-256)
 - **Loan**: every date source per tranche on one timeline, every billing month posted vs recomputed, and *why this figure*, interval by interval, down to the SQL step
 - **Refund ledger**: filter, sort, export CSV
+- **Review & release**: a person approves or holds each refund with a name and reason; a re-run that changes a figure sends it back; only approved letters can be released, as a ZIP and manifest for the lender's own channels. This tool never contacts a borrower
 - **Work queues**: evidence gaps with drafted branch queries, unexplained, ambiguous, permitted, undercharge
 - **Fix coverage**: sanction-cohort × charge-quarter heatmap. A fix that covered only new loans shows as old cohorts still being charged
 - **Policy & re-runs**: flip an interpretation, re-run the whole book in Exasol, compare runs loan by loan
@@ -111,6 +112,7 @@ Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues 
 | `make load LOANS=10000` | Create schemas and IMPORT the book into Exasol |
 | `make audit` | Run the SQL pipeline (`sql/10..90`) inside Exasol, recording timings and lineage |
 | `make demo LOANS=10000` | generate + load + audit |
+| `make review-reset` | Clear review records for the loaded synthetic book, to rehearse the demo |
 | `make test` | pytest (database tests skip without `.env`) |
 | `make oracle LOANS=10000` | Independent Python oracle vs the latest run, every loan |
 | `make scale LOANS=500000` | Big book in separate `SCALE_*` schemas, report in `eval/reports/` |
@@ -123,6 +125,8 @@ Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues 
 "How much do we owe borrowers disbursed by cheque in 2024?" is answered by SQL over read-only views through Exasol's MCP server, with the SQL shown. The assistant's database user cannot read the truth tables or borrower names, or write anything. See [ASK](docs/ASK.md).
 
 ### Troubleshooting
+
+- **SSL or connection errors on `localhost:8563` while the database is running** (seen on macOS after the laptop woke from sleep): the launcher's port forward can lose its route to the VM. Set `EXASOL_DSN=<VM IP>:8563` in `.env`; the IP is in `local/runtime/vm.log` under the deployment directory
 
 - **Connection refused on `localhost:8563`**: the database is stopped. Run `exasol status`, then `exasol start`
 - **Authentication failed**: the password in `.env` must match `~/.exasol/personal/deployments/default/secrets.json`

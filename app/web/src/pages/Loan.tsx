@@ -1,11 +1,13 @@
-import { useMemo } from "react";
-import { CONFIDENCE_WORDS, DAYCOUNT_WORDS, day, describeConvention, go, inr, inrExact, LOAN_STATUS_WORDS, MODE_WORDS, month, plural, PRACTICE, SOURCE_WORDS, sources, STATUS_WORDS, useApi } from "../lib";
+import { useMemo, useState } from "react";
+import { CONFIDENCE_WORDS, DAYCOUNT_WORDS, day, describeConvention, go, inr, inrExact, LETTER_WORDS, LOAN_STATUS_WORDS, MODE_WORDS, month, plural, post, PRACTICE, REVIEW_WORDS, SOURCE_WORDS, sources, STATUS_WORDS, useApi, useReviewer } from "../lib";
+import { ActorFields } from "./Review";
 
 const DAY_MS = 86400000;
 const toT = (d: string) => Date.parse(d.slice(0, 10) + "T00:00:00Z");
 
 export default function Loan({ runId, loanId, period }: { runId: string; loanId?: string; period: string | null }) {
-  const { data, error } = useApi<any>(loanId ? `/runs/${runId}/loans/${loanId}` : null, [runId, loanId]);
+  const [ver, setVer] = useState(0);
+  const { data, error } = useApi<any>(loanId ? `/runs/${runId}/loans/${loanId}` : null, [runId, loanId, ver]);
   const periods: any[] = data?.periods ?? [];
   const selected = useMemo(() => {
     if (!periods.length) return null;
@@ -45,6 +47,8 @@ export default function Loan({ runId, loanId, period }: { runId: string; loanId?
           {data.ledger.length > 0 && <a className="btn" style={{ marginTop: 12 }} href={`#/letter/${loanId}`}>Borrower letter</a>}
         </div>
       </div>
+
+      {(data.review.length > 0 || data.review_history.length > 0) && <ReviewPanel data={data} onChange={() => setVer((v) => v + 1)} />}
 
       <section className="section">
         <header>
@@ -109,6 +113,74 @@ export default function Loan({ runId, loanId, period }: { runId: string; loanId?
         </section>
       )}
     </>
+  );
+}
+
+function ReviewPanel({ data, onChange }: { data: any; onChange: () => void }) {
+  const [name, setName] = useReviewer();
+  const [reason, setReason] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const decide = async (r: any, decision: string) => {
+    setErr(null);
+    try {
+      await post(`/runs/${data.run_id}/review/decisions`, { loan_id: r.loan_id, practice_code: r.practice_code, decision, reviewer: name, reason });
+      setReason("");
+      onChange();
+    } catch (e: any) { setErr(e.message); }
+  };
+  return (
+    <section className="section">
+      <header>
+        <div>
+          <h2>Review</h2>
+          <p>A person decides whether this refund goes ahead. The decision records the figure they saw; it cannot change it.</p>
+        </div>
+        {data.letter && <span className={`tag ${data.letter.letter_state}`}>Letter: {LETTER_WORDS[data.letter.letter_state]}</span>}
+      </header>
+      {err && <div className="verdict warn" style={{ marginBottom: 12 }}>{err}</div>}
+      {data.review.length > 0 && <ActorFields name={name} setName={setName} reason={reason} setReason={setReason} />}
+      <div className="card">
+        <table className="t">
+          <thead><tr><th>Practice</th><th className="r">Refund</th><th>Review</th><th>Latest decision</th><th className="r">Action</th></tr></thead>
+          <tbody>
+            {data.review.map((r: any) => (
+              <tr key={r.practice_code}>
+                <td><span className="tag code">{r.practice_code}</span> <span className="small muted">{PRACTICE[r.practice_code]}</span></td>
+                <td className="r">{inr(r.excess_paise)}</td>
+                <td><span className={`tag ${r.review_state}`}>{REVIEW_WORDS[r.review_state]}</span></td>
+                <td className="small muted">{r.decided_by ? `${r.decided_by}: ${r.review_reason}` : "-"}{r.review_state === "STALE" && <div className="tiny">Decided at {inr(r.reviewed_paise)}; the figure has changed since.</div>}</td>
+                <td className="r nowrap">
+                  <button className="btn mini" onClick={() => decide(r, "APPROVED")}>Approve</button>{" "}
+                  <button className="btn ghost mini" onClick={() => decide(r, "HOLD")}>Hold</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data.review_history.length > 0 && (
+        <details style={{ marginTop: 10 }}>
+          <summary className="small muted">All decisions on this loan ({data.review_history.length})</summary>
+          <div className="card" style={{ marginTop: 8 }}>
+            <table className="t">
+              <thead><tr><th>When (UTC)</th><th>Item</th><th>Decision</th><th className="r">Figure seen</th><th>By</th><th>Reason</th></tr></thead>
+              <tbody>
+                {data.review_history.map((h: any, i: number) => (
+                  <tr key={i}>
+                    <td className="small">{day(h.decided_at)} {String(h.decided_at).slice(11, 16)}</td>
+                    <td className="small">{h.practice_code ?? month(h.period_start)}</td>
+                    <td><span className={`tag ${h.review_decision}`}>{REVIEW_WORDS[h.review_decision]}</span></td>
+                    <td className="r">{inr(h.figure_paise)}</td>
+                    <td className="small">{h.decided_by}</td>
+                    <td className="small muted">{h.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
+    </section>
   );
 }
 

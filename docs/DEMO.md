@@ -41,9 +41,14 @@ Opening matters most: the date conflict and the matched rule must be on screen i
 - Ask the book live from an MCP client (`docs/ASK.md`): "how much do we owe borrowers disbursed by cheque in 2024?", show the SQL, then show the same client being refused a read of `SAHI_TRUTH`
 - Meena's letter in Tamil as well as English and Hindi, checker green each time
 - Data page: download the template, upload it as a book (three loans), show Meena's ₹2,301.37 again on an uploaded book, then reload the sample. Answers "how would a lender use this?" on screen
-- Overview: download the inspection pack and open its README
+- Before the call: check the Policy page shows defaults and the overview shows the expected total. A setting left off from a rehearsal changes every figure
+- Human sign-off, about a minute: on Meena's letter, type a name and note, click Release and show it blocked as a draft. Approve her refund on her loan page with a name and reason, then release, then open the ZIP's manifest. Say: "We never contact a borrower. A person approves, the checker confirms the figures, and the lender sends it through its own channels"
+- Stale approval, if time allows, on seed 42: approve `L000528` (P1), turn off "Accept the LMS date", re-run, and show it return to "Needs re-review". Turn the setting back on and re-run. The commitment fee flip does not show this: it moves no approved figure, it adds 250 new draft letters. Other seeds need a different loan, so find one in rehearsal
+- Overview: download the inspection pack, open its README, and show `review_decisions.csv`
 - Have ready: SQL for money-in-hand and fingerprint steps, `tests/test_rbi_fixtures.py`, `eval/reports/robustness.json`, `LIMITS.md`, answers on interpretation, data realism, and what a real lender would need to connect
 - Backup: recorded video and screenshots if the laptop or network fails
+
+Before each rehearsal on the same book, run `make review-reset` so Meena starts as a draft. A fresh seed starts clean by itself.
 
 ## Running the demo
 

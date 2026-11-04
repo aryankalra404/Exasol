@@ -23,6 +23,7 @@ def load(dataset_dir: Path) -> dict:
     conn = connect()
     run_file(conn, SQL_DIR / "01_raw_schema.sql")
     run_file(conn, SQL_DIR / "05_policy_and_out_schema.sql")
+    run_file(conn, SQL_DIR / "06_review_schema.sql")
     counts = {}
     t0 = time.perf_counter()
     for sub, tables, schema in (("raw", RAW_TABLES, s["RAW"]), ("truth", TRUTH_TABLES, s["TRUTH"])):

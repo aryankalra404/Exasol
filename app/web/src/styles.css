@@ -170,6 +170,10 @@ table.t td.num, table.t td.r { font-family: var(--mono); font-variant-numeric: t
 .tag.CONFIRMED { background: var(--ok-soft); color: var(--ok); }
 .tag.FALLBACK { background: var(--paper-2); color: var(--ink-2); }
 .tag.code { background: var(--ink); color: var(--paper); }
+.tag.APPROVED, .tag.RELEASED, .tag.CLEARED { background: var(--ok-soft); color: var(--ok); }
+.tag.HOLD { background: var(--slate-soft); color: var(--slate); }
+.tag.STALE, .tag.DRAFT { background: var(--warn-soft); color: var(--warn); }
+.tag.UNREVIEWED { background: var(--paper-2); color: var(--ink-2); }
 
 /* controls */
 .btn {
@@ -180,10 +184,14 @@ table.t td.num, table.t td.r { font-family: var(--mono); font-variant-numeric: t
 .btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
 .btn.ghost:hover { border-color: var(--ink); }
 .btn:disabled { opacity: 0.5; cursor: progress; }
+.btn.mini { padding: 3px 9px; font-size: 12.5px; }
+.nowrap { white-space: nowrap; }
+.actor .grow { flex: 1 1 260px; }
 .legend-row { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 14px; }
 .legend-row .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
 .pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 0 12px; }
 .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.actor input { min-width: 170px; }
 .filters select, .filters input {
   font: inherit; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--card);
 }

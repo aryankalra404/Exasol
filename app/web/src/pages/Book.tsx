@@ -1,7 +1,10 @@
 import { describeConvention, inr, month, n, plural, PRACTICE, seconds, sentence, useApi } from "../lib";
 
+const paiseIn = (rows: any[] | undefined, state: string) => rows?.find((r) => r.review_state === state)?.excess_paise ?? 0;
+
 export default function Book({ runId }: { runId: string }) {
   const { data, error } = useApi<any>(`/runs/${runId}/summary`, [runId]);
+  const review = useApi<any>(`/runs/${runId}/review/summary`, [runId]).data;
   if (error) return <div className="empty">{error}</div>;
   if (!data) return <div className="loading">Reading the audit run from Exasol…</div>;
   const s = data.summary;
@@ -28,7 +31,9 @@ export default function Book({ runId }: { runId: string }) {
           <div className="filters" style={{ marginTop: 16, marginBottom: 0 }}>
             <a className="btn" href={`/api/runs/${run.run_id}/inspection-pack.zip`}>Download inspection pack</a>
             <a className="btn ghost" href="#/ledger">Open refund ledger</a>
+            <a className="btn ghost" href="#/review">Review and release</a>
           </div>
+          {review && <p className="small" style={{ marginTop: 10 }}><b className="num">{inr(paiseIn(review.by_state, "APPROVED"), { paise: false })}</b> approved by a reviewer, of <span className="num">{inr(review.ledger_total, { paise: false })}</span> owed. No refund letter leaves until a person approves it.</p>}
           <p className="tiny faint" style={{ marginTop: 8 }}>The pack holds the ledger, every finding, the branch queries, the policy used and the SQL with its fingerprints, for the inspector.</p>
         </div>
         <div className="facts">

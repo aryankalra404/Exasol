@@ -131,6 +131,20 @@ The audit compares the **net** posted amount per (loan, period) after reversals.
 
 **conventions**: `convention_id VARCHAR(40) PK`, `start_basis`, `principal_basis`, `advance_treatment`, `month_rounding`, `is_fair BOOLEAN`, `unfair_dimension_count DECIMAL(1,0)`, `is_permitted_variant BOOLEAN`, `practice_codes VARCHAR(20)` (e.g. `P2,P3`). Rebuilt by `sql/05`, 33 rows. `convention_id` = start (`MIH`, `CHQ`, `SNC`, `AGR`) `|` principal (`DIS`, `SAN`) `|` advance (`NET`, `IGN`) `|` month (`EXACT`, `FULL`); fair is `MIH|DIS|NET|EXACT`; the commitment fee variant is `CFEE`
 
+## SAHI_POLICY: human review log (`sql/06_review_schema.sql`)
+
+Append-only records of what people decided, kept across re-runs and scoped by `dataset_id`. The app writes them; the audit pipeline never reads them, so they cannot change a computed figure. Figures are copied from `SAHI_OUT` by the INSERT, never sent by the browser.
+
+**review_decisions**: `decision_seq IDENTITY`, `action_id VARCHAR(36)` (shared by a filtered approval), `dataset_id`, `run_id`, `item_kind` (`LEDGER`, `UNEXPLAINED`), `loan_id`, `practice_code` (LEDGER), `period_start` (UNEXPLAINED), `figure_paise DECIMAL(18,0)` (the figure the reviewer saw), `review_decision` (`APPROVED`, `HOLD` for LEDGER; `CLEARED`, `HOLD` for UNEXPLAINED), `decided_by`, `reason`, `decided_at`. The latest row per item counts. Review state: `UNREVIEWED` with no decision, `STALE` when `figure_paise` differs from the run's figure, otherwise the decision
+
+**policy_changes**: `change_seq IDENTITY`, `setting_key`, `old_value`, `new_value`, `changed_by`, `reason`, `changed_at`
+
+**letter_releases**: `release_seq IDENTITY`, `batch_id`, `dataset_id`, `run_id`, `loan_id`, `letter_lang`, `excess_paise`, `approved_by`, `released_by`, `released_at`, `text_sha256`, `letter_text VARCHAR(20000)`
+
+**release_batches**: `batch_id`, `dataset_id`, `run_id`, `released_by`, `batch_note`, `released_at`, `letter_count`, `total_paise`
+
+Letter state per refundable loan: `DRAFT` until every ledger row of the loan is `APPROVED`, then `APPROVED`, then `RELEASED` once a letter for this exact total has been released. Released means handed over for dispatch, not delivered.
+
 ## SAHI_OUT (pipeline results; the app reads only these, SAHI_POLICY and SAHI_RAW)
 
 Every table has `run_id` first. DDL lives in the SQL step that fills the table.
@@ -200,8 +214,9 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - `GET /api/runs/{run_id}/inspection-pack.zip`: README with totals, refund_ledger, findings, evidence_gaps, run_summary, step_timings, lineage CSVs, policy_snapshot.json and the SQL files
 - `GET /api/data/status` (loaded dataset, synthetic or uploaded, row counts, latest run), `GET /api/data/templates.zip`
 - `POST /api/data/upload` (body: a ZIP of one CSV per `SAHI_RAW` table, header row, any column order; checked against `sql/01_raw_schema.sql` before loading; returns `{ok:false, errors}` or loads, audits and returns the run), `POST /api/data/sample` (reload the synthetic sample)
+- `GET /api/runs/{run_id}/review/summary`; `POST /api/runs/{run_id}/review/decisions`, `/review/approve-filtered` (needs a filter; touches `UNREVIEWED` rows only), `/review/unexplained`, `/releases` (409 on any draft or checker failure, nothing released); `GET /api/releases/{batch_id}/letters.zip`. Writes need `reviewer` and `reason`, and apply to the latest run only (409 otherwise). Ledger rows gain `review_state`, `decided_by`, `review_reason`, `decided_at`, and the ledger takes `review=`; loan and letter responses gain `run_id` and review state; the inspection pack gains `review_decisions.csv`, `policy_changes.csv`, `release_batches.csv`, `letter_releases.csv`
 - `GET /api/lineage`, `GET /api/lineage/{sql_step_id}` (includes the SQL text)
-- `GET/PUT /api/policy/settings`, `POST /api/runs` (re-run the pipeline), `GET /api/compare/{a}/{b}`, `GET /api/search?q=`
+- `GET/PUT /api/policy/settings` (PUT requires `changed_by` and `reason`; GET adds `changes`), `POST /api/runs` (re-run the pipeline), `GET /api/compare/{a}/{b}`, `GET /api/search?q=`
 
 ## Changelog
 
@@ -210,3 +225,4 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - 0.3.0 (31 Oct 2026): additive. New schema `SAHI_ASK` (views, latest run) and user `ASK_READER`; env `EXASOL_SCHEMA_ASK`, `EXASOL_ASK_USER`, `EXASOL_ASK_PASSWORD`. Affects nobody else
 - 0.3.1 (31 Oct 2026): additive. Work-queue API takes `page` and `size` (replaces `limit`) and returns `total_rows`. Affects app only
 - 0.4.0 (31 Oct 2026): additive. Data and inspection-pack endpoints. An uploaded book gets `dataset_id = upload_<UTC timestamp>`, `generator_version = 'upload'`, empty truth tables, and is stored under `data/uploads/`. Affects app only
+- 0.5.0 (4 Nov 2026): breaking for `PUT /api/policy/settings` callers (now requires `changed_by`, `reason`); otherwise additive. Human review log in `SAHI_POLICY`, review and release endpoints. Pipeline, oracle and generator unaffected. Affects app only

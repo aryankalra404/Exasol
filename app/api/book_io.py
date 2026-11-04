@@ -19,6 +19,7 @@ import zipfile
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from app.api.review import ledger_review_sql
 from generator.generate import COLUMNS, generate
 from scripts.db import ROOT
 from scripts.load import RAW_TABLES, TRUTH_TABLES
@@ -204,7 +205,7 @@ def _csv(data: list[dict]) -> str:
     return buf.getvalue()
 
 
-def inspection_pack(rid: str, rows, out_schema: str, raw_schema: str) -> bytes:
+def inspection_pack(rid: str, rows, out_schema: str, raw_schema: str, policy_schema: str | None = None) -> bytes:
     """Everything an inspector needs for one run, copied out of Exasol as it stands. `rows(sql, params)` reads."""
     p = {"r": rid}
     run = rows(f"SELECT * FROM {out_schema}.audit_runs WHERE run_id = {{r}}", p)[0]
@@ -216,6 +217,20 @@ def inspection_pack(rid: str, rows, out_schema: str, raw_schema: str) -> bytes:
     gaps = rows(f"SELECT * FROM {out_schema}.evidence_gaps WHERE run_id = {{r}} ORDER BY branch_id, loan_id, tranche_no", p)
     timings = rows(f"SELECT * FROM {out_schema}.step_timings WHERE run_id = {{r}} ORDER BY started_at", p)
     lineage = rows(f"SELECT * FROM {out_schema}.lineage ORDER BY sql_step_id")
+    review_files: dict[str, list[dict]] = {}
+    if policy_schema:
+        scope = f"WHERE dataset_id = (SELECT dataset_id FROM {out_schema}.audit_runs WHERE run_id = {{r}})"
+        review_files = {
+            "review_decisions.csv": rows(f"SELECT decision_seq, run_id, item_kind, loan_id, practice_code, period_start, figure_paise, "
+                                         f"review_decision, decided_by, reason, decided_at FROM {policy_schema}.review_decisions "
+                                         f"{scope} ORDER BY decision_seq", p),
+            "policy_changes.csv": rows(f"SELECT setting_key, old_value, new_value, changed_by, reason, changed_at "
+                                       f"FROM {policy_schema}.policy_changes ORDER BY change_seq"),
+            "release_batches.csv": rows(f"SELECT batch_id, run_id, released_by, batch_note, released_at, letter_count, total_paise "
+                                        f"FROM {policy_schema}.release_batches {scope} ORDER BY released_at", p),
+            "letter_releases.csv": rows(f"SELECT batch_id, run_id, loan_id, letter_lang, excess_paise, approved_by, released_by, "
+                                        f"released_at, text_sha256 FROM {policy_schema}.letter_releases {scope} ORDER BY release_seq", p),
+        }
 
     def rupees(paise) -> str:
         s = str(paise)
@@ -231,6 +246,13 @@ def inspection_pack(rid: str, rows, out_schema: str, raw_schema: str) -> bytes:
             groups.insert(0, head)
         return f"{'-' if neg else ''}Rs {','.join(groups + [tail]) if groups else tail}.{frac}"
 
+    review_note = ""
+    if policy_schema:
+        states = rows(f"SELECT review_state, COUNT(*) AS row_count, SUM(excess_paise) AS excess_paise "
+                      f"FROM ({ledger_review_sql(out_schema, policy_schema)}) x GROUP BY review_state ORDER BY 1", p)
+        review_note = "\n## Human review of this ledger (names are self-declared)\n\n" + "".join(
+            f"- {s['review_state']}: {s['row_count']} rows, {rupees(s['excess_paise'])}\n" for s in states)
+
     note = f"""# Inspection pack
 
 Run {rid}, dataset {run['dataset_id']}, label "{run['label']}"
@@ -243,7 +265,7 @@ Started {run['started_at']} UTC, {run['duration_ms']} ms inside Exasol, code ver
 - Evidence gaps (not in the total): {summary['gap_tranches']} tranches on {summary['gap_loans']} loans
 - Unexplained postings (not in the total): {summary['unexplained_periods']} billing months on {summary['unexplained_loans']} loans
 - Loans audited: {summary['loans_audited']}; billing months recomputed: {summary['periods_audited']}
-
+{review_note}
 ## Files
 
 - refund_ledger.csv: one row per loan and RBI practice; finding_ids link to findings.csv
@@ -251,6 +273,9 @@ Started {run['started_at']} UTC, {run['duration_ms']} ms inside Exasol, code ver
 - evidence_gaps.csv: tranches that could not be decided, with the query drafted to each branch
 - policy_snapshot.json: the interpretation settings and date-precedence rules this run used
 - step_timings.csv and lineage.csv: each SQL step, its time, its file and the SHA-256 of that file
+- review_decisions.csv: every approve, hold or clear, with who, why and the figure they saw; re-reviews add rows
+- policy_changes.csv: every change to a policy setting, with who and why
+- release_batches.csv and letter_releases.csv: letters handed over for dispatch; this tool does not send them
 - sql/: the SQL files as they are in this copy of the code; compare their SHA-256 with lineage.csv
 
 Every figure was computed by SQL inside Exasol. This pack is a copy; nothing in it was recalculated.
@@ -265,6 +290,8 @@ Every figure was computed by SQL inside Exasol. This pack is a copy; nothing in 
         z.writestr(base + "step_timings.csv", _csv(timings))
         z.writestr(base + "lineage.csv", _csv(lineage))
         z.writestr(base + "run_summary.csv", _csv([summary]))
+        for name, data in review_files.items():
+            z.writestr(base + name, _csv(data))
         try:
             z.writestr(base + "policy_snapshot.json", json.dumps(json.loads(run["policy_snapshot"]), indent=2))
         except (TypeError, ValueError):

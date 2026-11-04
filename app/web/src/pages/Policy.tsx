@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Run } from "../App";
-import { api, day, inr, MODE_WORDS, n, PRACTICE, seconds, SOURCE_WORDS, useApi } from "../lib";
+import { api, day, inr, MODE_WORDS, n, PRACTICE, seconds, SOURCE_WORDS, useApi, useReviewer } from "../lib";
+import { ActorFields } from "./Review";
 
 const HELP: Record<string, string> = {
   commitment_fee_permitted_if_disclosed: "If on, a fee from the sanction date that the Key Facts Statement disclosed is listed as permitted, not refunded.",
@@ -27,6 +28,8 @@ const NICE: Record<string, string> = {
 export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: string) => void }) {
   const { data, setData } = useApi<any>(`/policy/settings`, []);
   const [busy, setBusy] = useState(false);
+  const [name, setName] = useReviewer();
+  const [why, setWhy] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [last, setLast] = useState<any>(null);
   const [a, setA] = useState<string>("");
@@ -38,7 +41,7 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
   const save = async (key: string, value: string) => {
     setErr(null);
     try {
-      setData(await api("/policy/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ setting_key: key, setting_value: value }) }));
+      setData(await api("/policy/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ setting_key: key, setting_value: value, changed_by: name, reason: why }) }));
     } catch (e: any) { setErr(e.message); }
   };
   const rerun = async () => {
@@ -66,6 +69,8 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
       <div className="grid g2" style={{ alignItems: "start" }}>
         <div className="card pad">
           <h2>Settings</h2>
+          <p className="small muted">Every change records who made it and why, and goes in the inspection pack.</p>
+          <ActorFields name={name} setName={setName} reason={why} setReason={setWhy} why="Reason for this change" />
           {(data?.settings ?? []).map((s: any) => {
             const bool = s.setting_value === "true" || s.setting_value === "false";
             return (
@@ -144,6 +149,20 @@ export default function Policy({ runs, onRun }: { runs: Run[]; onRun: (id: strin
           </>
         )}
         {!cmp.data && <div className="empty">Re-run with a different policy to compare.</div>}
+      </section>
+
+      <section className="section">
+        <header><h2>Policy change log</h2></header>
+        <div className="card">
+          <table className="t">
+            <thead><tr><th>When (UTC)</th><th>Setting</th><th>Change</th><th>By</th><th>Reason</th></tr></thead>
+            <tbody>{(data?.changes ?? []).map((c: any, i: number) => (
+              <tr key={i}><td className="small">{day(c.changed_at)} {String(c.changed_at).slice(11, 16)}</td><td className="small">{NICE[c.setting_key] ?? c.setting_key}</td>
+                <td className="small mono">{c.old_value} → {c.new_value}</td><td className="small">{c.changed_by}</td><td className="small muted">{c.reason}</td></tr>
+            ))}</tbody>
+          </table>
+          {data && !data.changes?.length && <div className="empty">No changes recorded yet.</div>}
+        </div>
       </section>
 
       <section className="section">

@@ -33,6 +33,15 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 - **The assistant writes the SQL, so it can ask the wrong question.** Exasol computes every number, and the SQL is always shown, but a mis-joined query gives a wrong answer. The refund ledger and the screens remain the record; answers are for exploration
 - Only the latest completed run is visible; comparing runs is done in the app
 
+## Review and release
+
+- **Released does not mean delivered.** This tool never contacts a borrower; it hands approved letters over as a ZIP and cannot see what happens next
+- **A review cannot edit a figure.** To change a refund, correct the evidence or policy and re-run
+- **An approval follows the figure, not the reasoning.** It stays valid across re-runs while that row's amount is unchanged, even if the policy behind it changed
+- **Evidence gaps have no review decision yet.** They already leave the total and carry a branch query, but the app does not record that a query was sent or answered
+- **Ambiguous months are reviewed per loan,** as the `AMB` ledger row, and only while counted in the refund total
+- **A released letter whose figure later changes is flagged,** on Review and release, but no correction letter is drafted
+
 ## Assumptions not yet validated
 
 - **How auditors test interest charging today.** We found no public account. "They sample" is an assumption, not a finding
@@ -40,7 +49,7 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 
 ## Platform
 
-- **Single-user local tool.** No login, roles or audit-log of who changed a policy setting; a lender deployment would put the app behind its own sign-on. Data comes in through `make load` or a ZIP upload on the Data page (up to 512 MB); one book is loaded at a time
+- **Single-user local tool, self-declared names.** No login or roles. Review decisions, policy changes and releases record a typed name and reason, so the log shows what was claimed, not a verified identity, and the same name can approve and release. A lender deployment would put the app behind its own sign-on and enforce separate approver and releaser roles. Data comes in through `make load` or a ZIP upload on the Data page (up to 512 MB); one book is loaded at a time
 - **Uploaded books have no truth tables**, so fingerprint accuracy and robustness can only be measured on generated books
 
 - Runs on Exasol Personal local (single node). Scale figures are from our laptop and stated with hardware
