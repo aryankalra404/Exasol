@@ -36,6 +36,17 @@ def clean_actor(name: str, reason: str) -> tuple[str, str]:
     return name, reason
 
 
+def clean_evidence_date(event_date: str, as_of: str) -> str:
+    """A real calendar date, not after the book's as-of date. Raises ValueError with a message fit to show."""
+    try:
+        when = date.fromisoformat(event_date.strip())
+    except ValueError:
+        raise ValueError("Enter the date from the branch's reply.") from None
+    if when > date.fromisoformat(str(as_of)):
+        raise ValueError(f"That date is after this book's as-of date, {as_of}.")
+    return when.isoformat()
+
+
 def latest_decisions_sql(out: str, pol: str, kind: str) -> str:
     """The most recent decision per item for the dataset of run {r}. Earlier decisions stay in the log."""
     return f"""SELECT loan_id, practice_code, period_start, figure_paise, review_decision, decided_by, reason, decided_at,

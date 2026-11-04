@@ -100,7 +100,7 @@ export default function App() {
         {!empty && page === "ledger" && <Ledger runId={rid} params={params} />}
         {!empty && page === "review" && <Review runId={rid} params={params} onLatest={() => pickRun("latest")} />}
         {!empty && page === "loan" && <Loan runId={rid} loanId={parts[1]} period={params.get("period")} />}
-        {!empty && page === "queues" && <Queues runId={rid} tab={parts[1] ?? "gaps"} />}
+        {!empty && page === "queues" && <Queues runId={rid} tab={parts[1] ?? "gaps"} onRun={() => { pickRun("latest"); setVer((v) => v + 1); }} />}
         {!empty && page === "regression" && <Regression runId={rid} branch={parts[1]} />}
         {!empty && page === "policy" && <Policy runs={runs} onRun={() => { pickRun("latest"); setVer((v) => v + 1); }} />}
         {!empty && page === "method" && <Method runId={rid} step={parts[1]} />}

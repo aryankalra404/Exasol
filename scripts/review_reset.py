@@ -1,4 +1,4 @@
-"""Clear review records for the loaded synthetic book, to rehearse the demo from a clean slate.
+"""Clear review records and entered evidence for the loaded synthetic book, to rehearse the demo from a clean slate.
 
 Refuses on an uploaded book: the review log is an audit trail, and this exists only for synthetic rehearsals.
 
@@ -16,10 +16,11 @@ def main() -> None:
     dataset_id, version = conn.execute(f"SELECT dataset_id, generator_version FROM {s['RAW']}.dataset_info").fetchone()
     if version == "upload":
         raise SystemExit("The loaded book is an upload. Its review log is an audit trail and will not be cleared.")
-    for table in ("review_decisions", "letter_releases", "release_batches"):
+    for table in ("review_decisions", "letter_releases", "release_batches", "evidence_additions"):
         st = conn.execute(f"DELETE FROM {s['POLICY']}.{table} WHERE dataset_id = {{d}}", {"d": dataset_id})
         print(f"{table}: {st.rowcount()} rows cleared for {dataset_id}")
     conn.close()
+    print("If evidence was cleared, run `make audit` so the results match.")
 
 
 if __name__ == "__main__":

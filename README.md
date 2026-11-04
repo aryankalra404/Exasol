@@ -93,7 +93,7 @@ Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues 
 - **Loan**: every date source per tranche on one timeline, every billing month posted vs recomputed, and *why this figure*, interval by interval, down to the SQL step
 - **Refund ledger**: filter, sort, export CSV
 - **Review & release**: a person approves or holds each refund with a name and reason; a re-run that changes a figure sends it back; only approved letters can be released, as a ZIP and manifest for the lender's own channels. This tool never contacts a borrower
-- **Work queues**: evidence gaps with drafted branch queries, unexplained, ambiguous, permitted, undercharge
+- **Work queues**: evidence gaps with drafted branch queries, and entry of the branch's reply: enter the date, re-run, and the same SQL rules decide the result. Also unexplained, ambiguous, permitted, undercharge
 - **Fix coverage**: sanction-cohort × charge-quarter heatmap. A fix that covered only new loans shows as old cohorts still being charged
 - **Policy & re-runs**: flip an interpretation, re-run the whole book in Exasol, compare runs loan by loan
 - **Letter**: borrower refund letter in English, Hindi or Tamil, every figure from the ledger, rejected by the checker if any figure differs
@@ -112,7 +112,7 @@ Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues 
 | `make load LOANS=10000` | Create schemas and IMPORT the book into Exasol |
 | `make audit` | Run the SQL pipeline (`sql/10..90`) inside Exasol, recording timings and lineage |
 | `make demo LOANS=10000` | generate + load + audit |
-| `make review-reset` | Clear review records for the loaded synthetic book, to rehearse the demo |
+| `make review-reset` | Clear review records and entered evidence for the loaded synthetic book, to rehearse the demo |
 | `make test` | pytest (database tests skip without `.env`) |
 | `make oracle LOANS=10000` | Independent Python oracle vs the latest run, every loan |
 | `make scale LOANS=500000` | Big book in separate `SCALE_*` schemas, report in `eval/reports/` |

@@ -38,7 +38,7 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 - **Released does not mean delivered.** This tool never contacts a borrower; it hands approved letters over as a ZIP and cannot see what happens next
 - **A review cannot edit a figure.** To change a refund, correct the evidence or policy and re-run
 - **An approval follows the figure, not the reasoning.** It stays valid across re-runs while that row's amount is unchanged, even if the policy behind it changed
-- **Evidence gaps have no review decision yet.** They already leave the total and carry a branch query, but the app does not record that a query was sent or answered
+- **Branch replies are entered one at a time, and the document is not stored.** The app keeps the date, a reference and who entered it. It does not record that a query was sent, and it cannot check the date against the document. A wrong date changes the result until it is withdrawn and the audit re-run
 - **Ambiguous months are reviewed per loan,** as the `AMB` ledger row, and only while counted in the refund total
 - **A released letter whose figure later changes is flagged,** on Review and release, but no correction letter is drafted
 

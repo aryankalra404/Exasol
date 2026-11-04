@@ -10,6 +10,7 @@ Rows out are from the 10,003-loan demo book (seed 42), run on 30 Oct 2026; see `
 |---|---|---|---|
 | Load | Create schemas, import synthetic extracts | `sql/01_raw_schema.sql`, `scripts/load.py` | `IMPORT ... FROM CSV` via pyexasol |
 | Policy seed | Settings, precedence, practices, 33 conventions (as a cross join of four value lists) | `sql/05_policy_and_out_schema.sql` | `VALUES` tables, `CROSS JOIN`, idempotent seeding |
+| Entered evidence | A date from a branch reply joins the evidence that S20 resolves; the re-run decides the result. No amount is entered | `sql/06_review_schema.sql`, `sql/20_money_in_hand.sql` | `UNION ALL` into the same set-based resolution |
 | Review log | Tables for human decisions, policy changes and released letters; review states and approved totals are computed by SQL from them. Not an audit step: the pipeline never reads these | `sql/06_review_schema.sql`, `app/api/review.py` | `IDENTITY` columns, window functions, `INSERT ... SELECT` so figures come from result tables |
 | S10 Run setup | Snapshot policy, find the audit window from the data, months, rate spans, loan facts | `sql/10_run_setup.sql` | `CONNECT BY` number generator, `LEAD`, `ROW_NUMBER` |
 | S20 Money-in-hand | Resolve the real disbursement date per tranche from conflicting evidence using the precedence table; flag conflicts and gaps | `sql/20_money_in_hand.sql` | window functions over evidence, `GROUP_CONCAT` |

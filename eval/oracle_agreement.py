@@ -22,6 +22,16 @@ def latest_run(conn) -> str:
                         f"ORDER BY started_at DESC LIMIT 1").fetchval()
 
 
+def entered_evidence(conn) -> list[dict]:
+    """Dates a person entered from a branch reply are audit input, so the oracle reads them too."""
+    s = schemas()
+    cols = ["loan_id", "tranche_no", "evidence_source", "event_date"]
+    return [dict(zip(cols, r)) for r in conn.execute(
+        f"SELECT a.loan_id, a.tranche_no, a.evidence_source, TO_CHAR(a.event_date, 'YYYY-MM-DD') "
+        f"FROM {s['POLICY']}.evidence_additions a JOIN {s['RAW']}.dataset_info i ON i.dataset_id = a.dataset_id "
+        f"WHERE a.withdrawn_at IS NULL").fetchall()]
+
+
 def compare(dataset_dir: Path, sample: int | None = None, seed: int = 7) -> dict:
     s = schemas()
     conn = connect()
@@ -34,7 +44,7 @@ def compare(dataset_dir: Path, sample: int | None = None, seed: int = 7) -> dict
         demo = [x for x in loan_ids if x.startswith("LDM")]
         loan_ids = sorted(set(random.Random(seed).sample(loan_ids, sample)) | set(demo))
     t0 = time.perf_counter()
-    results = audit(dataset_dir, loan_ids)
+    results = audit(dataset_dir, loan_ids, entered_evidence(conn))
     oracle_s = time.perf_counter() - t0
     keys = {(r.loan_id, r.period_start) for r in results}
     sql_keys = {k for k in sql if k[0] in set(loan_ids)}

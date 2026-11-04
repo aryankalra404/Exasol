@@ -48,10 +48,13 @@ def run_audit(label: str = "", conn=None) -> dict:
     settings = conn.execute(f"SELECT setting_key, setting_value FROM {s['POLICY']}.settings ORDER BY 1").fetchall()
     precedence = conn.execute(f"SELECT payment_mode, rank, evidence_source, rule FROM {s['POLICY']}.date_precedence "
                               f"ORDER BY 1, 2").fetchall()
+    dataset_id = conn.execute(f"SELECT MAX(dataset_id) FROM {s['RAW']}.dataset_info").fetchval()
+    added = conn.execute(f"SELECT evidence_id FROM {s['POLICY']}.evidence_additions WHERE dataset_id = {{d}} "
+                         f"AND withdrawn_at IS NULL ORDER BY 1", {"d": dataset_id}).fetchall()
     snapshot = json.dumps({"settings": dict(settings),
+                           "evidence_additions": [r[0] for r in added],
                            "date_precedence": [dict(zip(["payment_mode", "rank", "evidence_source", "rule"],
                                                         [str(v) for v in r])) for r in precedence]})
-    dataset_id = conn.execute(f"SELECT MAX(dataset_id) FROM {s['RAW']}.dataset_info").fetchval()
     started = now()
     conn.execute(f"INSERT INTO {s['OUT']}.audit_runs (run_id, dataset_id, started_at, git_sha, policy_snapshot, status, label) "
                  f"VALUES ({{r}}, {{d}}, {{t}}, {{g}}, {{p}}, 'RUNNING', {{l}})",

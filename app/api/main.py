@@ -243,7 +243,13 @@ def loan(run_id: str, loan_id: str):
         "tranches": rows(f"""SELECT m.*, t.payee_type FROM {OUT}.money_in_hand m
                              JOIN {RAW}.tranches t ON t.loan_id = m.loan_id AND t.tranche_no = m.tranche_no
                              WHERE m.run_id = {{r}} AND m.loan_id = {{l}} ORDER BY m.tranche_no""", p),
-        "evidence": rows(f"SELECT * FROM {RAW}.disbursement_evidence WHERE loan_id = {{l}} ORDER BY tranche_no, event_date", p),
+        "evidence": rows(f"""SELECT evidence_id, loan_id, tranche_no, evidence_source, event_date, reference, recorded_in FROM {RAW}.disbursement_evidence
+                             WHERE loan_id = {{l}}
+                             UNION ALL
+                             SELECT a.evidence_id, a.loan_id, a.tranche_no, a.evidence_source, a.event_date, a.reference, 'REVIEWER'
+                             FROM {POL}.evidence_additions a JOIN {OUT}.audit_runs r ON r.run_id = {{r}} AND r.dataset_id = a.dataset_id
+                             WHERE a.loan_id = {{l}} AND a.added_at <= r.started_at AND (a.withdrawn_at IS NULL OR a.withdrawn_at > r.started_at)
+                             ORDER BY 3, 5""", p),
         "rates": rows(f"SELECT effective_date, annual_rate_pct FROM {RAW}.rate_history WHERE loan_id = {{l}} ORDER BY 1", p),
         "periods": rows(f"SELECT * FROM {OUT}.fingerprints WHERE run_id = {{r}} AND loan_id = {{l}} ORDER BY period_start", p),
         "findings": rows(f"SELECT * FROM {OUT}.findings WHERE run_id = {{r}} AND loan_id = {{l}} ORDER BY period_start, practice_code", p),
@@ -627,6 +633,90 @@ def review_unexplained(run_id: str, body: QueueDecisionIn):
         if not st.rowcount():
             raise HTTPException(404, "This month is not in the unexplained queue of the latest run.")
     return {"ok": True}
+
+
+# ---------- evidence: a date a person enters from a branch reply; the next run decides what it means ----------
+@app.get("/api/runs/{run_id}/evidence")
+def evidence_entries(run_id: str):
+    rid = resolve_run(run_id)
+    return rows(f"""SELECT a.evidence_id, a.loan_id, b.display_name, a.tranche_no, a.evidence_source, a.event_date, a.reference,
+                           a.added_by, a.reason, a.added_at, a.withdrawn_by, a.withdrawn_reason, a.withdrawn_at,
+                           CASE WHEN a.withdrawn_at IS NOT NULL AND a.added_at > r.started_at THEN 'NEVER_USED'
+                                WHEN a.withdrawn_at > r.started_at THEN 'WITHDRAWN_PENDING'
+                                WHEN a.withdrawn_at IS NOT NULL THEN 'WITHDRAWN'
+                                WHEN a.added_at > r.started_at THEN 'PENDING'
+                                ELSE 'IN_RUN' END AS entry_state,
+                           COALESCE(led.refund_paise, 0) AS loan_refund_paise, fnd.statuses AS loan_statuses
+                    FROM {POL}.evidence_additions a
+                    JOIN {OUT}.audit_runs r ON r.run_id = {{r}} AND r.dataset_id = a.dataset_id
+                    LEFT JOIN (SELECT loan_id, SUM(excess_paise) AS refund_paise FROM {OUT}.refund_ledger
+                               WHERE run_id = {{r}} GROUP BY loan_id) led ON led.loan_id = a.loan_id
+                    LEFT JOIN (SELECT loan_id, GROUP_CONCAT(DISTINCT status ORDER BY status SEPARATOR ',') AS statuses
+                               FROM {OUT}.findings WHERE run_id = {{r}} GROUP BY loan_id) fnd ON fnd.loan_id = a.loan_id
+                    LEFT JOIN {RAW}.loans l ON l.loan_id = a.loan_id
+                    LEFT JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
+                    ORDER BY a.added_at DESC""", {"r": rid})
+
+
+class EvidenceIn(BaseModel):
+    loan_id: str
+    tranche_no: int
+    event_date: str
+    reference: str
+    reviewer: str
+    reason: str
+
+
+@app.post("/api/runs/{run_id}/evidence")
+def evidence_add(run_id: str, body: EvidenceIn):
+    """Record the date a branch supplied for a tranche in the gap queue. No figure is entered: re-run the audit and
+    the same SQL rules decide what this date means."""
+    rid = _writable_run(run_id)
+    who, why = _actor(body.reviewer, body.reason)
+    reference = " ".join(body.reference.split())
+    if not reference:
+        raise HTTPException(400, "Enter the document reference from the branch's reply.")
+    if len(reference) > 50:
+        raise HTTPException(400, "Document reference is too long (50 characters at most).")
+    p = {"r": rid, "l": body.loan_id, "t": body.tranche_no}
+    gap = one(f"SELECT missing_source FROM {OUT}.evidence_gaps WHERE run_id = {{r}} AND loan_id = {{l}} AND tranche_no = {{t}}", p)
+    if not gap:
+        raise HTTPException(404, "This tranche is not in the evidence-gap queue of the latest run.")
+    info = one(f"SELECT dataset_id, as_of FROM {RAW}.dataset_info")
+    try:
+        when = rv.clean_evidence_date(body.event_date, info["as_of"])
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    source = str(gap["missing_source"]).split(",")[0]  # the first record the precedence rules look for
+    if one(f"""SELECT 1 AS x FROM {POL}.evidence_additions WHERE dataset_id = {{d}} AND loan_id = {{l}} AND tranche_no = {{t}}
+               AND evidence_source = {{s}} AND withdrawn_at IS NULL""", {**p, "d": info["dataset_id"], "s": source}):
+        raise HTTPException(409, "A date is already entered for this tranche. Withdraw it first if it was wrong.")
+    with db() as c:
+        c.execute(f"""INSERT INTO {POL}.evidence_additions (evidence_id, dataset_id, loan_id, tranche_no, evidence_source, event_date,
+                                                            reference, added_by, reason, added_at)
+                      VALUES ({{i}}, {{d}}, {{l}}, {{t}}, {{s}}, {{w}}, {{ref}}, {{who}}, {{why}}, {{at}})""",
+                  {**p, "i": f"RV{uuid.uuid4().hex[:12].upper()}", "d": info["dataset_id"], "s": source, "w": when,
+                   "ref": reference, "who": who, "why": why, "at": now()})
+    return evidence_entries(rid)
+
+
+class WithdrawIn(BaseModel):
+    reviewer: str
+    reason: str
+
+
+@app.post("/api/runs/{run_id}/evidence/{evidence_id}/withdraw")
+def evidence_withdraw(run_id: str, evidence_id: str, body: WithdrawIn):
+    """A wrong entry is withdrawn, never erased. The next run stops using it."""
+    rid = _writable_run(run_id)
+    who, why = _actor(body.reviewer, body.reason)
+    with db() as c:
+        st = c.execute(f"""UPDATE {POL}.evidence_additions SET withdrawn_by = {{who}}, withdrawn_reason = {{why}}, withdrawn_at = {{at}}
+                           WHERE evidence_id = {{i}} AND withdrawn_at IS NULL""",
+                       {"who": who, "why": why, "at": now(), "i": evidence_id})
+        if not st.rowcount():
+            raise HTTPException(404, "No active entry with this id.")
+    return evidence_entries(rid)
 
 
 class ReleaseIn(BaseModel):

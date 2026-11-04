@@ -1,8 +1,16 @@
 -- step: S20_MONEY_IN_HAND
 -- purpose: resolve the day each tranche's money actually reached the borrower or payee, from conflicting
 --          evidence, using the editable precedence table. Flag conflicts. Mark GAP when no defensible date.
--- inputs: {RAW}.tranches, {RAW}.disbursement_evidence, {POLICY}.date_precedence, {WORK}.cfg
+-- inputs: {RAW}.tranches, {RAW}.disbursement_evidence, {POLICY}.evidence_additions, {POLICY}.date_precedence, {WORK}.cfg
 -- outputs: {WORK}.mih, {OUT}.money_in_hand
+
+-- dates a person entered from a branch reply count as evidence for this book, unless withdrawn
+CREATE OR REPLACE TABLE {WORK}.evidence_all AS
+SELECT evidence_id, loan_id, tranche_no, evidence_source, event_date FROM {RAW}.disbursement_evidence
+UNION ALL
+SELECT a.evidence_id, a.loan_id, a.tranche_no, a.evidence_source, a.event_date
+FROM {POLICY}.evidence_additions a JOIN {RAW}.dataset_info i ON i.dataset_id = a.dataset_id
+WHERE a.withdrawn_at IS NULL;
 
 -- evidence per tranche per source. Duplicate records of one source keep the earliest date (smallest refund
 -- claim, so the conservative choice) and raise the conflict flag below.
@@ -10,7 +18,7 @@ CREATE OR REPLACE TABLE {WORK}.ev_src AS
 SELECT loan_id, tranche_no, evidence_source,
        MIN(event_date) AS first_date, MAX(event_date) AS last_date, COUNT(*) AS n_records,
        GROUP_CONCAT(evidence_id ORDER BY evidence_id SEPARATOR ',') AS evidence_ids
-FROM {RAW}.disbursement_evidence
+FROM {WORK}.evidence_all
 GROUP BY loan_id, tranche_no, evidence_source;
 
 CREATE OR REPLACE TABLE {WORK}.mih_pick AS

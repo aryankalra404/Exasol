@@ -213,7 +213,7 @@ function Tranche({ t, loan, evidence, extra }: { t: any; loan: any; evidence: an
     marks.push({ label: "Sanction", date: loan.sanction_date, kind: "ref" });
     marks.push({ label: "Agreement", date: loan.agreement_date, kind: "ref" });
   }
-  evidence.forEach((e) => marks.push({ label: SOURCE_WORDS[e.evidence_source] ?? e.evidence_source, date: e.event_date, kind: "ev", note: e.recorded_in }));
+  evidence.forEach((e) => marks.push({ label: `${SOURCE_WORDS[e.evidence_source] ?? e.evidence_source}${e.recorded_in === "REVIEWER" ? " (branch reply)" : ""}`, date: e.event_date, kind: "ev", note: e.recorded_in }));
   const all = marks.map((m) => toT(m.date)).concat(t.resolved_date ? [toT(t.resolved_date)] : []);
   const bands = extra.filter((x) => x.extra_balance_paise && toT(x.interval_end) > Math.min(...all) - 40 * DAY_MS && toT(x.interval_start) < Math.max(...all) + 40 * DAY_MS);
   bands.forEach((b) => { all.push(toT(b.interval_start)); all.push(toT(b.interval_end)); });

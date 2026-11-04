@@ -83,7 +83,7 @@ def read(path: Path) -> list[dict]:
 
 
 class Book:
-    def __init__(self, dataset_dir: Path):
+    def __init__(self, dataset_dir: Path, extra_evidence: list[dict] | None = None):
         raw = dataset_dir / "raw"
         self.loans = {r["loan_id"]: r for r in read(raw / "loans.csv")}
         self.kfs = {r["loan_id"]: r for r in read(raw / "kfs.csv")}
@@ -93,7 +93,7 @@ class Book:
         for v in self.rates.values():
             v.sort()
         evidence = defaultdict(lambda: defaultdict(list))
-        for r in read(raw / "disbursement_evidence.csv"):
+        for r in [*read(raw / "disbursement_evidence.csv"), *(extra_evidence or [])]:
             evidence[(r["loan_id"], int(r["tranche_no"]))][r["evidence_source"]].append(d(r["event_date"]))
         self.tranches = defaultdict(list)
         for r in read(raw / "tranches.csv"):
@@ -229,8 +229,8 @@ class Result:
     convention: str | None
 
 
-def audit(dataset_dir: Path, loan_ids: list[str] | None = None) -> list[Result]:
-    book = Book(dataset_dir)
+def audit(dataset_dir: Path, loan_ids: list[str] | None = None, extra_evidence: list[dict] | None = None) -> list[Result]:
+    book = Book(dataset_dir, extra_evidence)
     convs = [c for c in conventions() if c != FAIR_ID]
     results: list[Result] = []
     for loan_id in loan_ids or sorted(book.loans):

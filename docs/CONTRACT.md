@@ -137,6 +137,8 @@ Append-only records of what people decided, kept across re-runs and scoped by `d
 
 **review_decisions**: `decision_seq IDENTITY`, `action_id VARCHAR(36)` (shared by a filtered approval), `dataset_id`, `run_id`, `item_kind` (`LEDGER`, `UNEXPLAINED`), `loan_id`, `practice_code` (LEDGER), `period_start` (UNEXPLAINED), `figure_paise DECIMAL(18,0)` (the figure the reviewer saw), `review_decision` (`APPROVED`, `HOLD` for LEDGER; `CLEARED`, `HOLD` for UNEXPLAINED), `decided_by`, `reason`, `decided_at`. The latest row per item counts. Review state: `UNREVIEWED` with no decision, `STALE` when `figure_paise` differs from the run's figure, otherwise the decision
 
+**evidence_additions**: `evidence_id` (`RV...`), `dataset_id`, `loan_id`, `tranche_no`, `evidence_source`, `event_date`, `reference`, `added_by`, `reason`, `added_at`, `withdrawn_by`, `withdrawn_reason`, `withdrawn_at`. A date a person entered from a branch reply. Unlike the rest of this log, this is a **pipeline input**: S20 reads it alongside `SAHI_RAW.disbursement_evidence`, unless withdrawn. It holds a date and never an amount. A wrong entry is withdrawn, never deleted. Each run lists the entries it used in `policy_snapshot`
+
 **policy_changes**: `change_seq IDENTITY`, `setting_key`, `old_value`, `new_value`, `changed_by`, `reason`, `changed_at`
 
 **letter_releases**: `release_seq IDENTITY`, `batch_id`, `dataset_id`, `run_id`, `loan_id`, `letter_lang`, `excess_paise`, `approved_by`, `released_by`, `released_at`, `text_sha256`, `letter_text VARCHAR(20000)`
@@ -215,6 +217,7 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - `GET /api/data/status` (loaded dataset, synthetic or uploaded, row counts, latest run), `GET /api/data/templates.zip`
 - `POST /api/data/upload` (body: a ZIP of one CSV per `SAHI_RAW` table, header row, any column order; checked against `sql/01_raw_schema.sql` before loading; returns `{ok:false, errors}` or loads, audits and returns the run), `POST /api/data/sample` (reload the synthetic sample)
 - `GET /api/runs/{run_id}/review/summary`; `POST /api/runs/{run_id}/review/decisions`, `/review/approve-filtered` (needs a filter; touches `UNREVIEWED` rows only), `/review/unexplained`, `/releases` (409 on any draft or checker failure, nothing released); `GET /api/releases/{batch_id}/letters.zip`. Writes need `reviewer` and `reason`, and apply to the latest run only (409 otherwise). Ledger rows gain `review_state`, `decided_by`, `review_reason`, `decided_at`, and the ledger takes `review=`; loan and letter responses gain `run_id` and review state; the inspection pack gains `review_decisions.csv`, `policy_changes.csv`, `release_batches.csv`, `letter_releases.csv`
+- `GET /api/runs/{run_id}/evidence`, `POST /api/runs/{run_id}/evidence` (only for a tranche in the gap queue; needs date, reference, reviewer, reason; moves nothing until a re-run), `POST /api/runs/{run_id}/evidence/{evidence_id}/withdraw`. Loan responses list entered evidence with `recorded_in = REVIEWER`; the inspection pack gains `evidence_additions.csv`
 - `GET /api/lineage`, `GET /api/lineage/{sql_step_id}` (includes the SQL text)
 - `GET/PUT /api/policy/settings` (PUT requires `changed_by` and `reason`; GET adds `changes`), `POST /api/runs` (re-run the pipeline), `GET /api/compare/{a}/{b}`, `GET /api/search?q=`
 
@@ -225,4 +228,5 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - 0.3.0 (31 Oct 2026): additive. New schema `SAHI_ASK` (views, latest run) and user `ASK_READER`; env `EXASOL_SCHEMA_ASK`, `EXASOL_ASK_USER`, `EXASOL_ASK_PASSWORD`. Affects nobody else
 - 0.3.1 (31 Oct 2026): additive. Work-queue API takes `page` and `size` (replaces `limit`) and returns `total_rows`. Affects app only
 - 0.4.0 (31 Oct 2026): additive. Data and inspection-pack endpoints. An uploaded book gets `dataset_id = upload_<UTC timestamp>`, `generator_version = 'upload'`, empty truth tables, and is stored under `data/uploads/`. Affects app only
+- 0.6.0 (4 Nov 2026): additive. `SAHI_POLICY.evidence_additions`, a new input to S20 and the oracle; evidence endpoints. A book with no entries audits exactly as before. Affects pipeline, oracle, app
 - 0.5.0 (4 Nov 2026): breaking for `PUT /api/policy/settings` callers (now requires `changed_by`, `reason`); otherwise additive. Human review log in `SAHI_POLICY`, review and release endpoints. Pipeline, oracle and generator unaffected. Affects app only

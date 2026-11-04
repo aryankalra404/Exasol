@@ -47,7 +47,7 @@ The step map with files and Exasol features is in `WHY_EXASOL.md`.
 |---|---|---|---|
 | generator | Builds a synthetic loan book with hidden LMS config and planted defects | nothing | `data/<dataset_id>/raw`, `truth` |
 | loader | Creates schemas, imports CSVs | `data/` | `SAHI_RAW`, `SAHI_TRUTH` |
-| pipeline | All audit logic | `SAHI_RAW`, `SAHI_POLICY` | `SAHI_OUT` |
+| pipeline | All audit logic, including dates entered from branch replies (`SAHI_POLICY.evidence_additions`) | `SAHI_RAW`, `SAHI_POLICY` | `SAHI_OUT` |
 | runner | Runs pipeline steps in order, records `audit_runs` and `step_timings`, snapshots policy | `sql/` | `SAHI_OUT.audit_runs` |
 | oracle | Recomputes fair interest and fingerprints per loan in Python | CSVs in `data/` | test reports |
 | app | API + web UI for the auditor; Data page loads a checked extract or the sample; inspection pack export | `SAHI_OUT`, `SAHI_POLICY`, `SAHI_RAW` | `SAHI_POLICY.settings`, triggers runs, replaces `SAHI_RAW` through the loader on upload |

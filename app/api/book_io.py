@@ -224,6 +224,9 @@ def inspection_pack(rid: str, rows, out_schema: str, raw_schema: str, policy_sch
             "review_decisions.csv": rows(f"SELECT decision_seq, run_id, item_kind, loan_id, practice_code, period_start, figure_paise, "
                                          f"review_decision, decided_by, reason, decided_at FROM {policy_schema}.review_decisions "
                                          f"{scope} ORDER BY decision_seq", p),
+            "evidence_additions.csv": rows(f"SELECT evidence_id, loan_id, tranche_no, evidence_source, event_date, reference, added_by, "
+                                           f"reason, added_at, withdrawn_by, withdrawn_reason, withdrawn_at "
+                                           f"FROM {policy_schema}.evidence_additions {scope} ORDER BY added_at", p),
             "policy_changes.csv": rows(f"SELECT setting_key, old_value, new_value, changed_by, reason, changed_at "
                                        f"FROM {policy_schema}.policy_changes ORDER BY change_seq"),
             "release_batches.csv": rows(f"SELECT batch_id, run_id, released_by, batch_note, released_at, letter_count, total_paise "
@@ -274,6 +277,7 @@ Started {run['started_at']} UTC, {run['duration_ms']} ms inside Exasol, code ver
 - policy_snapshot.json: the interpretation settings and date-precedence rules this run used
 - step_timings.csv and lineage.csv: each SQL step, its time, its file and the SHA-256 of that file
 - review_decisions.csv: every approve, hold or clear, with who, why and the figure they saw; re-reviews add rows
+- evidence_additions.csv: dates a person entered from a branch reply, with who, why and the document reference; withdrawn entries stay listed
 - policy_changes.csv: every change to a policy setting, with who and why
 - release_batches.csv and letter_releases.csv: letters handed over for dispatch; this tool does not send them
 - sql/: the SQL files as they are in this copy of the code; compare their SHA-256 with lineage.csv

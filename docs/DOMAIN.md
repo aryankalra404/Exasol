@@ -70,6 +70,7 @@ Each tranche has several date evidence records (`disbursement_evidence` in the c
 
 - **Conflict flag:** any non-sanction/agreement source differs from the resolved date by more than `conflict_tolerance_days` (default 0). Flagged, not hidden. Conflicts do not stop resolution
 - **GAP:** no defensible date. The billing periods that overlap the tranche's uncertainty window (earliest to latest evidence date of any source) are `EVIDENCE_GAP`, excluded from the refund total, and listed in the evidence-gap queue with the missing source named and a drafted branch query. Later periods are still audited, using the latest evidence date as a provisional start (the balance is the same either way once the money has certainly arrived)
+- **A date entered from a branch reply** is one more evidence record of the missing source, and goes through the same precedence. A person enters a date and a document reference, never an amount. It can resolve a gap to any status, including `UNEXPLAINED` if no convention then reproduces the posting. Withdrawn entries are ignored
 - **Duplicate records of one source** (two handover acks with different dates): the earliest is used, because it gives the smaller refund claim, and the conflict flag is raised
 
 ## Conventions
