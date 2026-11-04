@@ -15,6 +15,7 @@ Live task board. Update it when you start, finish, block or cut something. Keep 
 
 Breaking or notable changes to `CONTRACT.md` that others must react to. Newest first.
 
+- 0.9.0 (5 Nov): additive, `GET /api/runs/{run_id}/loans/{loan_id}/source/{period_start}`. No table changes
 - 0.8.1 (5 Nov): additive, `current.step_id` on `GET /api/live`. No table changes
 - 0.8.0 (5 Nov): additive, `GET /api/live`. No table changes
 - 0.7.0 (4 Nov): loan outcomes, evidence level, refund instructions. No table changes
@@ -92,6 +93,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | R5 | Usable review: loan outcomes, review by root cause, evidence level, refund instructions | Aryan | done | Overview, All loans, Review & release, `tests/test_review.py` |
 | R2 | Human checks: letters, oracle, auditor, RBI text | | todo | sheets in `docs/HUMAN_CHECKS.md`; only people can do these |
 | R6 | Exasol live view: running SQL, operators and step progress during a run | Aryan | done | `app/api/live.py`, live panel on Policy that opens on a re-run, then walks through the finished run step by step (arrows, left and right keys, or clicking a step), the same panel on Data for a load and audit, step strip on Work queues, `tests/test_live.py`. Read-only, no pipeline change. Run through the real buttons in headless Chrome |
+| R7 | Show source records: the raw rows and decision path behind one month | Aryan | doing | contract 0.9.0, endpoint and panel on the loan page |
 
 ### Submission
 | # | Task | Owner | State | Notes |

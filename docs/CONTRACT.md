@@ -1,6 +1,6 @@
 # Contract
 
-**Version 0.8.1** (5 Nov 2026)
+**Version 0.9.0** (5 Nov 2026)
 
 The interface between components. Generator, SQL pipeline, oracle, app, letters and agent talk only through what is defined here. Build against this, not against each other's code.
 
@@ -212,6 +212,7 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - `GET /api/runs/{run_id}/queue/{status}?page=&size=` for `UNEXPLAINED`, `AMBIGUOUS`, `PERMITTED`, `UNDERCHARGE`, `EVIDENCE_GAP`; each row carries `total_rows`
 - `GET /api/runs/{run_id}/gaps`, `GET /api/runs/{run_id}/cohorts?branch=`
 - `GET /api/runs/{run_id}/loans/{loan_id}` and `/loans/{loan_id}/proof/{period_start}`
+- `GET /api/runs/{run_id}/loans/{loan_id}/source/{period_start}`: read-only. The rows behind one audited month, exactly as stored, with the statement that fetched them. Returns `decision` (`fingerprint`, `findings`, `refund_paise`, `tranches` with `precedence`, from `SAHI_OUT` and the run's policy snapshot), `records` (`key`, `table`, `sql`, `columns`, `rows`; keys `evidence`, `entered_evidence`, `postings`, `tranches`, `rates`, `kfs`, `loan`, `receipts`), `deciding_evidence_ids`, `earlier_receipts` (`receipts`, `principal_paise`) and `freshness` (`same_extract`, `posted_in_run`, `posted_now`, `posted_matches`), because raw tables hold the loaded extract, not a copy per run. 404 for a month that run did not audit
 - `GET /api/runs/{run_id}/letters/{loan_id}?lang=en|hi|ta` (rendered letter + checker result)
 - `GET /api/runs/{run_id}/inspection-pack.zip`: README with totals, refund_ledger, findings, evidence_gaps, run_summary, step_timings, lineage CSVs, policy_snapshot.json and the SQL files
 - `GET /api/data/status` (loaded dataset, synthetic or uploaded, row counts, latest run), `GET /api/data/templates.zip`
@@ -230,6 +231,7 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - 0.3.0 (31 Oct 2026): additive. New schema `SAHI_ASK` (views, latest run) and user `ASK_READER`; env `EXASOL_SCHEMA_ASK`, `EXASOL_ASK_USER`, `EXASOL_ASK_PASSWORD`. Affects nobody else
 - 0.3.1 (31 Oct 2026): additive. Work-queue API takes `page` and `size` (replaces `limit`) and returns `total_rows`. Affects app only
 - 0.4.0 (31 Oct 2026): additive. Data and inspection-pack endpoints. An uploaded book gets `dataset_id = upload_<UTC timestamp>`, `generator_version = 'upload'`, empty truth tables, and is stored under `data/uploads/`. Affects app only
+- 0.9.0 (5 Nov 2026): additive. `GET /api/runs/{run_id}/loans/{loan_id}/source/{period_start}`. No table changes. Affects app only
 - 0.8.1 (5 Nov 2026): additive. `current.step_id` on `GET /api/live`. Affects app only
 - 0.8.0 (5 Nov 2026): additive. `GET /api/live`. No table changes. Affects app only
 - 0.7.0 (4 Nov 2026): additive. Loan outcomes, evidence level on ledger rows, refund instructions in release ZIPs. No table changes. Affects app only
