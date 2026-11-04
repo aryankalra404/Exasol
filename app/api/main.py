@@ -135,14 +135,19 @@ _LEDGER_STATE = rv.state_case("l.excess_paise")
 LEDGER_SQL = f"""
     SELECT l.loan_id, l.borrower_id, b.display_name, l.branch_id, br.branch_name, l.product, l.practice_code,
            l.periods, l.days_affected, l.excess_paise, l.first_period, l.last_period, {_LEDGER_STATE} AS review_state,
-           d.decided_by, d.reason AS review_reason, d.decided_at
+           d.decided_by, d.reason AS review_reason, d.decided_at, fc.conventions, {rv.CERTAINTY_CASE} AS certainty,
+           CASE WHEN d.review_decision = 'HOLD' AND d.figure_paise = l.excess_paise
+                THEN GREATEST(DAYS_BETWEEN(CAST({{today}} AS DATE), CAST(d.decided_at AS DATE)), 0) END AS held_days
     FROM {OUT}.refund_ledger l
     JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
     JOIN {RAW}.branches br ON br.branch_id = l.branch_id
     LEFT JOIN ({rv.latest_decisions_sql(OUT, POL, 'LEDGER')}) d
       ON d.loan_id = l.loan_id AND d.practice_code = l.practice_code AND d.rn = 1
+    {rv.certainty_joins_sql(OUT)}
     WHERE l.run_id = {{r}}
       AND ({{review}} IS NULL OR {_LEDGER_STATE} = {{review}})
+      AND ({{certainty}} IS NULL OR {rv.CERTAINTY_CASE} = {{certainty}})
+      AND ({{convention}} IS NULL OR INSTR(',' || fc.conventions || ',', ',' || {{convention}} || ',') > 0)
       AND ({{practice}} IS NULL OR l.practice_code = {{practice}})
       AND ({{branch}} IS NULL OR l.branch_id = {{branch}})
       AND ({{product}} IS NULL OR l.product = {{product}})
@@ -150,18 +155,19 @@ LEDGER_SQL = f"""
 """
 
 
-def _ledger_params(rid, practice, branch, product, q, review=""):
+def _ledger_params(rid, practice, branch, product, q, review="", certainty="", convention=""):
     return {"r": rid, "practice": practice or None, "branch": branch or None, "product": product or None,
-            "q": f"%{q.upper()}%" if q else None, "review": review or None}
+            "q": f"%{q.upper()}%" if q else None, "review": review or None, "certainty": certainty or None,
+            "convention": convention or None, "today": now()[:10]}  # the app's clock: the database VM's can lag after sleep
 
 
 @app.get("/api/runs/{run_id}/ledger")
 def ledger(run_id: str, practice: str = "", branch: str = "", product: str = "", q: str = "", review: str = "",
-           sort: str = "excess", page: int = Query(1, ge=1), size: int = Query(50, le=500)):
+           certainty: str = "", convention: str = "", sort: str = "excess", page: int = Query(1, ge=1), size: int = Query(50, le=500)):
     rid = resolve_run(run_id)
     order = {"excess": "l.excess_paise DESC", "loan": "l.loan_id", "days": "l.days_affected DESC",
              "period": "l.first_period"}.get(sort, "l.excess_paise DESC")
-    p = _ledger_params(rid, practice, branch, product, q, review)
+    p = _ledger_params(rid, practice, branch, product, q, review, certainty, convention)
     total = one(f"SELECT COUNT(*) AS n, COALESCE(SUM(excess_paise), 0) AS excess_paise, "
                 f"COUNT(DISTINCT loan_id) AS loans FROM ({LEDGER_SQL}) x", p)
     data = rows(f"{LEDGER_SQL} ORDER BY {order}, l.loan_id, l.practice_code LIMIT {size} OFFSET {(page - 1) * size}", p)
@@ -518,6 +524,29 @@ _DECISION_INSERT = f"""INSERT INTO {POL}.review_decisions (action_id, dataset_id
                            period_start, figure_paise, review_decision, decided_by, reason, decided_at)"""
 
 
+@app.get("/api/runs/{run_id}/outcomes")
+def loan_outcomes(run_id: str):
+    """Where every audited loan landed. Each loan has exactly one outcome, so the counts add up to the book."""
+    rid = resolve_run(run_id)
+    return {"run_id": rid, "outcomes": rows(f"""SELECT outcome, COUNT(*) AS loans, SUM(refund_paise) AS refund_paise
+                                               FROM ({rv.loan_outcomes_sql(OUT)}) x GROUP BY outcome""", {"r": rid})}
+
+
+@app.get("/api/runs/{run_id}/outcomes/{outcome}")
+def loans_with_outcome(run_id: str, outcome: str, branch: str = "", page: int = Query(1, ge=1), size: int = Query(50, le=500)):
+    rid = resolve_run(run_id)
+    if outcome not in ("FAIR", "REFUND", "EVIDENCE_GAP", "UNEXPLAINED", "PERMITTED", "UNDERCHARGE"):
+        raise HTTPException(400, "unknown outcome")
+    return rows(f"""SELECT x.loan_id, b.display_name, l.branch_id, br.branch_name, l.product, x.months, x.posted_paise, x.fair_paise,
+                           x.refund_paise, COUNT(*) OVER () AS total_rows
+                    FROM ({rv.loan_outcomes_sql(OUT)}) x
+                    JOIN {RAW}.loans l ON l.loan_id = x.loan_id
+                    JOIN {RAW}.borrowers b ON b.borrower_id = l.borrower_id
+                    JOIN {RAW}.branches br ON br.branch_id = l.branch_id
+                    WHERE x.outcome = {{o}} AND ({{b}} IS NULL OR l.branch_id = {{b}})
+                    ORDER BY x.loan_id LIMIT {size} OFFSET {(page - 1) * size}""", {"r": rid, "o": outcome, "b": branch or None})
+
+
 @app.get("/api/runs/{run_id}/review/summary")
 def review_summary(run_id: str):
     rid = resolve_run(run_id)
@@ -525,6 +554,8 @@ def review_summary(run_id: str):
     return {
         "run_id": rid,
         "is_latest": rid == resolve_run("latest"),
+        "by_certainty": rows(f"""SELECT certainty, COUNT(*) AS row_count, COUNT(DISTINCT loan_id) AS loans, SUM(excess_paise) AS excess_paise
+                                 FROM ({LEDGER_SQL}) x GROUP BY certainty""", _ledger_params(rid, "", "", "", "")),
         "ledger_total": one(f"SELECT COALESCE(SUM(excess_paise), 0) AS v FROM {OUT}.refund_ledger WHERE run_id = {{r}}", p)["v"],
         "by_state": rows(f"""SELECT review_state, COUNT(*) AS row_count, COUNT(DISTINCT loan_id) AS loans,
                                     SUM(excess_paise) AS excess_paise
@@ -577,6 +608,8 @@ class BulkApproveIn(BaseModel):
     branch: str = ""
     product: str = ""
     q: str = ""
+    certainty: str = ""
+    convention: str = ""
     reviewer: str
     reason: str
 
@@ -586,11 +619,11 @@ def review_approve_filtered(run_id: str, body: BulkApproveIn):
     """Approve the not-yet-reviewed rows matching a filter, so one reason covers one root cause. Rows on hold or
     with a changed figure are left alone; they need looking at one by one."""
     rid = _writable_run(run_id)
-    if not (body.practice or body.branch or body.product or body.q):
-        raise HTTPException(400, "Filter by practice, branch, product or search first. The whole book cannot be approved in one click.")
+    if not (body.practice or body.branch or body.product or body.q or body.certainty or body.convention):
+        raise HTTPException(400, "Filter first, for example by root cause, practice or branch. The whole book cannot be approved in one click.")
     who, why = _actor(body.reviewer, body.reason)
     action = str(uuid.uuid4())
-    p = {**_ledger_params(rid, body.practice, body.branch, body.product, body.q, "UNREVIEWED"),
+    p = {**_ledger_params(rid, body.practice, body.branch, body.product, body.q, "UNREVIEWED", body.certainty, body.convention),
          "a": action, "who": who, "why": why, "at": now()}
     with db() as c:
         c.execute(f"""{_DECISION_INSERT}

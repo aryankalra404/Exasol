@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { day, inr, month, n, plural, post, PRACTICE, REVIEW_WORDS, useApi, useReviewer } from "../lib";
+import { CERTAINTY_WORDS, day, describeConvention, inr, month, n, plural, post, PRACTICE, REVIEW_WORDS, useApi, useReviewer } from "../lib";
 
 /** Who and why. Both are required by the API on every review action; the name is remembered, the reason is not. */
 export function ActorFields({ name, setName, reason, setReason, why = "Reason for this action", sticky = false }: {
@@ -54,9 +54,11 @@ export default function Review({ runId, params, onLatest }: { runId: string; par
   const [practice, setPractice] = useState(params.get("practice") ?? "");
   const [branch, setBranch] = useState(params.get("branch") ?? "");
   const [review, setReview] = useState(params.get("review") ?? "UNREVIEWED");
+  const [certainty, setCertainty] = useState(params.get("certainty") ?? "");
+  const [convention, setConvention] = useState(params.get("convention") ?? "");
   const [page, setPage] = useState(1);
   const size = 25;
-  const qs = new URLSearchParams({ practice, branch, review, page: String(page), size: String(size) }).toString();
+  const qs = new URLSearchParams({ practice, branch, review, certainty, convention, page: String(page), size: String(size) }).toString();
   const sum = useApi<any>(`/runs/${runId}/review/summary`, [runId, ver]).data;
   const led = useApi<any>(`/runs/${runId}/ledger?${qs}`, [runId, qs, ver]).data;
   const meta = useApi<any>(`/runs/${runId}/summary`, [runId]).data;
@@ -81,7 +83,7 @@ export default function Review({ runId, params, onLatest }: { runId: string; par
     () => `${REVIEW_WORDS[decision]}: ${r.loan_id} ${r.practice_code}, ${inr(r.excess_paise)}.`,
   );
   const approveAll = () => needActor(reason) ?? act(
-    () => post(`/runs/${rid}/review/approve-filtered`, { practice, branch, reviewer: name, reason }),
+    () => post(`/runs/${rid}/review/approve-filtered`, { practice, branch, certainty, convention, reviewer: name, reason }),
     (r) => `Approved ${plural(r.row_count, "row")}, ${inr(r.excess_paise)}. Rows on hold or with a changed figure were left alone.`,
   );
   const release = () => act(
@@ -108,17 +110,24 @@ export default function Review({ runId, params, onLatest }: { runId: string; par
           <div className="tile ok"><div className="upper">Approved</div><div className="v">{inr(approved, { paise: false })}</div><div className="d">of {inr(sum.ledger_total, { paise: false })} owed, {plural(sumOf(sum.by_state, "APPROVED", "row_count"), "row")}</div></div>
           <div className="tile"><div className="upper">Not reviewed</div><div className="v">{inr(sumOf(sum.by_state, "UNREVIEWED", "excess_paise"), { paise: false })}</div><div className="d">{plural(sumOf(sum.by_state, "UNREVIEWED", "row_count"), "row")}</div></div>
           <div className="tile warn"><div className="upper">Needs re-review</div><div className="v">{inr(sumOf(sum.by_state, "STALE", "excess_paise"), { paise: false })}</div><div className="d">{plural(sumOf(sum.by_state, "STALE", "row_count"), "row")} whose figure changed after the decision</div></div>
-          <div className="tile slate"><div className="upper">On hold</div><div className="v">{inr(sumOf(sum.by_state, "HOLD", "excess_paise"), { paise: false })}</div><div className="d">{plural(sumOf(sum.by_state, "HOLD", "row_count"), "row")}</div></div>
+          <div className="tile slate"><div className="upper">On hold</div><div className="v">{inr(sumOf(sum.by_state, "HOLD", "excess_paise"), { paise: false })}</div><div className="d">{plural(sumOf(sum.by_state, "HOLD", "row_count"), "row")}, still counted as owed until resolved</div></div>
         </div>
       )}
 
       <section className="section">
-        <header><div><h2>Refunds to review</h2><p>Approve or hold one row, or filter to one practice or branch and approve what is left under one reason.</p></div></header>
+        <header><div><h2>Refunds to review</h2><p>Approve or hold one row, or filter to one root cause or evidence level and approve what is left under one reason. Loans with no refund are listed in <a href="#/loans/FAIR">All loans</a>.</p></div></header>
         {readOnly ? <OlderRun onLatest={onLatest} /> : <ActorFields name={name} setName={setName} reason={reason} setReason={setReason} sticky />}
         <div className="filters">
           <select aria-label="Review state" value={review} onChange={(e) => { setReview(e.target.value); setPage(1); }}>
             <option value="">All review states</option>
             {["UNREVIEWED", "STALE", "HOLD", "APPROVED"].map((s) => <option key={s} value={s}>{REVIEW_WORDS[s]}</option>)}
+          </select>
+          <select aria-label="Evidence" value={certainty} onChange={(e) => { setCertainty(e.target.value); setPage(1); }}>
+            <option value="">All evidence levels</option>
+            {Object.entries(CERTAINTY_WORDS).map(([k, label]) => {
+              const c = sum?.by_certainty?.find((x: any) => x.certainty === k);
+              return <option key={k} value={k}>{label} ({n(c?.row_count ?? 0)})</option>;
+            })}
           </select>
           <select aria-label="Practice" value={practice} onChange={(e) => { setPractice(e.target.value); setPage(1); }}>
             <option value="">All practices</option>
@@ -128,21 +137,26 @@ export default function Review({ runId, params, onLatest }: { runId: string; par
             <option value="">All branches</option>
             {(meta?.branches ?? []).map((b: any) => <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>)}
           </select>
-          {(practice || branch) && <button className="btn ghost" disabled={busy || readOnly} onClick={approveAll}>Approve all not reviewed in this filter</button>}
+          {convention && <button className="btn ghost mini" title="Clear this filter" onClick={() => { setConvention(""); setPage(1); }}>Root cause: {describeConvention(convention).toLowerCase()} ×</button>}
+          {(practice || branch || certainty || convention) && <button className="btn ghost" disabled={busy || readOnly} onClick={approveAll}>Approve all not reviewed in this filter</button>}
           {led && <span className="muted small" style={{ marginLeft: "auto" }}>{plural(led.total.n, "row")}, <b className="num">{inr(led.total.excess_paise)}</b></span>}
         </div>
         <div className="card">
           <table className="t">
-            <thead><tr><th>Borrower</th><th>Loan</th><th>Practice</th><th>Months</th><th className="r">Excess</th><th>Review</th><th className="r">Action</th></tr></thead>
+            <thead><tr><th>Borrower</th><th>Loan</th><th>Practice</th><th>Why</th><th>Months</th><th className="r">Excess</th><th>Review</th><th className="r">Action</th></tr></thead>
             <tbody>
               {(led?.rows ?? []).map((r: any) => (
                 <tr key={r.loan_id + r.practice_code}>
                   <td>{r.display_name}</td>
                   <td className="mono small"><a href={`#/loan/${r.loan_id}`}>{r.loan_id}</a></td>
                   <td><span className="tag code">{r.practice_code}</span></td>
+                  <td className="small" style={{ maxWidth: 300 }}>
+                    {r.practice_code === "AMB" ? PRACTICE.AMB : describeConvention(String(r.conventions ?? "").split(",")[0])}, {plural(r.days_affected, "day")} affected
+                    <div className="tiny faint">{CERTAINTY_WORDS[r.certainty]}</div>
+                  </td>
                   <td className="small">{month(r.first_period)}{r.first_period !== r.last_period ? ` to ${month(r.last_period)}` : ""}</td>
                   <td className="r">{inr(r.excess_paise)}</td>
-                  <td className="small"><span className={`tag ${r.review_state}`}>{REVIEW_WORDS[r.review_state]}</span>{r.decided_by && <div className="tiny faint" title={r.review_reason}>{r.decided_by}: {r.review_reason}</div>}</td>
+                  <td className="small"><span className={`tag ${r.review_state}`}>{REVIEW_WORDS[r.review_state]}</span>{r.held_days != null && <div className="tiny">On hold for {plural(r.held_days, "day")}</div>}{r.decided_by && <div className="tiny faint" title={r.review_reason}>{r.decided_by}: {r.review_reason}</div>}</td>
                   <td className="r nowrap">
                     <button className="btn mini" disabled={busy || readOnly} onClick={() => decide(r, "APPROVED")}>Approve</button>{" "}
                     <button className="btn ghost mini" disabled={busy || readOnly} onClick={() => decide(r, "HOLD")}>Hold</button>

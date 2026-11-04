@@ -90,10 +90,10 @@ make app        # http://127.0.0.1:8000
 
 Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues and policy page.
 
-- **Overview**: the refund total, what is held out of it and why, excess by RBI practice and branch, *what the loan system was actually doing*, and a one-click **inspection pack** (ledger, findings, branch queries, policy used, SQL with SHA-256)
+- **Overview**: the refund total, where every loan landed (correct, refund owed, or another outcome), what is held out of the total and why, excess by RBI practice and branch, *what the loan system was actually doing*, and a one-click **inspection pack** (ledger, findings, branch queries, policy used, SQL with SHA-256)
 - **Loan**: every date source per tranche on one timeline, every billing month posted vs recomputed, and *why this figure*, interval by interval, down to the SQL step
 - **Refund ledger**: filter, sort, export CSV
-- **Review & release**: a person approves or holds each refund with a name and reason; a re-run that changes a figure sends it back; only approved letters can be released, as a ZIP and manifest for the lender's own channels. This tool never contacts a borrower
+- **Review & release**: review by root cause, with the reason and evidence level on each row. A person approves or holds each refund with a name and reason; a re-run that changes a figure sends it back; only approved letters can be released, as a ZIP and manifest for the lender's own channels. This tool never contacts a borrower
 - **Work queues**: evidence gaps with drafted branch queries, and entry of the branch's reply: enter the date, re-run, and the same SQL rules decide the result. Also unexplained, ambiguous, permitted, undercharge
 - **Fix coverage**: sanction-cohort × charge-quarter heatmap. A fix that covered only new loans shows as old cohorts still being charged
 - **Policy & re-runs**: flip an interpretation, re-run the whole book in Exasol, compare runs loan by loan

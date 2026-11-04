@@ -36,6 +36,8 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 
 ## Review and release
 
+- **Outcomes are per loan, and refund wins.** A loan owed money counts as Refund even if another of its months is still open; the evidence level shows that
+- **A held refund stays in the refund total** until the evidence or policy changes. Holds have no owner or due date
 - **Released does not mean delivered.** This tool never contacts a borrower; it hands approved letters over as a ZIP and cannot see what happens next
 - **A review cannot edit a figure.** To change a refund, correct the evidence or policy and re-run
 - **An approval follows the figure, not the reasoning.** It stays valid across re-runs while that row's amount is unchanged, even if the policy behind it changed
@@ -56,6 +58,7 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 
 - Runs on Exasol Personal local (single node). Scale figures are from our laptop and stated with hardware
 - Exasol Personal allows 20 connections; the app uses a pool of four
+- The Exasol VM's clock can fall behind after the laptop sleeps (measured about 3 days). Timestamps and hold ages use the app's clock, never the database's
 - Exasol local VM as measured: 2 vCPU, 8 GB RAM, on an Apple M4 (16 GB) MacBook
 
 ## Generator realism

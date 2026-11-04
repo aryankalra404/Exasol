@@ -1,10 +1,11 @@
-import { describeConvention, inr, month, n, plural, PRACTICE, seconds, sentence, useApi } from "../lib";
+import { describeConvention, inr, month, n, OUTCOME_WORDS, plural, PRACTICE, seconds, sentence, useApi } from "../lib";
 
 const paiseIn = (rows: any[] | undefined, state: string) => rows?.find((r) => r.review_state === state)?.excess_paise ?? 0;
 
 export default function Book({ runId }: { runId: string }) {
   const { data, error } = useApi<any>(`/runs/${runId}/summary`, [runId]);
   const review = useApi<any>(`/runs/${runId}/review/summary`, [runId]).data;
+  const outcomes = useApi<any>(`/runs/${runId}/outcomes`, [runId]).data?.outcomes as any[] | undefined;
   if (error) return <div className="empty">{error}</div>;
   if (!data) return <div className="loading">Reading the audit run from Exasol…</div>;
   const s = data.summary;
@@ -43,6 +44,28 @@ export default function Book({ runId }: { runId: string }) {
           <div><div className="v">{seconds(run.duration_ms)}</div><div className="k">end-to-end inside Exasol, measured</div></div>
         </div>
       </section>
+
+      {outcomes && (
+        <section className="section">
+          <header>
+            <div>
+              <h2>Where every loan landed</h2>
+              <p>Each audited loan has one outcome, so these add up to the whole book. Select one to list its loans.</p>
+            </div>
+          </header>
+          <div className="outcomes">
+            {["FAIR", "REFUND", "PERMITTED", "EVIDENCE_GAP", "UNEXPLAINED", "UNDERCHARGE"].map((k) => {
+              const o = outcomes.find((x) => x.outcome === k);
+              return (
+                <a key={k} className={`tile ${k === "FAIR" ? "ok" : k === "EVIDENCE_GAP" ? "warn" : k === "PERMITTED" ? "slate" : ""}`} href={`#/loans/${k}`}>
+                  <div className="upper">{OUTCOME_WORDS[k]}</div>
+                  <div className="v">{n(o?.loans ?? 0)}</div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <header>
@@ -121,7 +144,7 @@ export default function Book({ runId }: { runId: string }) {
         <header>
           <div>
             <h2>What the loan system was actually doing</h2>
-            <p>Each row is a calculation method found in the lender's own postings. Correcting that one setting in the loan system fixes every loan in the row.</p>
+            <p>Each row is a calculation method found in the lender's own postings. Correcting that one setting in the loan system fixes every loan in the row. Select a row to review its refunds together.</p>
           </div>
         </header>
         <div className="card">
@@ -133,7 +156,7 @@ export default function Book({ runId }: { runId: string }) {
             <tbody>
               {(data.root_causes as any[]).map((r) => (
                 <tr key={r.branch_id + r.convention_id} className="click"
-                  onClick={() => (window.location.hash = `#/ledger?branch=${r.branch_id}`)}>
+                  onClick={() => (window.location.hash = `#/review?branch=${r.branch_id}&convention=${encodeURIComponent(r.convention_id)}`)}>
                   <td>{r.branch_name}<div className="faint mono tiny">{r.branch_id}</div></td>
                   <td>{describeConvention(r.convention_id)}<div className="faint mono tiny">{r.convention_id}</div></td>
                   <td>{String(r.practice_codes ?? "").split(",").map((p: string) => <span key={p} className="tag code" style={{ marginRight: 4 }}>{p}</span>)}</td>

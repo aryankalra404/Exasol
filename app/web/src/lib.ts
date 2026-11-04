@@ -154,6 +154,22 @@ export const REVIEW_WORDS: Record<string, string> = {
   CLEARED: "Cleared, no refund",
 };
 
+export const CERTAINTY_WORDS: Record<string, string> = {
+  EXACT_CONFIRMED: "Exact match, confirmed date",
+  FALLBACK_DATE: "Exact match, fallback date",
+  OPEN_MONTHS: "Exact match, other months open",
+  NOT_UNIQUE: "Overcharge certain, rule not unique",
+};
+
+export const OUTCOME_WORDS: Record<string, string> = {
+  FAIR: "Correct",
+  REFUND: "Refund owed",
+  EVIDENCE_GAP: "Waiting on evidence",
+  UNEXPLAINED: "Needs investigation",
+  PERMITTED: "Permitted, no refund",
+  UNDERCHARGE: "Undercharged",
+};
+
 export const LETTER_WORDS: Record<string, string> = { DRAFT: "Draft", APPROVED: "Approved", RELEASED: "Released" };
 
 export const SOURCE_WORDS: Record<string, string> = {

@@ -10,6 +10,14 @@ const TABS: [string, string, string][] = [
   ["undercharge", "Undercharge", "The lender posted less than the fair amount. Nothing to refund; listed for completeness."],
 ];
 
+const ACTION: Record<string, string> = {
+  gaps: "Waiting on the branch",
+  unexplained: "Needs investigation",
+  ambiguous: "Review as a refund",
+  permitted: "No action unless policy changes",
+  undercharge: "For information",
+};
+
 export default function Queues({ runId, tab, onRun }: { runId: string; tab: string; onRun: () => void }) {
   const [ran, setRan] = useState(0);
   const s = useApi<any>(`/runs/${runId}/summary`, [runId, ran]).data?.summary;
@@ -28,7 +36,7 @@ export default function Queues({ runId, tab, onRun }: { runId: string; tab: stri
       <div className="tabs">
         {TABS.map(([k, label]) => <a key={k} href={`#/queues/${k}`} className={tab === k ? "on" : ""}>{label}{counts[k] && <span className="count">{counts[k]}</span>}</a>)}
       </div>
-      <p className="muted" style={{ marginTop: 0 }}>{info[2]}</p>
+      <p className="muted" style={{ marginTop: 0 }}><b style={{ color: "var(--ink)" }}>{ACTION[info[0]]}.</b> {info[2]}</p>
       {tab === "gaps" ? <Gaps runId={runId} onRan={() => { setRan((v) => v + 1); onRun(); }} /> : <FindingQueue runId={runId} status={{ unexplained: "UNEXPLAINED", ambiguous: "AMBIGUOUS", permitted: "PERMITTED", undercharge: "UNDERCHARGE" }[tab] ?? "UNEXPLAINED"} />}
     </>
   );

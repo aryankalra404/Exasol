@@ -10,6 +10,7 @@ import socket
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from datetime import date
@@ -61,6 +62,8 @@ def test_release_zip_holds_letters_manifest_and_says_not_sent():
     manifest = z.read(base + "manifest.csv").decode()
     assert "Priya" in manifest and "230137" in manifest and letters[0]["text_sha256"] in manifest
     assert "does not mean a borrower has received" in z.read(base + "README.txt").decode().replace("\n", " ")
+    pay = z.read(base + "refund_instructions.csv").decode()
+    assert "SB-aaaaaaaa-LDM0001" in pay and "230137" in pay and "₹2,301.37" in pay
 
 
 class _Reply:
@@ -153,6 +156,8 @@ def test_review_flow_end_to_end(client):
     # hold, then approve: the latest decision counts and the figure comes from the ledger
     assert client.post(f"{url}/review/decisions", json={**body, **WHO, "decision": "HOLD"}).status_code == 200
     assert _meena(client, rid)["review"][0]["review_state"] == "HOLD"
+    held = client.get("/api/runs/latest/ledger?q=LDM0001").json()["rows"][0]
+    assert int(held["held_days"]) == 0, "held today"
     assert client.post(f"{url}/review/decisions", json={**body, **WHO}).status_code == 200
     m = _meena(client, rid)
     assert m["review"][0]["review_state"] == "APPROVED" and int(m["review"][0]["reviewed_paise"]) == 230137
@@ -222,3 +227,31 @@ def test_unexplained_decision_moves_no_money(client):
     assert row["review_state"] == "CLEARED" and row["decided_by"] == "pytest-review"
     assert client.get("/api/runs/latest/summary").json()["summary"]["refund_paise"] == before
     assert date.fromisoformat(item["period_start"])
+
+
+@needs_db
+def test_every_loan_has_one_outcome_and_the_outcomes_add_up(client):
+    summary = client.get("/api/runs/latest/summary").json()["summary"]
+    rows = {o["outcome"]: o for o in client.get("/api/runs/latest/outcomes").json()["outcomes"]}
+    assert sum(int(o["loans"]) for o in rows.values()) == int(summary["loans_audited"])
+    assert int(rows["REFUND"]["loans"]) == int(summary["refund_loans"])
+    assert sum(int(o["refund_paise"]) for o in rows.values()) == int(summary["refund_paise"])
+    fair = client.get("/api/runs/latest/outcomes/FAIR?size=5").json()
+    assert fair and int(fair[0]["total_rows"]) == int(rows["FAIR"]["loans"])
+    assert all(int(r["posted_paise"]) == int(r["fair_paise"]) and int(r["refund_paise"]) == 0 for r in fair)
+
+
+@needs_db
+def test_evidence_levels_cover_the_ledger_and_root_cause_filter_matches(client):
+    review = client.get("/api/runs/latest/review/summary").json()
+    assert sum(int(c["excess_paise"]) for c in review["by_certainty"]) == int(review["ledger_total"])
+    summary = client.get("/api/runs/latest/summary").json()
+    cause = summary["root_causes"][0]
+    query = urllib.parse.urlencode({"branch": cause["branch_id"], "convention": cause["convention_id"], "size": 500})
+    rows = client.get(f"/api/runs/latest/ledger?{query}").json()["rows"]
+    assert rows and all(cause["convention_id"] in r["conventions"].split(",") for r in rows)
+    assert all(r["branch_id"] == cause["branch_id"] for r in rows)
+    url = f"/api/runs/{review['run_id']}/review/approve-filtered"
+    before = client.get("/api/runs/latest/ledger?review=APPROVED").json()["total"]["n"]
+    got = client.post(url, {"branch": "NO-SUCH", "convention": cause["convention_id"], **WHO}).json()
+    assert int(got["row_count"]) == 0 and client.get("/api/runs/latest/ledger?review=APPROVED").json()["total"]["n"] == before

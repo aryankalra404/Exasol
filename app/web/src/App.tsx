@@ -9,6 +9,7 @@ import Policy from "./pages/Policy";
 import Method from "./pages/Method";
 import Letter from "./pages/Letter";
 import Review from "./pages/Review";
+import Loans from "./pages/Loans";
 import Data, { FirstRun } from "./pages/Data";
 
 export type Run = {
@@ -17,7 +18,7 @@ export type Run = {
 };
 
 const NAV: [string, [string, string][]][] = [
-  ["Audit", [["book", "Overview"], ["ledger", "Refund ledger"], ["review", "Review & release"], ["queues", "Work queues"], ["regression", "Fix coverage"]]],
+  ["Audit", [["book", "Overview"], ["ledger", "Refund ledger"], ["review", "Review & release"], ["queues", "Work queues"], ["loans", "All loans"], ["regression", "Fix coverage"]]],
   ["Controls", [["policy", "Policy & re-runs"], ["method", "Method & lineage"], ["data", "Data"]]],
 ];
 
@@ -99,6 +100,7 @@ export default function App() {
         {!empty && page === "book" && <Book runId={rid} />}
         {!empty && page === "ledger" && <Ledger runId={rid} params={params} />}
         {!empty && page === "review" && <Review runId={rid} params={params} onLatest={() => pickRun("latest")} />}
+        {!empty && page === "loans" && <Loans runId={rid} outcome={parts[1] ?? "FAIR"} />}
         {!empty && page === "loan" && <Loan runId={rid} loanId={parts[1]} period={params.get("period")} />}
         {!empty && page === "queues" && <Queues runId={rid} tab={parts[1] ?? "gaps"} onRun={() => { pickRun("latest"); setVer((v) => v + 1); }} />}
         {!empty && page === "regression" && <Regression runId={rid} branch={parts[1]} />}

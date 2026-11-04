@@ -18,6 +18,8 @@ All features are deterministic. Every figure comes from SQL in Exasol.
 | **Ask the book (MCP)** | What else does the committee want to know? | Any MCP client, through Exasol's MCP server as a read-only user on latest-run views; SQL always shown. See `ASK.md` |
 | **Checked borrower letters (English, Hindi, Tamil)** | Can we send this without a wrong number? | Letter. Every figure from the ledger; a checker re-reads the letter and rejects any mismatch or stray amount |
 | **Close the evidence gap** | The branch replied. Now what? | Work queues. Enter the date and reference, re-run, and the same SQL rules decide. No amount is entered, and a wrong entry can be withdrawn. See `D29` |
+| **Where every loan landed** | Which loans are clean? | Overview and All loans. One outcome per loan, adding up to the book |
+| **Review by root cause, with evidence level** | How do I review thousands of refunds? | Overview → a root cause → Review & release. Each row says why and what evidence backs it. See `D30` |
 | **Review and release** | Who signed this off before it went out? | Review and release, loan, letter, queues, policy. Approve or hold with a name and reason; a changed figure sends the row back; only approved letters release, as a ZIP and manifest. See `D26`, `D27` |
 | **Method with lineage** | Can the inspector see how it was computed? | Method. Each step's SQL, SHA-256 and timing for this run |
 | **Inspection pack** | What do I hand the inspector? | Overview. One ZIP: totals, ledger, every finding, branch queries, policy used, SQL with SHA-256 |

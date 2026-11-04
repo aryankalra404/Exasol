@@ -123,3 +123,7 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 **D29. A branch reply is entered as evidence, then the audit re-runs** (accepted)
 - Why: the gap queue drafted a query but nothing happened when the branch answered. The reviewer enters a date and document reference, never a figure, and the same SQL rules decide the result, which may be a refund, fair, or unexplained. The oracle reads the same entries from its own path, so it can still disagree. Stored in `SAHI_POLICY` because `make load` rebuilds `SAHI_RAW`
 - Gave up: attaching the document itself; bulk entry from a file
+
+**D30. Every loan gets one outcome, and refunds show their evidence level, not a "correct" label** (accepted)
+- Why: the loans found correct were invisible, and an auditor needs "these are clean" as much as "these are wrong". Refunds are reviewed by root cause, because nobody clicks through thousands of rows. The level says what the evidence is ("exact match, confirmed date"), not that a refund is certain: a matching record can still be wrong. Disagreeing dates do not lower the level, because that disagreement is often what proves the overcharge
+- Gave up: a single confidence score, which would hide what the doubt actually is

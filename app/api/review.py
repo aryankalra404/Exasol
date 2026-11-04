@@ -70,6 +70,42 @@ def ledger_review_sql(out: str, pol: str) -> str:
                WHERE l.run_id = {{r}}"""
 
 
+# how strong the evidence behind a ledger row is; uses the fc, mf and op joins in the ledger query
+CERTAINTY_CASE = """CASE WHEN l.practice_code = 'AMB' THEN 'NOT_UNIQUE'
+                        WHEN op.loan_id IS NOT NULL THEN 'OPEN_MONTHS'
+                        WHEN mf.has_fallback = 1 THEN 'FALLBACK_DATE'
+                        ELSE 'EXACT_CONFIRMED' END"""
+CERTAINTIES = ("EXACT_CONFIRMED", "FALLBACK_DATE", "OPEN_MONTHS", "NOT_UNIQUE")
+
+
+def certainty_joins_sql(out: str) -> str:
+    return f"""LEFT JOIN (SELECT loan_id, practice_code,
+                                 GROUP_CONCAT(DISTINCT matched_convention_id ORDER BY matched_convention_id SEPARATOR ',') AS conventions
+                          FROM {out}.findings WHERE run_id = {{r}} AND status IN ('REFUND', 'AMBIGUOUS')
+                          GROUP BY loan_id, practice_code) fc ON fc.loan_id = l.loan_id AND fc.practice_code = l.practice_code
+               LEFT JOIN (SELECT loan_id, MAX(CASE WHEN confidence = 'FALLBACK' THEN 1 ELSE 0 END) AS has_fallback
+                          FROM {out}.money_in_hand WHERE run_id = {{r}} GROUP BY loan_id) mf ON mf.loan_id = l.loan_id
+               LEFT JOIN (SELECT DISTINCT loan_id FROM {out}.fingerprints WHERE run_id = {{r}}
+                          AND match_status IN ('EVIDENCE_GAP', 'UNEXPLAINED')) op ON op.loan_id = l.loan_id"""
+
+
+def loan_outcomes_sql(out: str) -> str:
+    """One outcome per audited loan of run {r}, so the outcomes add up to the whole book. The strongest applies:
+    a loan owed money counts as a refund even if another of its months is still open."""
+    return f"""SELECT f.loan_id, COUNT(*) AS months, SUM(f.posted_paise) AS posted_paise, SUM(f.fair_paise) AS fair_paise,
+                      COALESCE(MAX(led.refund_paise), 0) AS refund_paise,
+                      CASE WHEN MAX(led.refund_paise) IS NOT NULL THEN 'REFUND'
+                           WHEN SUM(CASE WHEN f.match_status = 'EVIDENCE_GAP' THEN 1 ELSE 0 END) > 0 THEN 'EVIDENCE_GAP'
+                           WHEN SUM(CASE WHEN f.match_status = 'UNEXPLAINED' THEN 1 ELSE 0 END) > 0 THEN 'UNEXPLAINED'
+                           WHEN SUM(CASE WHEN f.match_status = 'PERMITTED' THEN 1 ELSE 0 END) > 0 THEN 'PERMITTED'
+                           WHEN SUM(CASE WHEN f.match_status = 'UNDERCHARGE' THEN 1 ELSE 0 END) > 0 THEN 'UNDERCHARGE'
+                           ELSE 'FAIR' END AS outcome
+               FROM {out}.fingerprints f
+               LEFT JOIN (SELECT loan_id, SUM(excess_paise) AS refund_paise FROM {out}.refund_ledger
+                          WHERE run_id = {{r}} GROUP BY loan_id) led ON led.loan_id = f.loan_id
+               WHERE f.run_id = {{r}} GROUP BY f.loan_id"""
+
+
 def latest_releases_sql(out: str, pol: str) -> str:
     return f"""SELECT loan_id, batch_id, excess_paise, released_at, released_by,
                       ROW_NUMBER() OVER (PARTITION BY loan_id ORDER BY release_seq DESC) AS rn
@@ -136,6 +172,9 @@ def release_zip(batch: dict, letters: list[dict]) -> bytes:
     base = f"letter_release_{batch['batch_id'][:8]}/"
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\n")
+    pay = io.StringIO()
+    instructions = csv.writer(pay, lineterminator="\n")
+    instructions.writerow(["reference", "loan_id", "borrower", "amount_paise", "amount", "narrative"])
     w.writerow(["file", "loan_id", "borrower", "language", "refund", "excess_paise", "approved_by", "released_by",
                 "released_at", "sha256"])
     with io.BytesIO() as raw, zipfile.ZipFile(raw, "w", zipfile.ZIP_DEFLATED) as z:
@@ -144,7 +183,10 @@ def release_zip(batch: dict, letters: list[dict]) -> bytes:
             z.writestr(base + name, r["letter_text"])
             w.writerow([name, r["loan_id"], r["display_name"], r["letter_lang"], inr(int(r["excess_paise"])),
                         r["excess_paise"], r["approved_by"], r["released_by"], r["released_at"], r["text_sha256"]])
+            instructions.writerow([f"SB-{batch['batch_id'][:8]}-{r['loan_id']}", r["loan_id"], r["display_name"], r["excess_paise"],
+                                   inr(int(r["excess_paise"])), "Refund of excess interest, interest audit"])
         z.writestr(base + "manifest.csv", buf.getvalue())
+        z.writestr(base + "refund_instructions.csv", pay.getvalue())
         z.writestr(base + "README.txt", f"""Letter release batch {batch['batch_id']}
 
 Released by {batch['released_by']} at {batch['released_at']} UTC
@@ -156,6 +198,7 @@ These letters were approved and handed over for dispatch through the lender's ow
 send anything, so being in this batch does not mean a borrower has received a letter.
 
 manifest.csv lists each letter with who approved it, who released it and the SHA-256 of its text.
+refund_instructions.csv lists the amount to credit to each loan, for the lender's team to post. This tool posts nothing.
 """)
         z.close()
         return raw.getvalue()
