@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CONFIDENCE_WORDS, DAYCOUNT_WORDS, day, describeConvention, go, inr, inrExact, LETTER_WORDS, LOAN_STATUS_WORDS, MODE_WORDS, month, plural, post, PRACTICE, REVIEW_WORDS, SOURCE_WORDS, sources, STATUS_WORDS, useApi, useReviewer } from "../lib";
-import { ActorFields } from "./Review";
+import { ActorFields, missingActor } from "./Review";
 
 const DAY_MS = 86400000;
 const toT = (d: string) => Date.parse(d.slice(0, 10) + "T00:00:00Z");
@@ -121,6 +121,8 @@ function ReviewPanel({ data, onChange }: { data: any; onChange: () => void }) {
   const [reason, setReason] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const decide = async (r: any, decision: string) => {
+    const missing = missingActor(name, reason);
+    if (missing) { setErr(missing); return; }
     setErr(null);
     try {
       await post(`/runs/${data.run_id}/review/decisions`, { loan_id: r.loan_id, practice_code: r.practice_code, decision, reviewer: name, reason });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { day, describeConvention, go, inr, MODE_WORDS, month, n, plural, post, REVIEW_WORDS, sources, useApi, useReviewer } from "../lib";
-import { ActorFields } from "./Review";
+import { ActorFields, missingActor, Toast } from "./Review";
 
 const TABS: [string, string, string][] = [
   ["gaps", "Evidence gaps", "The money-in-hand date cannot be decided. A query to the branch is drafted for each."],
@@ -110,6 +110,8 @@ function FindingQueue({ runId, status }: { runId: string; status: string }) {
   const { data } = useApi<any[]>(`/runs/${runId}/queue/${status}?page=${page}&size=${ROWS_PER_PAGE}`, [runId, status, page, ver]);
   const unexplained = status === "UNEXPLAINED";
   const decide = async (r: any, decision: string) => {
+    const missing = missingActor(name, why);
+    if (missing) { setErr(missing); return; }
     setErr(null);
     try {
       await post(`/runs/${r.run_id}/review/unexplained`, { loan_id: r.loan_id, period_start: r.period_start, decision, reviewer: name, reason: why });
@@ -125,8 +127,8 @@ function FindingQueue({ runId, status }: { runId: string; status: string }) {
     {unexplained && (
       <>
         <p className="small muted" style={{ marginTop: 0 }}>Record the outcome of a manual look. This moves no money: to change a refund, correct the evidence or the policy and re-run.</p>
-        <ActorFields name={name} setName={setName} reason={why} setReason={setWhy} why="What did you find?" />
-        {err && <div className="verdict warn" style={{ marginBottom: 12 }}>{err}</div>}
+        <ActorFields name={name} setName={setName} reason={why} setReason={setWhy} why="What did you find?" sticky />
+        <Toast err={err} onClose={() => setErr(null)} />
       </>
     )}
     <div className="card">

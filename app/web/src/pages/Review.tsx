@@ -2,20 +2,48 @@ import { useState } from "react";
 import { day, inr, month, n, plural, post, PRACTICE, REVIEW_WORDS, useApi, useReviewer } from "../lib";
 
 /** Who and why. Both are required by the API on every review action; the name is remembered, the reason is not. */
-export function ActorFields({ name, setName, reason, setReason, why = "Reason for this action" }: {
-  name: string; setName: (v: string) => void; reason: string; setReason: (v: string) => void; why?: string;
+export function ActorFields({ name, setName, reason, setReason, why = "Reason for this action", sticky = false }: {
+  name: string; setName: (v: string) => void; reason: string; setReason: (v: string) => void; why?: string; sticky?: boolean;
 }) {
   return (
-    <div className="filters actor">
-      <input aria-label="Your name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
-      <input aria-label={why} className="grow" placeholder={why} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} />
+    <div className={`filters actor ${sticky ? "sticky" : ""}`}>
+      <input data-actor="name" aria-label="Your name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
+      <input data-actor="reason" aria-label={why} className="grow" placeholder={why} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} />
+    </div>
+  );
+}
+
+/** Says what is missing before a request is sent, and puts the cursor there. Null when both are filled in. */
+export function missingActor(name: string, reason: string): string | null {
+  const missing = !name.trim() ? "name" : !reason.trim() ? "reason" : null;
+  if (!missing) return null;
+  document.querySelector<HTMLInputElement>(`input[data-actor="${missing}"]`)?.focus();
+  return missing === "name" ? "Enter your name first. Every review action records who took it." : "Enter a reason first. Every review action records why it was taken.";
+}
+
+/** Feedback fixed to the window, so it shows wherever the reviewer has scrolled to. */
+export function Toast({ err, msg, onClose }: { err: string | null; msg?: string | null; onClose: () => void }) {
+  if (!err && !msg) return null;
+  return (
+    <div className={`toast ${err ? "warn" : "ok"}`} role={err ? "alert" : "status"}>
+      <span>{err ?? msg}</span>
+      <button className="toast-x" aria-label="Dismiss" onClick={onClose}>×</button>
     </div>
   );
 }
 
 const sumOf = (rows: any[] | undefined, state: string, key: string) => rows?.find((r) => (r.review_state ?? r.letter_state) === state)?.[key] ?? 0;
 
-export default function Review({ runId, params }: { runId: string; params: URLSearchParams }) {
+function OlderRun({ onLatest }: { onLatest: () => void }) {
+  return (
+    <div className="verdict warn older-run">
+      <span>You are viewing an older audit run, so it is read-only and the buttons are off.</span>
+      <button className="btn" onClick={onLatest}>Switch to the latest run</button>
+    </div>
+  );
+}
+
+export default function Review({ runId, params, onLatest }: { runId: string; params: URLSearchParams; onLatest: () => void }) {
   const [ver, setVer] = useState(0);
   const [name, setName] = useReviewer();
   const [reason, setReason] = useState("");
@@ -43,11 +71,16 @@ export default function Review({ runId, params }: { runId: string; params: URLSe
       setVer((v) => v + 1);
     } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
   };
-  const decide = (r: any, decision: string) => act(
+  const needActor = (why: string) => {
+    const missing = missingActor(name, why);
+    if (missing) { setMsg(null); setErr(missing); }
+    return missing;
+  };
+  const decide = (r: any, decision: string) => needActor(reason) ?? act(
     () => post(`/runs/${rid}/review/decisions`, { loan_id: r.loan_id, practice_code: r.practice_code, decision, reviewer: name, reason }),
     () => `${REVIEW_WORDS[decision]}: ${r.loan_id} ${r.practice_code}, ${inr(r.excess_paise)}.`,
   );
-  const approveAll = () => act(
+  const approveAll = () => needActor(reason) ?? act(
     () => post(`/runs/${rid}/review/approve-filtered`, { practice, branch, reviewer: name, reason }),
     (r) => `Approved ${plural(r.row_count, "row")}, ${inr(r.excess_paise)}. Rows on hold or with a changed figure were left alone.`,
   );
@@ -67,9 +100,8 @@ export default function Review({ runId, params }: { runId: string; params: URLSe
           <p>A person approves each refund before its letter can leave. Decisions never change a figure: every amount here comes from the audit run in Exasol.</p>
         </div>
       </div>
-      {readOnly && <div className="verdict warn" style={{ marginBottom: 16 }}>This is an older run, shown read-only. Switch to the latest run to review or release.</div>}
-      {err && <div className="verdict warn" style={{ marginBottom: 16 }}>{err}</div>}
-      {msg && <div className="verdict ok" style={{ marginBottom: 16 }}>{msg}</div>}
+      {readOnly && <OlderRun onLatest={onLatest} />}
+      <Toast err={err} msg={msg} onClose={() => { setErr(null); setMsg(null); }} />
 
       {sum && (
         <div className="grid g4">
@@ -82,7 +114,7 @@ export default function Review({ runId, params }: { runId: string; params: URLSe
 
       <section className="section">
         <header><div><h2>Refunds to review</h2><p>Approve or hold one row, or filter to one practice or branch and approve what is left under one reason.</p></div></header>
-        <ActorFields name={name} setName={setName} reason={reason} setReason={setReason} />
+        {readOnly ? <OlderRun onLatest={onLatest} /> : <ActorFields name={name} setName={setName} reason={reason} setReason={setReason} sticky />}
         <div className="filters">
           <select aria-label="Review state" value={review} onChange={(e) => { setReview(e.target.value); setPage(1); }}>
             <option value="">All review states</option>
@@ -149,7 +181,11 @@ export default function Review({ runId, params }: { runId: string; params: URLSe
         )}
         <div className="filters actor">
           <input className="grow" aria-label="Note for this batch" placeholder="Note for this batch" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
-          <button className="btn" disabled={busy || readOnly || ready === 0} onClick={release}>Release {plural(ready, "approved letter")}</button>
+          <button className="btn" disabled={busy || readOnly || ready === 0} onClick={() => {
+            if (!name.trim()) { needActor(note); return; }
+            if (!note.trim()) { setMsg(null); setErr("Enter a note for this batch first."); document.querySelector<HTMLInputElement>('input[aria-label="Note for this batch"]')?.focus(); return; }
+            release();
+          }}>Release {plural(ready, "approved letter")}</button>
         </div>
         <div className="card">
           <table className="t">
