@@ -11,7 +11,8 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 
 - **No re-amortisation.** Excess is measured per period on the principal path the LMS recorded. A fair system would have allocated slightly more of each EMI to principal, so refunds are slightly understated (conservative)
 - **Only the listed conventions are recognised.** A posting produced by any other rule is reported as `UNEXPLAINED`, not guessed
-- **Calendar-month billing periods** are assumed. Lenders with other posting cycles need the period definition changed
+- **Calendar-month billing periods** are assumed. Uploads with a posting that does not start on the 1st are refused. Lenders with other posting cycles need the period definition changed
+- **A missing posting counts as zero charged,** so an extract that stops early shows many Undercharge months. They are listed, never refunded
 - Gaps and unexplained rows are excluded from the refund total by design
 - **Weekends only, no holiday calendar.** The generator shifts rail credits past weekends; RBI's holiday list is not loaded
 - **Days affected** for a finding is the calendar days on which the matched convention's balance differed from fair in that month; when one finding is split across several practices, each row shows the same days
@@ -44,7 +45,7 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 
 ## Assumptions not yet validated
 
-- **Blind testing has not been done yet.** The generator, the SQL and the oracle share an author, so agreement on generated books proves less than it appears to. `RED_TEAM.md` is how we test on loans we did not design
+- **No person has blind-tested this yet.** The generator, the SQL and the oracle share an author, so agreement on generated books proves less than it appears to. One machine-written blind round found a real bug that both the SQL and the oracle shared (`RED_TEAM.md`), so more may exist. It tested against our own `DOMAIN.md`, not against a person's reading of RBI's text
 - **How auditors test interest charging today.** We found no public account. "They sample" is an assumption, not a finding
 - **Prevalence.** RBI has not published how many lenders, loans or rupees were involved. We do not state a number
 

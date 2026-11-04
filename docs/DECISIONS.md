@@ -118,7 +118,7 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 
 **D28. Red-team loans are written outside the team's code, and answers come first** (accepted)
 - Why: agreement on generated books is partly circular, because one author wrote the generator, the SQL and the oracle. Answers written before the first run cannot be fitted to the result. The harness reports disagreements and never decides who is right. `RT_*` schemas are dropped each run, so results always use default policy and the demo book stays untouched
-- Gave up: speed; this needs a person who has not read the code
+- Gave up: speed; this needs a person who has not read the code. A machine-written round with no code access was run first and is labelled as such everywhere; it does not count as a person's review
 
 **D29. A branch reply is entered as evidence, then the audit re-runs** (accepted)
 - Why: the gap queue drafted a query but nothing happened when the branch answered. The reviewer enters a date and document reference, never a figure, and the same SQL rules decide the result, which may be a refund, fair, or unexplained. The oracle reads the same entries from its own path, so it can still disagree. Stored in `SAHI_POLICY` because `make load` rebuilds `SAHI_RAW`

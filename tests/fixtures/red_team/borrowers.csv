@@ -1,0 +1,13 @@
+borrower_id,display_name,preferred_language,state_name
+BRT001,Fakey Halfpaisa,en,Maharashtra
+BRT002,Dummy Thirtyday,hi,Karnataka
+BRT003,Sample Leapyear,en,Rajasthan
+BRT004,Testy Postdated,ta,Tamil Nadu
+BRT005,Mock Railcredit,en,Madhya Pradesh
+BRT006,Pretend Crossmonth,hi,Uttar Pradesh
+BRT007,Bogus Fullmonth,ta,Maharashtra
+BRT008,Phony Noack,en,Maharashtra
+BRT009,Nonesuch Negative,hi,Karnataka
+BRT010,Example Feepaid,en,Rajasthan
+BRT011,Dummy Nofee,ta,Tamil Nadu
+BRT012,Sample Reversal,en,Maharashtra

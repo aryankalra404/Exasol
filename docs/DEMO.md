@@ -46,6 +46,7 @@ Opening matters most: the date conflict and the matched rule must be on screen i
 - Stale approval, if time allows, on seed 42: approve `L000528` (P1), turn off "Accept the LMS date", re-run, and show it return to "Needs re-review". Turn the setting back on and re-run. The commitment fee flip does not show this: it moves no approved figure, it adds 250 new draft letters. Other seeds need a different loan, so find one in rehearsal
 - Close the gap, about a minute. Work queues → Evidence gaps, filter to the branch, and on seed 42 enter handover 14 May 2025 for Nisha Das (`L008982`, tranche 3, Vadodara Alkapuri). Re-run: ₹9,694.79 refund appears. Say: "We entered a date, not an amount. Exasol decided." For contrast, Asha (`LDM0003`) with handover 5 Jun 2025 comes out fair: no refund, and the lender was right. Any other date for Asha is unexplained, which is also correct. Other seeds need a different loan
 - Overview: download the inspection pack, open its README, and show `review_decisions.csv`
+- If asked how we know it is right: say the blind round was machine-written, with no code access, not a person. Say plainly that it found a real bug the oracle shared (`RED_TEAM.md`), that we fixed it, and that a person's review is the next step
 - Have ready: SQL for money-in-hand and fingerprint steps, `tests/test_rbi_fixtures.py`, `eval/reports/robustness.json`, `LIMITS.md`, answers on interpretation, data realism, and what a real lender would need to connect
 - Backup: recorded video and screenshots if the laptop or network fails
 

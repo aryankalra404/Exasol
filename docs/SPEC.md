@@ -61,7 +61,7 @@ What we build, in priority order. Tiers are cut lines: finish a tier fully (test
 
 - **Ask the book (built, see `ASK.md`):** assistant over Exasol's MCP server, read-only on the `SAHI_ASK` views. Shows the SQL it ran. Never computes a number itself
 - **APR check** against KFS disclosed APR via a Python UDF (IRR is iterative, the one place a UDF is justified)
-- **Blind red team (harness built, loans not yet written, see `RED_TEAM.md`):** someone who did not write the generator builds about 10 adversarial loans from the RBI text. Report results including misses
+- **Blind red team (machine-written round done, a person still wanted, see `RED_TEAM.md`):** someone who did not write the generator builds about 10 adversarial loans from the RBI text. Report results including misses
 - Robustness curve: defect level from none to heavy vs refund totals and gap counts
 - Cloud deployment guide (Exasol Personal on AWS)
 

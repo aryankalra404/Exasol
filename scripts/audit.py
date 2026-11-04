@@ -91,6 +91,15 @@ def run_audit(label: str = "", conn=None) -> dict:
     return {"run_id": run_id, "dataset_id": dataset_id, "duration_ms": total, "steps": steps}
 
 
+def postings_outside_audit(conn, run_id: str) -> list:
+    """Postings with no audited month. Must be empty: a posting left out would be an overcharge nobody sees."""
+    s = schemas()
+    return conn.execute(f"""SELECT p.posting_id, p.loan_id, p.period_start FROM {s['RAW']}.interest_postings p
+                            LEFT JOIN {s['OUT']}.fingerprints f ON f.run_id = {{r}} AND f.loan_id = p.loan_id
+                                                                AND f.period_start = p.period_start
+                            WHERE f.loan_id IS NULL""", {"r": run_id}).fetchall()
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Run the audit pipeline in Exasol")
     p.add_argument("--label", default="")

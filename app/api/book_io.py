@@ -139,6 +139,10 @@ def validate_extract(zip_bytes: bytes) -> tuple[dict[str, list[list[str]]], list
                 break
         if not tables["interest_postings"]:
             err("interest_postings.csv has no rows: there is nothing to audit.")
+        i = COLUMNS["interest_postings"].index("period_start")
+        off_cycle = [r[i] for r in tables["interest_postings"] if r[i] and not r[i].endswith("-01")]
+        if off_cycle:
+            err(f"interest_postings.csv: period_start must be the 1st of a month (calendar-month billing), e.g. {off_cycle[0]}.")
     return tables, errors, counts
 
 

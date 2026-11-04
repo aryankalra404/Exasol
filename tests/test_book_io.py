@@ -27,6 +27,19 @@ def test_template_is_a_valid_extract():
     assert counts["loans"] == 3 and counts["interest_postings"] > 0
 
 
+def test_posting_not_on_the_first_of_a_month_is_refused():
+    def edit(name, text):
+        if name != "interest_postings.csv":
+            return text
+        lines = text.splitlines()
+        i = lines[0].split(",").index("period_start")
+        cells = lines[1].split(",")
+        cells[i] = cells[i][:-2] + "15"
+        lines[1] = ",".join(cells)
+        return "\n".join(lines) + "\n"
+    assert any("1st of a month" in e for e in validate_extract(rezip(templates_zip(), edit))[1])
+
+
 def test_not_a_zip_is_refused():
     assert "not a ZIP" in validate_extract(b"hello")[1][0]
 

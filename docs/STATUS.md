@@ -84,7 +84,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | # | Task | Owner | State | Notes |
 |---|---|---|---|---|
 | R1 | Human review layer + letter release | Aryan | done | `sql/06`, `app/api/review.py`, Review & release page, `tests/test_review.py`. Run on Exasol through the API and through the real buttons in headless Chrome |
-| R3 | Blind red team | | todo | harness done (`eval/red_team.py`, `make red-team`), brief in `docs/RED_TEAM.md`. Needs someone who has not read the generator or SQL to write the loans and expected answers. Do not write them from inside the team's code |
+| R3 | Blind red team | | doing | machine-written round done, found and fixed 1 real bug, see `docs/RED_TEAM.md`. Still wanted: a person who has not read the generator or SQL |
 | R4 | Close the evidence gap: enter branch replies, re-run | Aryan | done | `evidence_additions`, S20, oracle, Work queues, `tests/test_evidence.py` |
 | R2 | Human checks: letters, oracle, auditor, RBI text | | todo | sheets in `docs/HUMAN_CHECKS.md`; only people can do these |
 
@@ -133,7 +133,8 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Letter release, whole book | 3,062 letters checked and stored in 0.48 s, ZIP of the batch in 0.18 s; 3,075 ledger rows approved by filter in 0.2 s | s42_n10000, MacBook Exasol VM 2 vCPU / 12 GB | 4 Nov 2026 |
 | Stale approvals | All rows approved and released, then LMS fallback off and re-run: 41 rows needed re-review, 72 released letters flagged. Commitment fee off instead: 0 stale, 250 new draft letters | s42_n10000 | 4 Nov 2026 |
 | Entered evidence, whole book | Handover dates entered for all 234 gaps, re-run: gaps 0, refund ₹8,83,23,995.69 to ₹8,89,23,632.85; oracle 232,890 / 232,890, largest deviation 0 paise; entries removed and re-run: original total exactly. The months resolved to 91 refund, 48 unexplained, 47 fair, 47 undercharge, 15 ambiguous, 4 permitted. Dates were test values at the end of each window, so these are not findings | s42_n10000 | 4 Nov 2026 |
-| Tests | 43 passed locally with Exasol | | 4 Nov 2026 |
+| Blind red team, machine-written | 12 loans, 60 months, answers frozen first. First run 59 of 60; 1 real bug fixed (postings before the sanction month were not audited). After the fix 60 of 60, all 12 loan refund totals agree. 54 further months flagged Undercharge, none refunded. Demo book unchanged, oracle 232,890 / 232,890 | `tests/fixtures/red_team` | 4 Nov 2026 |
+| Tests | 47 passed locally with Exasol | | 4 Nov 2026 |
 
 ## Blockers and open questions
 

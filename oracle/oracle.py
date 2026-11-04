@@ -236,7 +236,7 @@ def audit(dataset_dir: Path, loan_ids: list[str] | None = None, extra_evidence: 
     for loan_id in loan_ids or sorted(book.loans):
         sanction = d(book.loans[loan_id]["sanction_date"])
         months = []
-        ps = first_of_month(sanction)
+        ps = min([first_of_month(sanction), *book.posted_periods[loan_id]])
         while ps < book.audit_end:
             months.append(ps)
             ps = add_month(ps)

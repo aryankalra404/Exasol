@@ -53,6 +53,7 @@ Exasol Personal local, single node, VM with 2 vCPU. Demo and 100k books: VM 8 GB
 - **Fingerprint accuracy** (demo book, against the generator's hidden configuration): every one of 7,535 MATCHED periods names the hidden convention (6,612) or one giving the identical figure (923); all 2,072 PERMITTED periods are exact. Undecided periods go to EVIDENCE_GAP (252), UNEXPLAINED (454) or AMBIGUOUS (385); every UNEXPLAINED period traces to a planted defect
 - **False positives: 0.** Disclosed commitment fees, a disclosed 30E/360 basis and fairly posted months never reach the ledger (`tests/test_false_positives.py`)
 - **Public anchor:** RBI's own KFS illustration (₹20,000 at 15% over 24 months; RBI prints EMI ₹970, interest ₹3,274, APR 17.07%) runs through the full SQL pipeline: exact EMI ₹969.73, every month fair, printed figures match (`tests/test_rbi_fixtures.py`)
+- **Blind round** (`make red-team`): 12 machine-written adversarial loans from the rules alone, with no access to the code. It found one real bug that the SQL and the oracle shared, since fixed: 59 of 60 months on the first run, 60 of 60 after. A person's review is still to come. See [RED_TEAM](docs/RED_TEAM.md)
 - **Robustness** (`make robustness`): with no defects the refund total equals the true unfair excess exactly; with 1,338 and 4,057 planted defects it recovers 98.37% and 96.82%, and the rest waits in the gap and unexplained queues. No level refunds a single fair or permitted month
 
 ## Setup

@@ -34,6 +34,7 @@ Any change here needs a `DECISIONS.md` entry and matching changes in the SQL and
 - A disbursement with money-in-hand date `D` accrues interest from `D` inclusive
 - A repayment with value date `R` reduces principal from `R` inclusive (no interest on the repaid amount for day `R`)
 - **Billing period:** calendar month, `[1st of month, 1st of next month)`. One posting per loan per period while principal is outstanding
+- **Every posting is audited.** A loan's months run from its sanction month, or from its earliest posting if that is earlier, to the end of the audit window
 
 ## Day-count basis
 

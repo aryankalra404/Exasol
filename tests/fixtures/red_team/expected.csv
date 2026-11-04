@@ -1,0 +1,61 @@
+loan_id,period_start,expected_status,expected_fair_paise,expected_excess_paise,why
+RT001,2025-03-01,FAIR,100001,0,exact half paisa: 25 days gives 100000.5; half up gives 100001 (banker or floor rounding raises a false alarm)
+RT001,2025-04-01,FAIR,120001,0,plain full month fairly posted
+RT001,2025-05-01,FAIR,124001,0,plain full month fairly posted
+RT001,2025-06-01,UNDERCHARGE,121501,-1,mid-month rate change; posting rounded per interval is 1 paisa under once-per-period rounding; tolerance 0
+RT001,2025-07-01,UNEXPLAINED,127101,1,1 paisa above fair; no candidate matches; tolerance 0 so must not pass as FAIR
+RT002,2024-01-01,FAIR,25000,0,"30E: disbursed on the 31st, f(Feb 1)-f(Jan 31) is 1 day"
+RT002,2024-02-01,FAIR,760005,0,30E leap: Feb 29 tranche earns 2 days not 1; t1 30 days; total lands exactly on .5 and rounds up
+RT002,2024-03-01,UNEXPLAINED,900005,17260,KFS says 30E but posted on ACT/365 for 31 days; day count is not a candidate dimension; above fair
+RT002,2024-04-01,FAIR,897505,0,30E: EMI on Apr 30 gives 29 days old balance and 1 day new
+RT002,2024-05-01,FAIR,825213,0,"30E: rate change on May 30 and EMI on May 31; [30,31) is 0 days so only 1 day at new rate on new balance"
+RT002,2024-06-01,UNDERCHARGE,831255,-11387,KFS says 30E but posted ACT/365 for 30 days; below fair
+RT003,2023-12-01,FAIR,9315,0,"blank day count defaults to ACT_365; money before sanction; 1 day; before first rate row so first row 8.5 applies, not KFS 9"
+RT003,2024-01-01,UNDERCHARGE,288767,-37260,posted from sanction date which is after money-in-hand; unfair candidate matches but below fair
+RT003,2024-02-01,FAIR,272466,0,ACT_365 keeps divisor 365 in leap year; 29 days t1 plus 1 day t2 on Feb 29
+RT003,2024-03-01,UNDERCHARGE,371575,-1015,posted with divisor 366; below fair; rate change exactly on the 1st so no split
+RT003,2024-04-01,FAIR,359589,0,plain full month at new rate
+RT004,2025-03-01,FAIR,160219,0,post-dated cheque: ack Mar 10 before cheque Mar 15; max gives Mar 15; conflict flagged not a finding
+RT004,2025-04-01,FAIR,372274,0,two acks Apr 12 and Apr 20; earliest used; posted from Apr 12 is fair
+RT004,2025-05-01,UNDERCHARGE,574904,-28274,two rail credits; earliest May 3 is money in hand; posted from May 9 falls below fair
+RT004,2025-06-01,UNEXPLAINED,626740,28274,post-dated cheque posted from ack Jun 12; before cheque date Jun 18; no start basis gives Jun 12
+RT004,2025-07-01,FAIR,730411,0,plain full month after all tranches
+RT005,2025-03-01,UNEXPLAINED,0,38014,posted from LMS date before rail credit; fair is 0; stray cheque row on NEFT must not create a P2 match
+RT005,2025-04-01,AMBIGUOUS,367466,12671,"full April: from sanction, from agreement and full month tie with 1 dim and 1 vote; P1 versus P3"
+RT005,2025-05-01,UNDERCHARGE,392808,-392808,"no posting at all for a month with principal outstanding, between two posted months; net posted is 0"
+RT005,2025-06-01,FAIR,478973,0,no rail credit so LMS fallback is the date; audited not a gap
+RT005,2025-07-01,UNEXPLAINED,572740,55753,prepayment ignored until month end; looks like P3 but FULL_MONTH snaps only CLOSURE receipts
+RT006,2025-03-01,REFUND,0,55233,"cheque dated Mar 28 handed over Apr 6; fair is 0 in March, posting exists; P2"
+RT006,2025-04-01,REFUND,345205,69042,"full April ties with sanction, agreement and full month; history (March) picks cheque date; P2"
+RT006,2025-05-01,FAIR,424626,0,"two EMIs in one month, one near month end"
+RT006,2025-06-01,FAIR,509523,0,DD with ack but no cheque date row; ack is the date; a null in max must not turn this into a gap
+RT007,2025-02-01,REFUND,185315,87781,"full Feb ties with sanction and agreement; history across Feb, Apr, May picks full month; P3"
+RT007,2025-03-01,FAIR,302356,0,plain full month fairly posted
+RT007,2025-04-01,REFUND,431589,80466,tranche 2 snapped to Apr 1; sanctioned-amount candidate also matches this month but has fewer votes; P3
+RT007,2025-05-01,REFUND,324301,204822,closure May 20 charged to month end; P3
+RT007,2025-06-01,UNEXPLAINED,0,12345,stray posting after closure; fair is 0
+RT008,2025-05-01,AMBIGUOUS,266301,192329,"sanction, agreement, full month tie; July looks like full month but gap periods do not vote"
+RT008,2025-06-01,FAIR,443836,0,plain full month before the gap
+RT008,2025-07-01,EVIDENCE_GAP,,,cheque without handover ack; window Jul 28 to Aug 2 overlaps July; posting shaped like full month must not vote
+RT008,2025-08-01,EVIDENCE_GAP,,,window overlaps August; excluded from refund
+RT008,2025-09-01,FAIR,737507,0,after the window audited on provisional start; balance certain
+RT009,2025-02-01,EVIDENCE_GAP,,,no ack; window Feb 10 to Mar 20
+RT009,2025-03-01,EVIDENCE_GAP,,,EMI principal before provisional start; balance negative Mar 5 to Mar 20; must not crash or be clamped into a finding
+RT009,2025-04-01,FAIR,246164,0,audited after window; balance net of the early EMI
+RT009,2025-05-01,EVIDENCE_GAP,,,second tranche no ack; window May 20 to Jun 1
+RT009,2025-06-01,EVIDENCE_GAP,,,window ends on Jun 1 inclusive so June overlaps it even though June is a full month either way
+RT009,2025-07-01,FAIR,424233,0,plain full month after both windows
+RT010,2025-01-01,PERMITTED,0,548493,disclosed fee at 9.10 on undisbursed from sanction; fair 0; looks exactly like sanction date plus sanctioned amount but disclosed
+RT010,2025-02-01,PERMITTED,174521,523561,fee on undisbursed plus interest on tranche 1; permitted beats the identical unfair candidate
+RT010,2025-03-01,PERMITTED,555890,236850,interest moves to 9.6 on Mar 15; fee stays at KFS 9.10
+RT010,2025-04-01,FAIR,789041,0,undisbursed is 0 so fee is 0
+RT011,2025-01-01,REFUND,0,548493,same shape as RT010 with no fee disclosed; from sanction on sanctioned amount; P1 P5
+RT011,2025-02-01,REFUND,174521,523561,other sanctioned-amount candidates match this month but have fewer votes; P1 P5
+RT011,2025-03-01,REFUND,536027,236850,tranche 2 arrives Mar 20; P1 P5 by history
+RT011,2025-04-01,FAIR,747945,0,once fully disbursed the sanctioned basis equals fair; FAIR wins
+RT012,2025-03-01,FAIR,189839,0,advance taken Mar 5 before cheque handover Mar 12; literal path has -3 lakh balance for 7 days; clamping to 0 gives a false alarm
+RT012,2025-04-01,REFUND,285514,287,advance reduction delayed to Apr 5 due date; P4
+RT012,2025-05-01,FAIR,471799,0,"tranche, EMI and rate change on May 10; EMI and prepayment on May 20; rate May 25; tranche May 31"
+RT012,2025-06-01,FAIR,751911,0,"wrong posting, reversal booked two months later, manual repost; net equals fair"
+RT012,2025-07-01,UNEXPLAINED,776975,776975,same posting twice with no reversal; net is double fair
+RT012,2025-08-01,UNDERCHARGE,776975,-776975,"posting fully reversed, no repost; net 0 is below fair"

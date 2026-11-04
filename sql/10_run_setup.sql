@@ -15,11 +15,13 @@ FROM {POLICY}.settings;
 
 CREATE OR REPLACE TABLE {WORK}.audit_window AS
 SELECT
-    (SELECT MIN(TRUNC(sanction_date, 'MM')) FROM {RAW}.loans) AS data_start,
+    LEAST((SELECT MIN(TRUNC(sanction_date, 'MM')) FROM {RAW}.loans),
+          (SELECT COALESCE(MIN(TRUNC(period_start, 'MM')), DATE '9999-12-01') FROM {RAW}.interest_postings)) AS data_start,
     (SELECT MAX(period_end) FROM {RAW}.interest_postings) AS audit_end
 FROM DUAL;
 
--- one row per loan per billing month, from the sanction month to the end of the audit window
+-- one row per loan per billing month, from the sanction month (or an earlier posting, so that no posting can
+-- fall outside the audit) to the end of the audit window
 CREATE OR REPLACE TABLE {WORK}.periods AS
 WITH months AS (
     SELECT ADD_MONTHS(w.data_start, CAST(n.lvl - 1 AS DECIMAL(5,0))) AS period_start
@@ -29,7 +31,9 @@ WITH months AS (
 )
 SELECT l.loan_id, m.period_start, ADD_MONTHS(m.period_start, 1) AS period_end
 FROM {RAW}.loans l
-JOIN months m ON m.period_start >= TRUNC(l.sanction_date, 'MM');
+LEFT JOIN (SELECT loan_id, MIN(TRUNC(period_start, 'MM')) AS first_posted FROM {RAW}.interest_postings GROUP BY loan_id) fp
+  ON fp.loan_id = l.loan_id
+JOIN months m ON m.period_start >= LEAST(TRUNC(l.sanction_date, 'MM'), COALESCE(fp.first_posted, TRUNC(l.sanction_date, 'MM')));
 
 -- rate in force over [span_start, span_end). Before the first rate row the initial rate applies.
 CREATE OR REPLACE TABLE {WORK}.rate_spans AS

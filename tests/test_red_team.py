@@ -95,3 +95,48 @@ def test_refuses_to_run_without_written_answers(template_book):
     write_expected(template_book, [])
     with pytest.raises(ValueError, match="write the expected answers"):
         run(template_book)
+
+
+def _oracle_results():
+    """The oracle on the frozen blind book, read straight from the CSVs."""
+    import shutil
+    import tempfile
+    from pathlib import Path
+
+    from eval.red_team import BOOK
+    from oracle.oracle import audit
+
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "raw").mkdir()
+        for f in BOOK.glob("*.csv"):
+            if f.name != "expected.csv":
+                shutil.copy(f, Path(tmp) / "raw" / f.name)
+        return {(r.loan_id, str(r.period_start)): r for r in audit(Path(tmp))}
+
+
+def test_oracle_audits_a_posting_before_the_sanction_month():
+    result = _oracle_results()[("RT003", "2023-12-01")]
+    assert result.status == "FAIR" and result.fair == 9315
+
+
+@needs_db
+def test_frozen_blind_book_agrees_and_no_posting_is_left_out():
+    from eval.red_team import BOOK
+
+    report = run(BOOK)
+    assert report["months_disagreeing"] == 0, [c for c in report["cases"] if c["problems"]]
+    assert all(t["agrees"] for t in report["loan_refund_totals"])
+    # months after a test loan stopped posting are undercharges, never refunds
+    assert {u["audit_status"] for u in report["unlisted_flagged_months"]} <= {"UNDERCHARGE"}
+
+
+@needs_db
+def test_every_posting_on_the_demo_book_is_audited():
+    from scripts.audit import postings_outside_audit
+    from scripts.db import connect, schemas
+
+    conn = connect()
+    run_id = conn.execute(f"SELECT run_id FROM {schemas()['OUT']}.audit_runs WHERE status = 'DONE' "
+                          f"ORDER BY started_at DESC LIMIT 1").fetchval()
+    assert postings_outside_audit(conn, run_id) == []
+    conn.close()

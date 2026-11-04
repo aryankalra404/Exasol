@@ -71,4 +71,13 @@ Then record the counts in `docs/STATUS.md` "Measured results".
 
 | Builder | Date | Loans | Months checked | Agree | Audit wrong | Answer wrong | Not covered |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| Machine-written, given only `DOMAIN.md`, the file formats and this brief, in a folder with no code. Not a person | 4 Nov 2026 | 12 | 60 | First run 59. After the fix 60 | 1 | 0 | 0 |
+| A person who has not read the code | | | | | | | |
+
+Answers were frozen before the first run and never edited: `tests/fixtures/red_team/expected.csv`, SHA-256 starting `002b41b75410e939`.
+
+**What the first run found:** a posting in a month before the loan's sanction month was never audited (RT003, Dec 2023, ₹93.15). It appeared nowhere, and no check noticed. The SQL and the oracle both started each loan at its sanction month, so they agreed with each other and neither could catch it. This is the risk of one author writing both. Fixed in both, separately, and uploads now refuse postings that do not start on the 1st. No demo figure changed: the demo book has no such posting.
+
+**What this does not prove:** the rules still come from our own `DOMAIN.md`, so a mistaken rule would pass. A person's review of the RBI text is still needed.
+
+Also reported: 54 months flagged Undercharge that were not in `expected.csv`, all after a test loan stopped posting while the book ran on. `DOMAIN.md` treats a missing posting as an undercharge, and none is refunded, so this is expected. A real extract with missing months would show the same.

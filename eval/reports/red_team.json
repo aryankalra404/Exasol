@@ -1,0 +1,1011 @@
+{
+  "date": "2026-11-04",
+  "run_id": "f7483df1-8038-4f27-815a-8f961fb8ba10",
+  "audit_ms": 982,
+  "loans": 12,
+  "months_checked": 60,
+  "months_agreeing": 60,
+  "months_disagreeing": 0,
+  "unlisted_flagged_months": [
+    {
+      "loan_id": "RT001",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -127101
+    },
+    {
+      "loan_id": "RT001",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -123001
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-07-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-10-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-11-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-12-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-01-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-02-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-03-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-04-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-05-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-06-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-07-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -831255
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-05-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-06-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -359589
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-07-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -359589
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-10-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-11-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -359589
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-12-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-01-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-02-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -335616
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-03-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-04-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -359589
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-05-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-06-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -359589
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-07-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -371575
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -359589
+    },
+    {
+      "loan_id": "RT004",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -730411
+    },
+    {
+      "loan_id": "RT004",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -706849
+    },
+    {
+      "loan_id": "RT005",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -549932
+    },
+    {
+      "loan_id": "RT005",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -532192
+    },
+    {
+      "loan_id": "RT006",
+      "period_start": "2025-07-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -633521
+    },
+    {
+      "loan_id": "RT006",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -633521
+    },
+    {
+      "loan_id": "RT006",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -613085
+    },
+    {
+      "loan_id": "RT009",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -424233
+    },
+    {
+      "loan_id": "RT009",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -410548
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-05-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -815342
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-06-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -789041
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-07-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -815342
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -815342
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -789041
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-05-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -772877
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-06-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -747945
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-07-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -772877
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-08-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -772877
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -747945
+    },
+    {
+      "loan_id": "RT012",
+      "period_start": "2025-09-01",
+      "audit_status": "UNDERCHARGE",
+      "audit_excess_paise": -751911
+    }
+  ],
+  "loan_refund_totals": [
+    {
+      "loan_id": "RT001",
+      "expected_refund_paise": 0,
+      "ledger_refund_paise": 0,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT002",
+      "expected_refund_paise": 0,
+      "ledger_refund_paise": 0,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT003",
+      "expected_refund_paise": 0,
+      "ledger_refund_paise": 0,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT004",
+      "expected_refund_paise": 0,
+      "ledger_refund_paise": 0,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT005",
+      "expected_refund_paise": 12671,
+      "ledger_refund_paise": 12671,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT006",
+      "expected_refund_paise": 124275,
+      "ledger_refund_paise": 124275,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT007",
+      "expected_refund_paise": 373069,
+      "ledger_refund_paise": 373069,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT008",
+      "expected_refund_paise": 192329,
+      "ledger_refund_paise": 192329,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT009",
+      "expected_refund_paise": 0,
+      "ledger_refund_paise": 0,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT010",
+      "expected_refund_paise": 0,
+      "ledger_refund_paise": 0,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT011",
+      "expected_refund_paise": 1308904,
+      "ledger_refund_paise": 1308904,
+      "agrees": true
+    },
+    {
+      "loan_id": "RT012",
+      "expected_refund_paise": 287,
+      "ledger_refund_paise": 287,
+      "agrees": true
+    }
+  ],
+  "cases": [
+    {
+      "loan_id": "RT001",
+      "period_start": "2025-03-01",
+      "why": "exact half paisa: 25 days gives 100000.5; half up gives 100001 (banker or floor rounding raises a false alarm)",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 100001,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT001",
+      "period_start": "2025-04-01",
+      "why": "plain full month fairly posted",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 120001,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT001",
+      "period_start": "2025-05-01",
+      "why": "plain full month fairly posted",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 124001,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT001",
+      "period_start": "2025-06-01",
+      "why": "mid-month rate change; posting rounded per interval is 1 paisa under once-per-period rounding; tolerance 0",
+      "expected_status": "UNDERCHARGE",
+      "problems": [],
+      "audit_status": "UNDERCHARGE",
+      "audit_fair_paise": 121501,
+      "audit_excess_paise": -1
+    },
+    {
+      "loan_id": "RT001",
+      "period_start": "2025-07-01",
+      "why": "1 paisa above fair; no candidate matches; tolerance 0 so must not pass as FAIR",
+      "expected_status": "UNEXPLAINED",
+      "problems": [],
+      "audit_status": "UNEXPLAINED",
+      "audit_fair_paise": 127101,
+      "audit_excess_paise": 1
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-01-01",
+      "why": "30E: disbursed on the 31st, f(Feb 1)-f(Jan 31) is 1 day",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 25000,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-02-01",
+      "why": "30E leap: Feb 29 tranche earns 2 days not 1; t1 30 days; total lands exactly on .5 and rounds up",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 760005,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-03-01",
+      "why": "KFS says 30E but posted on ACT/365 for 31 days; day count is not a candidate dimension; above fair",
+      "expected_status": "UNEXPLAINED",
+      "problems": [],
+      "audit_status": "UNEXPLAINED",
+      "audit_fair_paise": 900005,
+      "audit_excess_paise": 17260
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-04-01",
+      "why": "30E: EMI on Apr 30 gives 29 days old balance and 1 day new",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 897505,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-05-01",
+      "why": "30E: rate change on May 30 and EMI on May 31; [30,31) is 0 days so only 1 day at new rate on new balance",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 825213,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT002",
+      "period_start": "2024-06-01",
+      "why": "KFS says 30E but posted ACT/365 for 30 days; below fair",
+      "expected_status": "UNDERCHARGE",
+      "problems": [],
+      "audit_status": "UNDERCHARGE",
+      "audit_fair_paise": 831255,
+      "audit_excess_paise": -11387
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2023-12-01",
+      "why": "blank day count defaults to ACT_365; money before sanction; 1 day; before first rate row so first row 8.5 applies, not KFS 9",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 9315,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-01-01",
+      "why": "posted from sanction date which is after money-in-hand; unfair candidate matches but below fair",
+      "expected_status": "UNDERCHARGE",
+      "problems": [],
+      "audit_status": "UNDERCHARGE",
+      "audit_fair_paise": 288767,
+      "audit_excess_paise": -37260
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-02-01",
+      "why": "ACT_365 keeps divisor 365 in leap year; 29 days t1 plus 1 day t2 on Feb 29",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 272466,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-03-01",
+      "why": "posted with divisor 366; below fair; rate change exactly on the 1st so no split",
+      "expected_status": "UNDERCHARGE",
+      "problems": [],
+      "audit_status": "UNDERCHARGE",
+      "audit_fair_paise": 371575,
+      "audit_excess_paise": -1015
+    },
+    {
+      "loan_id": "RT003",
+      "period_start": "2024-04-01",
+      "why": "plain full month at new rate",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 359589,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT004",
+      "period_start": "2025-03-01",
+      "why": "post-dated cheque: ack Mar 10 before cheque Mar 15; max gives Mar 15; conflict flagged not a finding",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 160219,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT004",
+      "period_start": "2025-04-01",
+      "why": "two acks Apr 12 and Apr 20; earliest used; posted from Apr 12 is fair",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 372274,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT004",
+      "period_start": "2025-05-01",
+      "why": "two rail credits; earliest May 3 is money in hand; posted from May 9 falls below fair",
+      "expected_status": "UNDERCHARGE",
+      "problems": [],
+      "audit_status": "UNDERCHARGE",
+      "audit_fair_paise": 574904,
+      "audit_excess_paise": -28274
+    },
+    {
+      "loan_id": "RT004",
+      "period_start": "2025-06-01",
+      "why": "post-dated cheque posted from ack Jun 12; before cheque date Jun 18; no start basis gives Jun 12",
+      "expected_status": "UNEXPLAINED",
+      "problems": [],
+      "audit_status": "UNEXPLAINED",
+      "audit_fair_paise": 626740,
+      "audit_excess_paise": 28274
+    },
+    {
+      "loan_id": "RT004",
+      "period_start": "2025-07-01",
+      "why": "plain full month after all tranches",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 730411,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT005",
+      "period_start": "2025-03-01",
+      "why": "posted from LMS date before rail credit; fair is 0; stray cheque row on NEFT must not create a P2 match",
+      "expected_status": "UNEXPLAINED",
+      "problems": [],
+      "audit_status": "UNEXPLAINED",
+      "audit_fair_paise": 0,
+      "audit_excess_paise": 38014
+    },
+    {
+      "loan_id": "RT005",
+      "period_start": "2025-04-01",
+      "why": "full April: from sanction, from agreement and full month tie with 1 dim and 1 vote; P1 versus P3",
+      "expected_status": "AMBIGUOUS",
+      "problems": [],
+      "audit_status": "AMBIGUOUS",
+      "audit_fair_paise": 367466,
+      "audit_excess_paise": 12671
+    },
+    {
+      "loan_id": "RT005",
+      "period_start": "2025-05-01",
+      "why": "no posting at all for a month with principal outstanding, between two posted months; net posted is 0",
+      "expected_status": "UNDERCHARGE",
+      "problems": [],
+      "audit_status": "UNDERCHARGE",
+      "audit_fair_paise": 392808,
+      "audit_excess_paise": -392808
+    },
+    {
+      "loan_id": "RT005",
+      "period_start": "2025-06-01",
+      "why": "no rail credit so LMS fallback is the date; audited not a gap",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 478973,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT005",
+      "period_start": "2025-07-01",
+      "why": "prepayment ignored until month end; looks like P3 but FULL_MONTH snaps only CLOSURE receipts",
+      "expected_status": "UNEXPLAINED",
+      "problems": [],
+      "audit_status": "UNEXPLAINED",
+      "audit_fair_paise": 572740,
+      "audit_excess_paise": 55753
+    },
+    {
+      "loan_id": "RT006",
+      "period_start": "2025-03-01",
+      "why": "cheque dated Mar 28 handed over Apr 6; fair is 0 in March, posting exists; P2",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 0,
+      "audit_excess_paise": 55233
+    },
+    {
+      "loan_id": "RT006",
+      "period_start": "2025-04-01",
+      "why": "full April ties with sanction, agreement and full month; history (March) picks cheque date; P2",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 345205,
+      "audit_excess_paise": 69042
+    },
+    {
+      "loan_id": "RT006",
+      "period_start": "2025-05-01",
+      "why": "two EMIs in one month, one near month end",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 424626,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT006",
+      "period_start": "2025-06-01",
+      "why": "DD with ack but no cheque date row; ack is the date; a null in max must not turn this into a gap",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 509523,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT007",
+      "period_start": "2025-02-01",
+      "why": "full Feb ties with sanction and agreement; history across Feb, Apr, May picks full month; P3",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 185315,
+      "audit_excess_paise": 87781
+    },
+    {
+      "loan_id": "RT007",
+      "period_start": "2025-03-01",
+      "why": "plain full month fairly posted",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 302356,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT007",
+      "period_start": "2025-04-01",
+      "why": "tranche 2 snapped to Apr 1; sanctioned-amount candidate also matches this month but has fewer votes; P3",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 431589,
+      "audit_excess_paise": 80466
+    },
+    {
+      "loan_id": "RT007",
+      "period_start": "2025-05-01",
+      "why": "closure May 20 charged to month end; P3",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 324301,
+      "audit_excess_paise": 204822
+    },
+    {
+      "loan_id": "RT007",
+      "period_start": "2025-06-01",
+      "why": "stray posting after closure; fair is 0",
+      "expected_status": "UNEXPLAINED",
+      "problems": [],
+      "audit_status": "UNEXPLAINED",
+      "audit_fair_paise": 0,
+      "audit_excess_paise": 12345
+    },
+    {
+      "loan_id": "RT008",
+      "period_start": "2025-05-01",
+      "why": "sanction, agreement, full month tie; July looks like full month but gap periods do not vote",
+      "expected_status": "AMBIGUOUS",
+      "problems": [],
+      "audit_status": "AMBIGUOUS",
+      "audit_fair_paise": 266301,
+      "audit_excess_paise": 192329
+    },
+    {
+      "loan_id": "RT008",
+      "period_start": "2025-06-01",
+      "why": "plain full month before the gap",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 443836,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT008",
+      "period_start": "2025-07-01",
+      "why": "cheque without handover ack; window Jul 28 to Aug 2 overlaps July; posting shaped like full month must not vote",
+      "expected_status": "EVIDENCE_GAP",
+      "problems": [],
+      "audit_status": "EVIDENCE_GAP",
+      "audit_fair_paise": 458630,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT008",
+      "period_start": "2025-08-01",
+      "why": "window overlaps August; excluded from refund",
+      "expected_status": "EVIDENCE_GAP",
+      "problems": [],
+      "audit_status": "EVIDENCE_GAP",
+      "audit_fair_paise": 753633,
+      "audit_excess_paise": 9863
+    },
+    {
+      "loan_id": "RT008",
+      "period_start": "2025-09-01",
+      "why": "after the window audited on provisional start; balance certain",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 737507,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT009",
+      "period_start": "2025-02-01",
+      "why": "no ack; window Feb 10 to Mar 20",
+      "expected_status": "EVIDENCE_GAP",
+      "problems": [],
+      "audit_status": "EVIDENCE_GAP",
+      "audit_fair_paise": 0,
+      "audit_excess_paise": 156164
+    },
+    {
+      "loan_id": "RT009",
+      "period_start": "2025-03-01",
+      "why": "EMI principal before provisional start; balance negative Mar 5 to Mar 20; must not crash or be clamped into a finding",
+      "expected_status": "EVIDENCE_GAP",
+      "problems": [],
+      "audit_status": "EVIDENCE_GAP",
+      "audit_fair_paise": 98260,
+      "audit_excess_paise": 156165
+    },
+    {
+      "loan_id": "RT009",
+      "period_start": "2025-04-01",
+      "why": "audited after window; balance net of the early EMI",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 246164,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT009",
+      "period_start": "2025-05-01",
+      "why": "second tranche no ack; window May 20 to Jun 1",
+      "expected_status": "EVIDENCE_GAP",
+      "problems": [],
+      "audit_status": "EVIDENCE_GAP",
+      "audit_fair_paise": 254370,
+      "audit_excess_paise": 65753
+    },
+    {
+      "loan_id": "RT009",
+      "period_start": "2025-06-01",
+      "why": "window ends on Jun 1 inclusive so June overlaps it even though June is a full month either way",
+      "expected_status": "EVIDENCE_GAP",
+      "problems": [],
+      "audit_status": "EVIDENCE_GAP",
+      "audit_fair_paise": 410548,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT009",
+      "period_start": "2025-07-01",
+      "why": "plain full month after both windows",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 424233,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-01-01",
+      "why": "disclosed fee at 9.10 on undisbursed from sanction; fair 0; looks exactly like sanction date plus sanctioned amount but disclosed",
+      "expected_status": "PERMITTED",
+      "problems": [],
+      "audit_status": "PERMITTED",
+      "audit_fair_paise": 0,
+      "audit_excess_paise": 548493
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-02-01",
+      "why": "fee on undisbursed plus interest on tranche 1; permitted beats the identical unfair candidate",
+      "expected_status": "PERMITTED",
+      "problems": [],
+      "audit_status": "PERMITTED",
+      "audit_fair_paise": 174521,
+      "audit_excess_paise": 523561
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-03-01",
+      "why": "interest moves to 9.6 on Mar 15; fee stays at KFS 9.10",
+      "expected_status": "PERMITTED",
+      "problems": [],
+      "audit_status": "PERMITTED",
+      "audit_fair_paise": 555890,
+      "audit_excess_paise": 236850
+    },
+    {
+      "loan_id": "RT010",
+      "period_start": "2025-04-01",
+      "why": "undisbursed is 0 so fee is 0",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 789041,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-01-01",
+      "why": "same shape as RT010 with no fee disclosed; from sanction on sanctioned amount; P1 P5",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 0,
+      "audit_excess_paise": 548493
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-02-01",
+      "why": "other sanctioned-amount candidates match this month but have fewer votes; P1 P5",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 174521,
+      "audit_excess_paise": 523561
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-03-01",
+      "why": "tranche 2 arrives Mar 20; P1 P5 by history",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 536027,
+      "audit_excess_paise": 236850
+    },
+    {
+      "loan_id": "RT011",
+      "period_start": "2025-04-01",
+      "why": "once fully disbursed the sanctioned basis equals fair; FAIR wins",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 747945,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT012",
+      "period_start": "2025-03-01",
+      "why": "advance taken Mar 5 before cheque handover Mar 12; literal path has -3 lakh balance for 7 days; clamping to 0 gives a false alarm",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 189839,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT012",
+      "period_start": "2025-04-01",
+      "why": "advance reduction delayed to Apr 5 due date; P4",
+      "expected_status": "REFUND",
+      "problems": [],
+      "audit_status": "REFUND",
+      "audit_fair_paise": 285514,
+      "audit_excess_paise": 287
+    },
+    {
+      "loan_id": "RT012",
+      "period_start": "2025-05-01",
+      "why": "tranche, EMI and rate change on May 10; EMI and prepayment on May 20; rate May 25; tranche May 31",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 471799,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT012",
+      "period_start": "2025-06-01",
+      "why": "wrong posting, reversal booked two months later, manual repost; net equals fair",
+      "expected_status": "FAIR",
+      "problems": [],
+      "audit_status": "FAIR",
+      "audit_fair_paise": 751911,
+      "audit_excess_paise": 0
+    },
+    {
+      "loan_id": "RT012",
+      "period_start": "2025-07-01",
+      "why": "same posting twice with no reversal; net is double fair",
+      "expected_status": "UNEXPLAINED",
+      "problems": [],
+      "audit_status": "UNEXPLAINED",
+      "audit_fair_paise": 776975,
+      "audit_excess_paise": 776975
+    },
+    {
+      "loan_id": "RT012",
+      "period_start": "2025-08-01",
+      "why": "posting fully reversed, no repost; net 0 is below fair",
+      "expected_status": "UNDERCHARGE",
+      "problems": [],
+      "audit_status": "UNDERCHARGE",
+      "audit_fair_paise": 776975,
+      "audit_excess_paise": -776975
+    }
+  ]
+}

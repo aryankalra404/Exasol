@@ -1,0 +1,13 @@
+branch_id,branch_name,state_name,region
+BR001,Pune Kothrud,Maharashtra,WEST
+BR002,Pune Hadapsar,Maharashtra,WEST
+BR003,Nagpur Civil Lines,Maharashtra,WEST
+BR004,Indore Vijay Nagar,Madhya Pradesh,CENTRAL
+BR005,Jaipur Malviya Nagar,Rajasthan,NORTH
+BR006,Lucknow Gomti Nagar,Uttar Pradesh,NORTH
+BR007,Coimbatore RS Puram,Tamil Nadu,SOUTH
+BR008,Mysuru Vijayanagar,Karnataka,SOUTH
+BR009,Vadodara Alkapuri,Gujarat,WEST
+BR010,Bhubaneswar Saheed Nagar,Odisha,EAST
+BR011,Kochi Kakkanad,Kerala,SOUTH
+BR012,Guwahati Dispur,Assam,EAST
