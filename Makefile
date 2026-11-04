@@ -3,7 +3,7 @@ SEED ?= 42
 LOANS ?= 10000
 DATASET := data/s$(SEED)_n$(LOANS)
 
-.PHONY: setup generate load audit demo review-reset test oracle robustness red-team red-team-template scale ask-setup ask-smoke app web clean
+.PHONY: setup generate load audit demo review-reset tamper tamper-undo test oracle robustness red-team red-team-template scale ask-setup ask-smoke app web clean
 
 setup:            ## python venv + dependencies, web build tools
 	python3 -m venv .venv
@@ -23,6 +23,12 @@ demo: generate load audit   ## everything: generate, load, audit
 
 review-reset:     ## clear review records for the loaded synthetic book, to rehearse the demo
 	$(PY) -m scripts.review_reset
+
+tamper:           ## add one paisa to Meena's March 2025 posting, for the demo; re-run the audit afterwards
+	$(PY) -m scripts.demo_tamper
+
+tamper-undo:      ## take that paisa back; re-run the audit afterwards
+	$(PY) -m scripts.demo_tamper --undo
 
 test:             ## unit + acceptance tests (db tests skip without .env)
 	$(PY) -m pytest -q tests

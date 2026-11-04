@@ -24,6 +24,7 @@ from pydantic import BaseModel
 
 from app.api import live as live_view
 from app.api import review as rv
+from app.api import source as src
 from app.api.book_io import inspection_pack, templates_zip, validate_extract, write_book
 from letters.letter import check, render
 from scripts.audit import now, run_audit
@@ -290,6 +291,50 @@ def proof(run_id: str, loan_id: str, period: str):
     fp = one(f"SELECT * FROM {OUT}.fingerprints WHERE run_id = {{r}} AND loan_id = {{l}} AND period_start = {{p}}", p)
     postings = rows(f"SELECT * FROM {RAW}.interest_postings WHERE loan_id = {{l}} AND period_start = {{p}} ORDER BY posted_on, posting_id", p)
     return {"divisor": divisor, "fair_intervals": fair, "extra_intervals": extra, "fingerprint": fp, "postings": postings}
+
+
+@app.get("/api/runs/{run_id}/loans/{loan_id}/source/{period}")
+def source_records(run_id: str, loan_id: str, period: str):
+    """The stored rows behind one audited month, the statements that read them, and the decision the run made."""
+    rid = resolve_run(run_id)
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", period):
+        raise HTTPException(400, "bad month")
+    p = {"r": rid, "l": loan_id, "p": period}
+    fingerprint = one(f"SELECT * FROM {OUT}.fingerprints WHERE run_id = {{r}} AND loan_id = {{l}} AND period_start = {{p}}", p)
+    if not fingerprint:
+        raise HTTPException(404, "this run did not audit that month for this loan")
+    run = one(f"SELECT dataset_id, started_at, label, policy_snapshot FROM {OUT}.audit_runs WHERE run_id = {{r}}", p)
+    tranches = rows(f"SELECT * FROM {OUT}.money_in_hand WHERE run_id = {{r}} AND loan_id = {{l}} ORDER BY tranche_no", p)
+    for t in tranches:
+        t["precedence"] = src.precedence(run["policy_snapshot"], t["payment_mode"])
+
+    records = []
+    with db() as c:
+        for key, table, sql in src.RECORDS:
+            st = c.execute(sql, p)
+            records.append({"key": key, "table": table, "sql": st.query, "columns": [x.lower() for x in st.column_names()],
+                            "rows": [[src.cell(v) for v in row] for row in st.fetchall()]})
+    records = [r for r in records if r["rows"] or r["key"] != "entered_evidence"]
+    evidence = [row for r in records if r["key"] in ("evidence", "entered_evidence") for row in src.as_dicts(r)]
+    loaded = one(f"SELECT dataset_id FROM {RAW}.dataset_info")
+    return {
+        "run_id": rid,
+        "loan_id": loan_id,
+        "period_start": period,
+        "run": {k: run[k] for k in ("dataset_id", "started_at", "label")},
+        "decision": {
+            "fingerprint": fingerprint,
+            "findings": rows(f"SELECT * FROM {OUT}.findings WHERE run_id = {{r}} AND loan_id = {{l}} AND period_start = {{p}} "
+                             f"ORDER BY practice_code", p),
+            "refund_paise": one(src.REFUND, p)["refund_paise"],
+            "tranches": tranches,
+        },
+        "records": records,
+        "deciding_evidence_ids": src.deciding_ids(evidence, tranches),
+        "earlier_receipts": one(src.EARLIER_RECEIPTS, p),
+        "freshness": src.freshness(run["dataset_id"], loaded["dataset_id"] if loaded else None,
+                                   fingerprint["posted_paise"], one(src.POSTED_NOW, p)["posted_now"]),
+    }
 
 
 @app.get("/api/runs/{run_id}/letters/{loan_id}")

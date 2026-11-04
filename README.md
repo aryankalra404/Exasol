@@ -114,6 +114,7 @@ Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues 
 | `make audit` | Run the SQL pipeline (`sql/10..90`) inside Exasol, recording timings and lineage |
 | `make demo LOANS=10000` | generate + load + audit |
 | `make review-reset` | Clear review records and entered evidence for the loaded synthetic book, to rehearse the demo |
+| `make tamper`, `make tamper-undo` | Add one paisa to Meena's March 2025 posting, or take it back, to show the audit catching it. Re-run the audit after each |
 | `make test` | pytest (database tests skip without `.env`) |
 | `make oracle LOANS=10000` | Independent Python oracle vs the latest run, every loan |
 | `make scale LOANS=500000` | Big book in separate `SCALE_*` schemas, report in `eval/reports/` |

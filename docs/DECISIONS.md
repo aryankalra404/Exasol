@@ -128,6 +128,11 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 - Why: the loans found correct were invisible, and an auditor needs "these are clean" as much as "these are wrong". Refunds are reviewed by root cause, because nobody clicks through thousands of rows. The level says what the evidence is ("exact match, confirmed date"), not that a refund is certain: a matching record can still be wrong. Disagreeing dates do not lower the level, because that disagreement is often what proves the overcharge
 - Gave up: a single confidence score, which would hide what the doubt actually is
 
+**D32. Source records read the stored rows live and return the statement Exasol actually ran** (accepted)
+- Why: an auditor or juror asking for the raw data should get the rows behind this one decision in one click, as stored, with SQL that cannot differ from what ran. Paise stay raw integers there; rupees appear only in the decision path, read from result tables
+- A panel for one month rather than a table browser, so the question "what was this decided from?" has one answer. Secondary tables stay folded
+- Gave up: snapshotting raw rows per run, which would duplicate the book. The panel says so and warns when the posted total or the book has changed
+
 **D31. The live view reads Exasol's system tables rather than having the pipeline report progress** (accepted)
 - Why: judges should see the engine itself, not an animation we could have scripted. `EXA_DBA_SESSIONS` and `EXA_DBA_PROFILE_RUNNING` give the real statement and operators, and the existing run log gives step progress, so `scripts/audit.py` did not change. Its own connection means a poll never waits on the app's pool
 - It opens on the Policy page, not a page of its own, so the re-run, the engine and the changed totals stay on one screen. The Data page has the same panel for a load and audit

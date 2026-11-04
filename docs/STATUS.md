@@ -93,7 +93,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | R5 | Usable review: loan outcomes, review by root cause, evidence level, refund instructions | Aryan | done | Overview, All loans, Review & release, `tests/test_review.py` |
 | R2 | Human checks: letters, oracle, auditor, RBI text | | todo | sheets in `docs/HUMAN_CHECKS.md`; only people can do these |
 | R6 | Exasol live view: running SQL, operators and step progress during a run | Aryan | done | `app/api/live.py`, live panel on Policy that opens on a re-run, then walks through the finished run step by step (arrows, left and right keys, or clicking a step), the same panel on Data for a load and audit, step strip on Work queues, `tests/test_live.py`. Read-only, no pipeline change. Run through the real buttons in headless Chrome |
-| R7 | Show source records: the raw rows and decision path behind one month | Aryan | doing | contract 0.9.0, endpoint and panel on the loan page |
+| R7 | Show source records: the raw rows and decision path behind one month | Aryan | done | `app/api/source.py`, panel on the loan page, `make tamper` and `make tamper-undo`, `tests/test_source_records.py`. Read-only, no pipeline change. Run through the real button in headless Chrome for refund, permitted, gap, fair, changed and unexplained months |
 
 ### Submission
 | # | Task | Owner | State | Notes |
@@ -144,7 +144,8 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Loan outcomes | 10,003 audited: 6,400 correct, 3,063 refund owed, 230 permitted, 171 waiting on evidence, 61 needs investigation, 78 undercharged. Refund rows by evidence: 2,560 exact match and confirmed date, 92 fallback date, 70 other months open, 353 rule not unique | s42_n10000 | 4 Nov 2026 |
 | Live view polling | Audit 7.6, 7.7, 8.0 s without polling; 8.1, 8.2, 8.4 s with `/api/live` polled twice a second. Three runs each, so a small sample. Slowest poll 0.10 s | s42_n10000 in separate schemas | 5 Nov 2026 |
 | Load and audit from the Data page | Sample reload: load 1.4 to 1.6 s, audit 8.2 to 9.2 s. Three-loan template upload: load 0.8 s, audit 1.1 to 1.5 s. Slowest live poll during an upload 0.14 s | s42_n10000 and the template book, separate schemas | 5 Nov 2026 |
-| Tests | 59 passed locally with Exasol | separate schemas | 5 Nov 2026 |
+| One paisa added to one posting (`PDM0001010`), re-run | Meena's March 2025 goes from Refund to Unexplained (closest rule off by 1 paisa); refund total ₹8,83,23,995.69 to ₹8,83,21,694.32, down exactly ₹2,301.37; refund loans 3,063 to 3,062; unexplained months 454 to 455; her approved letter leaves the book. Paisa taken back, re-run: total, loans and unexplained restored exactly and the approval counts again. Re-runs 7.4 to 8.4 s | s42_n10000, separate schemas | 5 Nov 2026 |
+| Tests | 72 passed, 1 skipped locally with Exasol | separate schemas | 5 Nov 2026 |
 
 ## Blockers and open questions
 

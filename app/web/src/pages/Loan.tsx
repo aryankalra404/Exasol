@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { CONFIDENCE_WORDS, DAYCOUNT_WORDS, day, describeConvention, go, inr, inrExact, LETTER_WORDS, LOAN_STATUS_WORDS, MODE_WORDS, month, plural, post, PRACTICE, REVIEW_WORDS, SOURCE_WORDS, sources, STATUS_WORDS, useApi, useReviewer } from "../lib";
 import { ActorFields, missingActor } from "./Review";
+import SourceRecords from "./SourceRecords";
 
 const DAY_MS = 86400000;
 const toT = (d: string) => Date.parse(d.slice(0, 10) + "T00:00:00Z");
@@ -88,7 +89,7 @@ export default function Loan({ runId, loanId, period }: { runId: string; loanId?
         </div>
       </section>
 
-      {selected && <Proof sel={selected} proof={proof.data} findings={data.findings.filter((f: any) => f.period_start === selected.period_start)} />}
+      {selected && <Proof key={selected.period_start} runId={runId} loanId={loanId} sel={selected} proof={proof.data} findings={data.findings.filter((f: any) => f.period_start === selected.period_start)} />}
 
       {flagged.length > 0 && (
         <section className="section">
@@ -221,7 +222,13 @@ function Tranche({ t, loan, evidence, extra }: { t: any; loan: any; evidence: an
   const span = Math.max(hi - lo, 10 * DAY_MS);
   lo -= span * 0.06; hi = lo + span * 1.12;
   const W = 1000, x = (d: string) => 30 + ((toT(d) - lo) / (hi - lo)) * (W - 60);
-  const rows = [...marks].sort((a, b) => toT(a.date) - toT(b.date));
+  // records on the same day share one mark, so their labels never draw over each other
+  const rows = [...marks].sort((a, b) => toT(a.date) - toT(b.date)).reduce<typeof marks>((out, m) => {
+    const last = out[out.length - 1];
+    if (last && last.date === m.date) out[out.length - 1] = { ...last, label: `${last.label}, ${m.label}`, kind: last.kind === "ev" ? "ev" : m.kind };
+    else out.push(m);
+    return out;
+  }, []);
 
   return (
     <div className="card pad">
@@ -241,12 +248,16 @@ function Tranche({ t, loan, evidence, extra }: { t: any; loan: any; evidence: an
         ))}
         {rows.map((m, i) => {
           const up = i % 2 === 0;
+          // a label near the right edge reads leftwards from its mark, so a merged label stays inside the card
+          const flip = x(m.date) > W * 0.7;
+          const tx = x(m.date) + (flip ? -5 : 5);
+          const anchor = flip ? "end" : "start";
           return (
             <g key={m.label + m.date}>
               <line x1={x(m.date)} x2={x(m.date)} y1={up ? 30 : 70} y2={up ? 70 : 108} stroke={m.kind === "ref" ? "var(--ink-3)" : "var(--ink-2)"} strokeDasharray={m.kind === "ref" ? "3 3" : ""} />
               <circle cx={x(m.date)} cy={70} r={4} fill={m.kind === "ref" ? "var(--paper)" : "var(--ink)"} stroke="var(--ink)" />
-              <text className="lbl" x={x(m.date) + 5} y={up ? 22 : 118}>{m.label}</text>
-              <text x={x(m.date) + 5} y={up ? 34 : 106}>{day(m.date)}</text>
+              <text className="lbl" x={tx} y={up ? 22 : 118} textAnchor={anchor}>{m.label}</text>
+              <text x={tx} y={up ? 34 : 106} textAnchor={anchor}>{day(m.date)}</text>
             </g>
           );
         })}
@@ -269,7 +280,8 @@ function Tranche({ t, loan, evidence, extra }: { t: any; loan: any; evidence: an
   );
 }
 
-function Proof({ sel, proof, findings }: { sel: any; proof: any; findings: any[] }) {
+function Proof({ runId, loanId, sel, proof, findings }: { runId: string; loanId: string; sel: any; proof: any; findings: any[] }) {
+  const [showSource, setShowSource] = useState(false);
   const status = sel.match_status;
   const tone = { FAIR: "ok", MATCHED: "", PERMITTED: "slate", EVIDENCE_GAP: "warn", UNEXPLAINED: "purple", AMBIGUOUS: "", UNDERCHARGE: "ok" }[status as string] ?? "";
   const codes = findings.map((f) => f.practice_code).filter(Boolean);
@@ -280,7 +292,10 @@ function Proof({ sel, proof, findings }: { sel: any; proof: any; findings: any[]
           <h2>Why this figure: {month(sel.period_start)}</h2>
           <p>How Exasol arrived at this month's figure, interval by interval. Interest is kept exact until the monthly total, which is rounded half up once.</p>
         </div>
-        <a className="btn ghost" href="#/method/S70_FINGERPRINT">{status === "MATCHED" || status === "PERMITTED" ? "SQL that matched it" : "View the SQL"}</a>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <button className="btn" onClick={() => setShowSource((v) => !v)} aria-expanded={showSource}>{showSource ? "Hide source records" : "Show source records"}</button>
+          <a className="btn ghost" href="#/method/S70_FINGERPRINT">{status === "MATCHED" || status === "PERMITTED" ? "SQL that matched it" : "View the SQL"}</a>
+        </div>
       </header>
       <div className="proof">
         <div><div className="upper">Posted by the loan system</div><div className="v">{inr(sel.posted_paise)}</div><div className="tiny faint mono">{sel.posting_ids}</div></div>
@@ -296,6 +311,8 @@ function Proof({ sel, proof, findings }: { sel: any; proof: any; findings: any[]
         {status === "AMBIGUOUS" && <>{findings[0]?.reason}</>}
         {status === "UNDERCHARGE" && <>{findings[0]?.reason}</>}
       </div>
+
+      {showSource && <SourceRecords runId={runId} loanId={loanId} sel={sel} />}
 
       {findings.length > 1 && (
         <div className="card" style={{ marginTop: 14 }}>

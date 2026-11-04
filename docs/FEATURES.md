@@ -10,6 +10,7 @@ All features are deterministic. Every figure comes from SQL in Exasol.
 |---|---|---|
 | **Book headline with honest exclusions** | How much do we owe, and what are we not sure about? | Book. Refund total next to gaps, unexplained, permitted and ambiguous, each with its own queue |
 | **"Why this figure"** | What proves this rupee? | Loan page. Posted vs fair vs excess, fair interest interval by interval, the extra balance charged and on which days, the postings, and the SQL step |
+| **Show source records** | What was this decided from? | Loan page, Why this figure. The stored rows for that month, the row that set each date, the statement that read them, and the steps to the decision. See `D32` |
 | **Evidence timeline per tranche** | When did the money really arrive? | Loan page. Every date source on one axis, the resolved date, and a band showing the days charged before money was in hand |
 | **Root causes: what the loan system was doing** | What do we fix? | Book. One row per (branch, behaviour): "from the cheque date, 19 loans, ₹61,565". One configuration fix closes the row |
 | **Fix coverage: "fixed for new loans only?" cohorts** | Did last year's fix actually cover everyone? | Regression. Sanction quarter × charge quarter heatmap. Old cohorts that stay dark after newer ones clear show an unmigrated fix |

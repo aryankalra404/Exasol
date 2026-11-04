@@ -51,6 +51,8 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 - **How auditors test interest charging today.** We found no public account. "They sample" is an assumption, not a finding
 - **Prevalence.** RBI has not published how many lenders, loans or rupees were involved. We do not state a number
 
+- **Source records show the loaded extract, not a copy per run.** On an older run or after a change, the panel warns if another book is loaded or the month's posted total differs from what the run audited. It does not detect a changed evidence date, rate or repayment until the audit is re-run
+
 ## Platform
 
 - **Single-user local tool, self-declared names.** No login or roles. Review decisions, policy changes and releases record a typed name and reason, so the log shows what was claimed, not a verified identity, and the same name can approve and release. A lender deployment would put the app behind its own sign-on and enforce separate approver and releaser roles. Data comes in through `make load` or a ZIP upload on the Data page (up to 512 MB); one book is loaded at a time

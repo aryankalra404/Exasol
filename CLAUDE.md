@@ -153,6 +153,8 @@ make load LOANS=10000       # schemas + IMPORT into Exasol
 make audit                  # run the SQL pipeline in Exasol (records run, timings, lineage)
 make demo LOANS=10000       # generate + load + audit
 make review-reset           # clear review records and entered evidence for the loaded synthetic book, to rehearse the demo
+make tamper                 # add one paisa to Meena's March 2025 posting for the demo; re-run the audit after
+make tamper-undo            # take it back; re-run the audit after
 make test                   # pytest; db tests skip without .env
 make oracle LOANS=10000     # independent oracle vs latest run, every loan
 make scale LOANS=500000     # SCALE_* schemas, timings + row counts into eval/reports/scale_*.json
