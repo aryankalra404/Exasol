@@ -31,6 +31,15 @@ def test_the_audit_statement_is_featured_over_a_screen_reading_results():
     assert live.pick_current([]) is None
 
 
+def test_each_pipeline_statement_maps_to_its_step_and_bookkeeping_to_none():
+    found = live.statement_steps("00000000-0000-0000-0000-000000000000")
+    assert set(found.values()) == {p["step_id"] for p in live.pipeline()}
+    assert live._prefix(f"INSERT INTO {live.S['OUT']}.step_timings VALUES (1)") not in found
+    # the session's text may be laid out differently from the file
+    some = next(iter(found))
+    assert live._prefix(some.replace(" ", "\n   ")) == some
+
+
 def test_passwords_never_reach_the_screen():
     assert "secret" not in live._mask("CREATE USER x IDENTIFIED BY secret")
 

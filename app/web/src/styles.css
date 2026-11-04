@@ -292,7 +292,15 @@ pre.sql {
 .live-dot.on { background: var(--accent); animation: live-pulse 1.1s ease-in-out infinite; }
 @keyframes live-pulse { 50% { opacity: 0.35; } }
 .live-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 6px; }
-.live-steps li { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; color: var(--ink-3); min-width: 0; }
+.live-steps li { border: 1px solid var(--rule); border-radius: 8px; color: var(--ink-3); min-width: 0; }
+.live-steps .cell { all: unset; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; width: 100%; height: 100%; }
+.live-steps button.cell { cursor: pointer; }
+.live-steps button.cell:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-radius: 8px; }
+.live-steps .selected { outline: 2px solid var(--ok); outline-offset: 1px; }
+.live-walk { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+.live-walk > div { flex: 1; min-width: 0; text-align: center; }
+.live-walk .btn { font-size: 18px; padding: 4px 14px; }
+.live-caught { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 0; }
 .live-steps b { font-size: 12.5px; font-weight: 500; line-height: 1.25; flex: 1; }
 .live-steps .done { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
 .live-steps .running { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); animation: live-pulse 1.1s ease-in-out infinite; }

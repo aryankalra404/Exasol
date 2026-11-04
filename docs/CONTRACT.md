@@ -1,6 +1,6 @@
 # Contract
 
-**Version 0.8.0** (5 Nov 2026)
+**Version 0.8.1** (5 Nov 2026)
 
 The interface between components. Generator, SQL pipeline, oracle, app, letters and agent talk only through what is defined here. Build against this, not against each other's code.
 
@@ -219,7 +219,7 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - `GET /api/runs/{run_id}/review/summary`; `POST /api/runs/{run_id}/review/decisions`, `/review/approve-filtered` (needs a filter; touches `UNREVIEWED` rows only), `/review/unexplained`, `/releases` (409 on any draft or checker failure, nothing released); `GET /api/releases/{batch_id}/letters.zip`. Writes need `reviewer` and `reason`, and apply to the latest run only (409 otherwise). Ledger rows gain `review_state`, `decided_by`, `review_reason`, `decided_at`, and the ledger takes `review=`; loan and letter responses gain `run_id` and review state; the inspection pack gains `review_decisions.csv`, `policy_changes.csv`, `release_batches.csv`, `letter_releases.csv`
 - `GET /api/runs/{run_id}/evidence`, `POST /api/runs/{run_id}/evidence` (only for a tranche in the gap queue; needs date, reference, reviewer, reason; moves nothing until a re-run), `POST /api/runs/{run_id}/evidence/{evidence_id}/withdraw`. Loan responses list entered evidence with `recorded_in = REVIEWER`; the inspection pack gains `evidence_additions.csv`
 - `GET /api/runs/{run_id}/outcomes` (one outcome per audited loan: `REFUND`, `EVIDENCE_GAP`, `UNEXPLAINED`, `PERMITTED`, `UNDERCHARGE`, `FAIR`, in that order of strength), `GET /api/runs/{run_id}/outcomes/{outcome}?branch=&page=&size=`. Ledger rows gain `conventions`, `certainty` (`EXACT_CONFIRMED`, `FALLBACK_DATE`, `OPEN_MONTHS`, `NOT_UNIQUE`) and `held_days`, and the ledger and filtered approval take `certainty=` and `convention=`. Release ZIPs gain `refund_instructions.csv`
-- `GET /api/live`: read-only view of what Exasol is doing, from `EXA_DBA_SESSIONS`, `EXA_DBA_PROFILE_RUNNING`, `audit_runs` and `step_timings`. Returns `version`, `open_sessions`, `run`, `running`, `steps` (`state`: `done`, `running`, `failed`, `waiting`), `current` (statement, SQL text up to 4,000 characters), `operators`, `others`. 503 if Exasol cannot be read
+- `GET /api/live`: read-only view of what Exasol is doing, from `EXA_DBA_SESSIONS`, `EXA_DBA_PROFILE_RUNNING`, `audit_runs` and `step_timings`. Returns `version`, `open_sessions`, `run`, `running`, `steps` (`state`: `done`, `running`, `failed`, `waiting`), `current` (statement, SQL text up to 4,000 characters, `step_id` matched against the SQL files, null if in none), `operators`, `others`. 503 if Exasol cannot be read
 - `GET /api/lineage`, `GET /api/lineage/{sql_step_id}` (includes the SQL text)
 - `GET/PUT /api/policy/settings` (PUT requires `changed_by` and `reason`; GET adds `changes`), `POST /api/runs` (re-run the pipeline), `GET /api/compare/{a}/{b}`, `GET /api/search?q=`
 
@@ -230,6 +230,7 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - 0.3.0 (31 Oct 2026): additive. New schema `SAHI_ASK` (views, latest run) and user `ASK_READER`; env `EXASOL_SCHEMA_ASK`, `EXASOL_ASK_USER`, `EXASOL_ASK_PASSWORD`. Affects nobody else
 - 0.3.1 (31 Oct 2026): additive. Work-queue API takes `page` and `size` (replaces `limit`) and returns `total_rows`. Affects app only
 - 0.4.0 (31 Oct 2026): additive. Data and inspection-pack endpoints. An uploaded book gets `dataset_id = upload_<UTC timestamp>`, `generator_version = 'upload'`, empty truth tables, and is stored under `data/uploads/`. Affects app only
+- 0.8.1 (5 Nov 2026): additive. `current.step_id` on `GET /api/live`. Affects app only
 - 0.8.0 (5 Nov 2026): additive. `GET /api/live`. No table changes. Affects app only
 - 0.7.0 (4 Nov 2026): additive. Loan outcomes, evidence level on ledger rows, refund instructions in release ZIPs. No table changes. Affects app only
 - 0.6.0 (4 Nov 2026): additive. `SAHI_POLICY.evidence_additions`, a new input to S20 and the oracle; evidence endpoints. A book with no entries audits exactly as before. Affects pipeline, oracle, app

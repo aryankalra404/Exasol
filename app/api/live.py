@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 from scripts.audit import now, pipeline_files
 from scripts.db import connect, schemas
-from scripts.sqlrun import header
+from scripts.sqlrun import header, render, statements
 
 S = schemas()
 OUT = S["OUT"]
@@ -24,6 +24,7 @@ _lock = threading.Lock()
 _conn = None
 _cached: tuple[float, dict] | None = None
 _pipeline: list[dict] | None = None
+_lookup: tuple[str, dict[str, str]] | None = None
 
 
 def pipeline() -> list[dict]:
@@ -35,6 +36,27 @@ def pipeline() -> list[dict]:
             _pipeline.append({"step_id": meta.get("step", path.stem.upper()), "file_path": f"sql/{path.name}",
                               "purpose": meta.get("purpose", "")})
     return _pipeline
+
+
+def _prefix(sql: str) -> str:
+    return " ".join(sql.split())[:160]
+
+
+def statement_steps(run_id: str) -> dict[str, str]:
+    """Which pipeline step each statement of this run belongs to, from the SQL files themselves.
+
+    Timing cannot say this reliably: a poll can read the run log just before a step ends and the session just after.
+    The runner's own bookkeeping statements are in no file, so they map to no step.
+    """
+    global _lookup
+    if _lookup is None or _lookup[0] != run_id:
+        found = {}
+        for path in pipeline_files():
+            step_id = header(path).get("step", path.stem.upper())
+            for stmt in statements(render(path.read_text(), run_id)):
+                found[_prefix(stmt)] = step_id
+        _lookup = (run_id, found)
+    return _lookup[1]
 
 
 def step_states(steps: list[dict], timings: dict[str, dict], status: str | None) -> list[dict]:
@@ -94,6 +116,7 @@ def _read(c) -> dict:
     operators = []
     if current:
         current["audit"] = is_audit_write(current)
+        current["step_id"] = statement_steps(run["run_id"]).get(_prefix(current["sql_text"] or "")) if run else None
         operators = _fetch(c, """SELECT part_id, part_name, part_info, part_finished, object_schema, object_name,
                                         object_rows, out_rows, duration, cpu, temp_db_ram_peak
                                  FROM EXA_DBA_PROFILE_RUNNING

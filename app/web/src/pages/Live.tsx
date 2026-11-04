@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, n, seconds } from "../lib";
+import { api, n, seconds, sentence } from "../lib";
 
 const FAST_MS = 500;
 const IDLE_MS = 3000;
@@ -46,22 +46,28 @@ const stepName = (id: string) => {
 const stepCode = (id: string) => id.split("_")[0];
 const STEP_WORDS: Record<string, string> = { done: "Done", running: "Running", failed: "Failed", waiting: "Waiting" };
 
-function Steps({ steps, starting }: { steps: any[]; starting: boolean }) {
+function Steps({ steps, starting, selected, onPick }: { steps: any[]; starting: boolean; selected?: number; onPick?: (i: number) => void }) {
+  const Cell = onPick ? "button" : "div";
   return (
     <ol className="live-steps">
-      {steps.map((s) => {
+      {steps.map((s, i) => {
         const state = starting ? "waiting" : s.state;
         return (
-          <li key={s.step_id} className={state} title={s.purpose}>
-            <span className="mono tiny">{stepCode(s.step_id)}</span>
-            <b>{stepName(s.step_id)}</b>
-            <span className="mono tiny">{!starting && s.duration_ms != null ? seconds(s.duration_ms) : STEP_WORDS[state]}</span>
+          <li key={s.step_id} className={`${state} ${selected === i ? "selected" : ""}`} title={s.purpose}>
+            <Cell className="cell" onClick={onPick ? () => onPick(i) : undefined}>
+              <span className="mono tiny">{stepCode(s.step_id)}</span>
+              <b>{stepName(s.step_id)}</b>
+              <span className="mono tiny">{!starting && s.duration_ms != null ? seconds(s.duration_ms) : STEP_WORDS[state]}</span>
+            </Cell>
           </li>
         );
       })}
     </ol>
   );
 }
+
+/** The step's first sentence: the rest of a SQL file's purpose line is detail for someone reading the file. */
+const firstSentence = (s: string) => sentence(s.split(/\.\s/)[0].replace(/\.$/, "")) + ".";
 
 function runWords(d: any, starting: boolean): string {
   if (starting) return "Starting audit in Exasol";
@@ -109,6 +115,15 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
   // the last statement a poll saw, kept so there is something to read after a fast run ends
   const [held, setHeld] = useState<{ current: any; operators: any[] } | null>(null);
   const runRef = useRef<string | null>(null);
+  // what the polls saw of this run, per step, so the finished run can be walked through at a talking pace
+  const [rec, setRec] = useState<{ runId: string; steps: Record<string, any[]> } | null>(null);
+  const [pick, setPick] = useState(0);
+  const [stmtPick, setStmtPick] = useState<number | null>(null);
+  const goStep = (i: number) => { setPick(i); setStmtPick(null); };
+
+  useEffect(() => {
+    if (starting) { setRec(null); goStep(0); }
+  }, [starting]);
 
   useEffect(() => {
     if (!data) return;
@@ -120,14 +135,45 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
     const cur = data.current;
     if (!cur || cur.command_name === "COMMIT") return;
     if (!data.running) return; // once the run is over, keep its last statement rather than a screen's read
+    if (cur.step_id) {
+      const sample = { current: cur, operators: data.operators };
+      setRec((r) => {
+        const base: { runId: string; steps: Record<string, any[]> } = r && r.runId === data.run.run_id ? r : { runId: data.run.run_id, steps: {} };
+        const list: any[] = base.steps[cur.step_id] ?? [];
+        const at = list.findIndex((x) => x.current.stmt_id === cur.stmt_id);
+        // the same statement sampled twice: keep the later view unless it has lost its plan
+        const next = at < 0 ? [...list, sample] : list.map((x, i) => (i === at && sample.operators.length >= x.operators.length ? sample : x));
+        return { ...base, steps: { ...base.steps, [cur.step_id]: next } };
+      });
+    }
     if (!cur.audit && held?.current?.audit) return;
     if (!data.operators.length && held?.operators.length) return; // sampled before its plan existed: keep SQL and plan together
     setHeld({ current: cur, operators: data.operators });
   }, [data]);
 
   const executing = data?.running && data.current && data.current.command_name !== "COMMIT";
-  const showing = executing ? data : held;
+  const replay = !running && !starting && !data?.running && data?.run?.status === "DONE" && rec?.runId === data.run.run_id;
+  const count = data?.steps?.length ?? 0;
+  const step = replay ? data.steps[pick] : null;
+  const caught: any[] = step ? rec!.steps[step.step_id] ?? [] : [];
+  const fullest = caught.reduce((best, x, i) => (x.operators.length > caught[best].operators.length ? i : best), 0);
+  const shown = stmtPick ?? fullest;
+  const showing = replay ? caught[shown] : executing ? data : held;
   const stmt = showing?.current;
+
+  useEffect(() => {
+    if (!replay) return;
+    const on = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if ((e.target as HTMLElement).closest?.("input, textarea, select, [contenteditable]")) return;
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      setStmtPick(null);
+      setPick((p) => Math.min(count - 1, Math.max(0, p + (e.key === "ArrowLeft" ? -1 : 1))));
+    };
+    window.addEventListener("keydown", on);
+    return () => window.removeEventListener("keydown", on);
+  }, [replay, count]);
 
   return (
     <div className="card pad live-panel">
@@ -138,11 +184,21 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
         <button className="btn ghost mini" style={{ marginLeft: "auto" }} onClick={onClose}>Close</button>
       </div>
       {error && <p className="small muted">{error}</p>}
-      {data && <Steps steps={data.steps} starting={starting} />}
+      {data && <Steps steps={data.steps} starting={starting} selected={replay ? pick : undefined} onPick={replay ? goStep : undefined} />}
+      {step && (
+        <div className="live-walk">
+          <button className="btn ghost mini" aria-label="Previous step" disabled={pick === 0} onClick={() => goStep(pick - 1)}>←</button>
+          <div>
+            <div><b>Step {pick + 1} of {count} · {stepName(step.step_id)}</b> <span className="mono small muted">{seconds(step.duration_ms)}</span></div>
+            <div className="small muted">{firstSentence(step.purpose)}</div>
+          </div>
+          <button className="btn ghost mini" aria-label="Next step" disabled={pick === count - 1} onClick={() => goStep(pick + 1)}>→</button>
+        </div>
+      )}
       <div className="grid g2 live-detail">
         <div>
           <div className="live-title">
-            <h3>{executing ? "Executing now" : "Last statement seen"}</h3>
+            <h3>{replay ? "SQL sampled in this step" : executing ? "Executing now" : "Last statement seen"}</h3>
             {stmt && <span className="tag PERMITTED">{stmt.command_name}</span>}
           </div>
           {stmt ? (
@@ -152,10 +208,19 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
               </p>
               <pre className="live-sql">{stmt.sql_text}</pre>
             </>
-          ) : <div className="empty">The SQL appears here as Exasol executes it.</div>}
+          ) : <div className="empty">{replay ? "This step finished between samples." : "The SQL appears here as Exasol executes it."}</div>}
+          {step && (
+            <p className="tiny muted live-caught">
+              {caught.length > 1 && caught.map((_, i) => (
+                <button key={i} className={`btn mini ${i === shown ? "" : "ghost"}`} onClick={() => setStmtPick(i)}>{i + 1}</button>
+              ))}
+              {caught.length > 1 && <span>{caught.length} statements caught by sampling. </span>}
+              <a href={`#/method/${step.step_id}`} target="_blank" rel="noreferrer">All SQL for this step</a>
+            </p>
+          )}
         </div>
         <div>
-          <h3>{executing ? "Query plan as it runs" : "Query plan at the last sample"}</h3>
+          <h3>{replay ? "Query plan when sampled" : executing ? "Query plan as it runs" : "Query plan at the last sample"}</h3>
           <p className="tiny muted">Sampled twice a second from <span className="mono">EXA_DBA_PROFILE_RUNNING</span>.</p>
           {showing?.operators?.length ? (
             <div className="live-plan">
@@ -173,7 +238,7 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
                 ))}</tbody>
               </table>
             </div>
-          ) : <div className="empty">Operators appear while a statement executes.</div>}
+          ) : <div className="empty">{replay ? "No operators were caught for this step." : "Operators appear while a statement executes."}</div>}
         </div>
       </div>
     </div>
