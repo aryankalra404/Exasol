@@ -31,6 +31,13 @@ def test_the_audit_statement_is_featured_over_a_screen_reading_results():
     assert live.pick_current([]) is None
 
 
+def test_a_book_load_is_featured_over_a_screen_reading_results():
+    read = {"command_name": "SELECT", "sql_text": f"SELECT 1 FROM {live.S['OUT']}.findings"}
+    load = {"command_name": "IMPORT", "sql_text": f"IMPORT INTO {live.S['RAW']}.LOANS FROM CSV AT 'x' FILE 'y'"}
+    assert live.pick_current([read, load]) is load
+    assert not live.is_audit_write(load)
+
+
 def test_each_pipeline_statement_maps_to_its_step_and_bookkeeping_to_none():
     found = live.statement_steps("00000000-0000-0000-0000-000000000000")
     assert set(found.values()) == {p["step_id"] for p in live.pipeline()}

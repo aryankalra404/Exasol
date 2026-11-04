@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, PlainTextResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -480,6 +481,11 @@ async def data_upload(request: Request):
     body = await request.body()
     if len(body) > MAX_UPLOAD:
         raise HTTPException(413, "The ZIP is larger than 512 MB. Load large books with `make load` instead.")
+    # off the event loop: loading and auditing take a while, and the live view and other screens must keep answering
+    return await run_in_threadpool(_load_upload, body)
+
+
+def _load_upload(body: bytes) -> dict:
     tables, errors, counts = validate_extract(body)
     if errors:
         return {"ok": False, "errors": errors, "counts": counts}

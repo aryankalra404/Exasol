@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { api, day, go, n, seconds, useApi } from "../lib";
+import { LivePanel } from "./Live";
 
 const TABLE_WORDS: Record<string, string> = {
   loans: "Loans",
@@ -35,20 +36,23 @@ export default function Data({ onChanged }: { onChanged: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [showLive, setShowLive] = useState(false);
   const file = useRef<HTMLInputElement>(null);
 
   const done = (r: any) => { setResult(r); setVer((v) => v + 1); onChanged(); };
+  // nothing was loaded: the panel would only be showing the previous book's audit
+  const failed = (list: string[]) => { setErrors(list); setShowLive(false); };
   const upload = async (f: File) => {
-    setBusy(`Checking and loading ${f.name}…`); setErrors([]); setResult(null);
+    setBusy(`Checking and loading ${f.name}…`); setErrors([]); setResult(null); setShowLive(true);
     try {
       const r = await api<any>("/data/upload", { method: "POST", headers: { "Content-Type": "application/zip" }, body: f });
-      if (r.ok) done(r); else setErrors(r.errors);
-    } catch (e: any) { setErrors([e.message]); } finally { setBusy(null); if (file.current) file.current.value = ""; }
+      if (r.ok) done(r); else failed(r.errors);
+    } catch (e: any) { failed([e.message]); } finally { setBusy(null); if (file.current) file.current.value = ""; }
   };
   const sample = async () => {
-    setBusy("Loading the synthetic sample book and running the audit…"); setErrors([]); setResult(null);
+    setBusy("Loading the synthetic sample book and running the audit…"); setErrors([]); setResult(null); setShowLive(true);
     try { done(await api<any>("/data/sample", { method: "POST" })); }
-    catch (e: any) { setErrors([e.message]); } finally { setBusy(null); }
+    catch (e: any) { failed([e.message]); } finally { setBusy(null); }
   };
 
   return (
@@ -61,9 +65,10 @@ export default function Data({ onChanged }: { onChanged: () => void }) {
       </div>
 
       {busy && <div className="verdict" style={{ marginBottom: 16 }}>{busy} This takes under a minute for a 10,000-loan book.</div>}
+      {showLive && <LivePanel running={!!busy} loadFirst onClose={() => setShowLive(false)} />}
       {result && (
         <div className="verdict ok" style={{ marginBottom: 16 }}>
-          Loaded <b>{result.dataset_id}</b> and audited it in {seconds(result.run.duration_ms)} inside Exasol.{" "}
+          Loaded <b>{result.dataset_id}</b> in {seconds(result.load_ms)} and audited it in {seconds(result.run.duration_ms)} inside Exasol.{" "}
           <a href="#/book" onClick={() => go("/book")}>Open the overview</a>
         </div>
       )}

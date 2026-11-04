@@ -130,5 +130,5 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 
 **D31. The live view reads Exasol's system tables rather than having the pipeline report progress** (accepted)
 - Why: judges should see the engine itself, not an animation we could have scripted. `EXA_DBA_SESSIONS` and `EXA_DBA_PROFILE_RUNNING` give the real statement and operators, and the existing run log gives step progress, so `scripts/audit.py` did not change. Its own connection means a poll never waits on the app's pool
-- It opens on the Policy page, not a page of its own, so the re-run, the engine and the changed totals stay on one screen
+- It opens on the Policy page, not a page of its own, so the re-run, the engine and the changed totals stay on one screen. The Data page has the same panel for a load and audit
 - Gave up: a complete statement list, which needs auditing or profiling switched on; polling is a sample and the panel says so. Watching a terminal run in the app

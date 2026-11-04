@@ -79,9 +79,21 @@ def is_audit_write(session: dict) -> bool:
     return session["command_name"] not in ("SELECT", "COMMIT") and any(f"{S[k]}." in sql for k in ("WORK", "OUT"))
 
 
+def is_book_write(session: dict) -> bool:
+    """A statement loading a loan book."""
+    sql = (session.get("sql_text") or "").upper()
+    return session["command_name"] not in ("SELECT", "COMMIT") and any(f"{S[k]}." in sql for k in ("RAW", "TRUTH"))
+
+
 def pick_current(sessions: list[dict]) -> dict | None:
-    """The statement to feature: the audit's own if there is one, then anything but a commit."""
-    return min(sessions, key=lambda s: 0 if is_audit_write(s) else (2 if s["command_name"] == "COMMIT" else 1), default=None)
+    """The statement to feature: the audit's own if there is one, then a book load, then anything but a commit."""
+    def rank(s: dict) -> int:
+        if is_audit_write(s):
+            return 0
+        if is_book_write(s):
+            return 1
+        return 3 if s["command_name"] == "COMMIT" else 2
+    return min(sessions, key=rank, default=None)
 
 
 def _mask(sql: str | None) -> str | None:

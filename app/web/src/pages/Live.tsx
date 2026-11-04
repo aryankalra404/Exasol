@@ -69,8 +69,8 @@ function Steps({ steps, starting, selected, onPick }: { steps: any[]; starting: 
 /** The step's first sentence: the rest of a SQL file's purpose line is detail for someone reading the file. */
 const firstSentence = (s: string) => sentence(s.split(/\.\s/)[0].replace(/\.$/, "")) + ".";
 
-function runWords(d: any, starting: boolean): string {
-  if (starting) return "Starting audit in Exasol";
+function runWords(d: any, starting: boolean, loadFirst = false): string {
+  if (starting) return loadFirst ? "Loading the book into Exasol" : "Starting audit in Exasol";
   if (!d?.run) return "No audit has run yet";
   if (d.running) return "Audit running in Exasol";
   if (d.run.status === "FAILED") return "The latest audit did not finish";
@@ -108,10 +108,14 @@ export function LiveStrip({ running }: { running: boolean }) {
   );
 }
 
-/** What Exasol is doing during a re-run, read from its own system tables. Nothing here is simulated or computed. */
-export function LivePanel({ running, onClose }: { running: boolean; onClose: () => void }) {
+/**
+ * What Exasol is doing during a re-run, read from its own system tables. Nothing here is simulated or computed.
+ * With loadFirst, the wait before the audit starts is a book being loaded, and its statements are shown too.
+ */
+export function LivePanel({ running, loadFirst = false, onClose }: { running: boolean; loadFirst?: boolean; onClose: () => void }) {
   const { data, error } = useLive(running);
   const starting = useStarting(running, data);
+  const watching = !!data && (data.running || (loadFirst && starting));
   // the last statement a poll saw, kept so there is something to read after a fast run ends
   const [held, setHeld] = useState<{ current: any; operators: any[] } | null>(null);
   const runRef = useRef<string | null>(null);
@@ -132,9 +136,11 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
       if (runRef.current !== null && data.running) setHeld(null);
       runRef.current = rid;
     }
+    // a run too quick to sample still gets its walk-through: times and descriptions come from the run log
+    if (data.running) setRec((r) => (r?.runId === rid ? r : { runId: rid, steps: {} }));
     const cur = data.current;
     if (!cur || cur.command_name === "COMMIT") return;
-    if (!data.running) return; // once the run is over, keep its last statement rather than a screen's read
+    if (!watching) return; // once the run is over, keep its last statement rather than a screen's read
     if (cur.step_id) {
       const sample = { current: cur, operators: data.operators };
       setRec((r) => {
@@ -151,7 +157,7 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
     setHeld({ current: cur, operators: data.operators });
   }, [data]);
 
-  const executing = data?.running && data.current && data.current.command_name !== "COMMIT";
+  const executing = watching && data.current && data.current.command_name !== "COMMIT";
   const replay = !running && !starting && !data?.running && data?.run?.status === "DONE" && rec?.runId === data.run.run_id;
   const count = data?.steps?.length ?? 0;
   const step = replay ? data.steps[pick] : null;
@@ -179,7 +185,7 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
     <div className="card pad live-panel">
       <div className="live-head">
         <span className={`live-dot ${data?.running || starting ? "on" : ""}`} />
-        <b>{runWords(data, starting)}</b>
+        <b>{runWords(data, starting, loadFirst)}</b>
         {data && <span className="small muted">Exasol {data.version} · read from its system tables</span>}
         <button className="btn ghost mini" style={{ marginLeft: "auto" }} onClick={onClose}>Close</button>
       </div>
