@@ -44,6 +44,15 @@ export default function App() {
   const rid = runId === "latest" ? "latest" : runId;
   const page = parts[0] ?? "book";
   const empty = status && (!status.loaded || !status.latest_run);
+  const topbar = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // sticky bars on the pages sit directly under the top bar, whose height changes when it wraps
+    const el = topbar.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => document.documentElement.style.setProperty("--topbar-h", `${el.offsetHeight}px`));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div className="shell">
@@ -68,7 +77,7 @@ export default function App() {
         </div>
       </aside>
       <main className="main">
-        <div className="topbar">
+        <div className="topbar" ref={topbar}>
           <div className="runchip">
             <span className="dot" />
             <span>Audit run</span>
