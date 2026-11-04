@@ -94,6 +94,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | R2 | Human checks: letters, oracle, auditor, RBI text | | todo | sheets in `docs/HUMAN_CHECKS.md`; only people can do these |
 | R6 | Exasol live view: running SQL, operators and step progress during a run | Aryan | done | `app/api/live.py`, live panel on Policy that opens on a re-run, then walks through the finished run step by step (arrows, left and right keys, or clicking a step), the same panel on Data for a load and audit, step strip on Work queues, `tests/test_live.py`. Read-only, no pipeline change. Run through the real buttons in headless Chrome |
 | R7 | Show source records: the raw rows and decision path behind one month | Aryan | done | `app/api/source.py`, panel on the loan page, `make tamper` and `make tamper-undo`, `tests/test_source_records.py`. Read-only, no pipeline change. Run through the real button in headless Chrome for refund, permitted, gap, fair, changed and unexplained months |
+| R8 | Pre-rehearsal fixes: review state, app restart, refusal prompt, deck figures | Aryan | doing | |
 
 ### Submission
 | # | Task | Owner | State | Notes |
