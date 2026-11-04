@@ -16,7 +16,7 @@ All figures below are synthetic, from the demo book (`s42_n10000`), recorded by 
 | Decides | which SQL to run. Exasol computes every number; the refund ledger stays the record |
 
 The limit is enforced by Exasol privileges, not by the prompt. `make ask-smoke` proves it each time: a read of
-`SAHI_TRUTH` through the MCP server comes back `insufficient privileges`.
+`SAHI_TRUTH` through the MCP server comes back `insufficient privileges`. Exasol stores names in uppercase, so a client that quotes `"SAHI_TRUTH"."expected"` gets "not found" instead; use `SAHI_TRUTH.EXPECTED` to show the refusal.
 
 ## Set up
 

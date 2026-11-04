@@ -38,7 +38,7 @@ Opening matters most: the date conflict and the matched rule must be on screen i
 - 15 min present + 5 min Q&A. Live demo 40%, Q&A depth 30%, real-world applicability 20%, communication 10%. Slides without a working demo are not scored
 - Run live on a **fresh seed** to show it is not canned
 - Live policy toggle: flip commitment fee permission, re-run, totals change
-- Ask the book live from an MCP client (`docs/ASK.md`): "how much do we owe borrowers disbursed by cheque in 2024?", show the SQL, then show the same client being refused a read of `SAHI_TRUTH`
+- Ask the book live from an MCP client (`docs/ASK.md`): "how much do we owe borrowers disbursed by cheque in 2024?", show the SQL, then show the same client being refused a read of `SAHI_TRUTH`. Ask it to run exactly `SELECT COUNT(*) FROM SAHI_TRUTH.EXPECTED`: if it quotes the name in lowercase (`"expected"`), Exasol says "not found", which looks like a missing table instead of a refusal
 - Meena's letter in Tamil as well as English and Hindi, checker green each time
 - Data page: download the template, upload it as a book (three loans), show Meena's ₹2,301.37 again on an uploaded book, then reload the sample. Answers "how would a lender use this?" on screen
 - Before the call: check the Policy page shows defaults and the overview shows the expected total. A setting left off from a rehearsal changes every figure
