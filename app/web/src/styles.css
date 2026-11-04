@@ -299,5 +299,8 @@ pre.sql {
 .live-steps .failed { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
 .live-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .live-sql { margin: 0; padding: 12px; background: var(--paper-2); border-radius: 8px; font: 12px/1.5 var(--mono); max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
-.live-line { overflow-wrap: anywhere; }
+.live-panel { margin-bottom: 16px; }
+.live-detail { margin-top: 16px; align-items: start; min-height: 300px; }
+.live-detail > div { min-width: 0; }
+.live-plan { max-height: 320px; overflow: auto; }
 @media (prefers-reduced-motion: reduce) { .live-dot.on, .live-steps .running { animation: none; } }

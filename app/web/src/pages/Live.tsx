@@ -121,6 +121,7 @@ export function LivePanel({ running, onClose }: { running: boolean; onClose: () 
     if (!cur || cur.command_name === "COMMIT") return;
     if (!data.running) return; // once the run is over, keep its last statement rather than a screen's read
     if (!cur.audit && held?.current?.audit) return;
+    if (!data.operators.length && held?.operators.length) return; // sampled before its plan existed: keep SQL and plan together
     setHeld({ current: cur, operators: data.operators });
   }, [data]);
 
