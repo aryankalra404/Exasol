@@ -128,6 +128,13 @@ Short log of non-obvious choices. Newest at the bottom. Each entry: what, why, w
 - Why: the loans found correct were invisible, and an auditor needs "these are clean" as much as "these are wrong". Refunds are reviewed by root cause, because nobody clicks through thousands of rows. The level says what the evidence is ("exact match, confirmed date"), not that a refund is certain: a matching record can still be wrong. Disagreeing dates do not lower the level, because that disagreement is often what proves the overcharge
 - Gave up: a single confidence score, which would hide what the doubt actually is
 
+**D33. Fix coverage judges a fix only on test months** (accepted)
+- What: a test month is one where the rule found at a branch and fair interest give different figures. The page and verdicts count only those. The old heatmap counted overcharged loans, and showed every other month as charged correctly
+- Why: most rules can only change the figure in certain months, for example when a cheque payout happens. An old loan could look green without ever being fixed. On the demo book, test months tell the hidden configuration apart at every branch; the old red fading out was payouts ending, not a fix
+- The first fair test month is reported as the earliest sign of a fix, not its date, because nothing in an extract records the date. The lender confirms it
+- Each branch's main rule is its largest by refund. Rules that give the same figure in some months stay listed as "also matched", since a posting cannot always separate them
+- Gave up: a verdict at branch level across all rules, and tracking refunds paid
+
 **D32. Source records read the stored rows live and return the statement Exasol actually ran** (accepted)
 - Why: an auditor or juror asking for the raw data should get the rows behind this one decision in one click, as stored, with SQL that cannot differ from what ran. Paise stay raw integers there; rupees appear only in the decision path, read from result tables
 - A panel for one month rather than a table browser, so the question "what was this decided from?" has one answer. Secondary tables stay folded

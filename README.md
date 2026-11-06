@@ -95,7 +95,7 @@ Start on **Overview**, click Meena's loan (`LDM0001`), then try the work queues 
 - **Refund ledger**: filter, sort, export CSV
 - **Review & release**: review by root cause, with the reason and evidence level on each row. A person approves or holds each refund with a name and reason; a re-run that changes a figure sends it back; only approved letters can be released, as a ZIP and manifest for the lender's own channels. This tool never contacts a borrower
 - **Work queues**: evidence gaps with drafted branch queries, and entry of the branch's reply: enter the date, re-run, and the same SQL rules decide the result. Also unexplained, ambiguous, permitted, undercharge
-- **Fix coverage**: sanction-cohort × charge-quarter heatmap. A fix that covered only new loans shows as old cohorts still being charged
+- **Fix coverage**: did a fix reach every loan? Judged only on test months, where the rule found and fair interest give different figures: a verdict per branch, a sanction × charge quarter heatmap, and the loans to correct as a CSV. A fix does not refund anyone, and this page does not track refunds paid
 - **Policy & re-runs**: flip an interpretation, re-run the whole book in Exasol, compare runs loan by loan
 - **Letter**: borrower refund letter in English, Hindi or Tamil, every figure from the ledger, rejected by the checker if any figure differs
 - **Method & lineage**: each SQL step with its file, SHA-256 and timing

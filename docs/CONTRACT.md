@@ -1,6 +1,6 @@
 # Contract
 
-**Version 0.9.0** (5 Nov 2026)
+**Version 0.10.0** (6 Nov 2026)
 
 The interface between components. Generator, SQL pipeline, oracle, app, letters and agent talk only through what is defined here. Build against this, not against each other's code.
 
@@ -173,6 +173,12 @@ Every table has `run_id` first. DDL lives in the SQL step that fills the table.
 
 **cohorts** (S90): `branch_id`, `sanction_quarter` (`YYYY-Qn`), `period_quarter`, `loans_in_cohort`, `loans_overcharged`, `excess_paise`
 
+**fix_coverage** (S90), one row per branch and rule behind its refunds. A test month is one where the rule and fair interest give different figures: `branch_id`, `convention_id`, `is_main` (largest refund at the branch), `verdict` (`NOT_FIXED`, `NEW_LOANS_ONLY`, `ALL_LOANS`, `MIXED`, `NOT_ENOUGH_EVIDENCE`), `first_fair_period`, `last_old_rule_period`, `old_rule_months`, `fair_months`, `undecided_months`, `older_old_rule_months`, `older_fair_months`, `newer_old_rule_months`, `newer_fair_months` (test months from `first_fair_period`; older means sanctioned before it), `loans_to_correct`, `open_loans_to_correct`, `loans_with_undisbursed`, `excess_paise`
+
+**fix_coverage_grid** (S90): `branch_id`, `convention_id`, `sanction_quarter`, `period_quarter`, `old_rule_months`, `fair_months`, `undecided_months`. No row means no test month in that cell
+
+**fix_loans** (S90), loans still on the rule: every old-rule month if no fair test month exists, otherwise those from `first_fair_period`: `branch_id`, `convention_id`, `loan_id`, `old_rule_months`, `first_old_rule_period`, `last_old_rule_period`, `loan_status`, `undisbursed_paise`, `refund_paise` (the loan's ledger total, across all its rules)
+
 **letter_figures** (S90), per refundable loan: one row per practice plus `line_key = 'TOTAL'`: `loan_id`, `borrower_id`, `display_name`, `preferred_language`, `product`, `branch_name`, `line_key`, `periods`, `days_affected`, `excess_paise`, `first_period`, `last_period`
 
 **balance_intervals** (S90), fair path for loans with any finding: `loan_id`, `period_start`, `interval_start`, `interval_end`, `balance_paise`, `annual_rate_pct`, `days`, `numerator`
@@ -211,6 +217,7 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - `GET /api/runs/{run_id}/ledger?practice=&branch=&product=&q=&sort=&page=&size=` and `/ledger.csv`
 - `GET /api/runs/{run_id}/queue/{status}?page=&size=` for `UNEXPLAINED`, `AMBIGUOUS`, `PERMITTED`, `UNDERCHARGE`, `EVIDENCE_GAP`; each row carries `total_rows`
 - `GET /api/runs/{run_id}/gaps`, `GET /api/runs/{run_id}/cohorts?branch=`
+- `GET /api/runs/{run_id}/fix-coverage`, `GET /api/runs/{run_id}/fix-coverage/{branch}?convention=`, `GET /api/runs/{run_id}/fix-coverage/{branch}/loans.csv?convention=`
 - `GET /api/runs/{run_id}/loans/{loan_id}` and `/loans/{loan_id}/proof/{period_start}`
 - `GET /api/runs/{run_id}/loans/{loan_id}/source/{period_start}`: read-only. The rows behind one audited month, exactly as stored, with the statement that fetched them. Returns `decision` (`fingerprint`, `findings`, `refund_paise`, `tranches` with `precedence`, from `SAHI_OUT` and the run's policy snapshot), `records` (`key`, `table`, `sql`, `columns`, `rows`; keys `evidence`, `entered_evidence`, `postings`, `tranches`, `rates`, `kfs`, `loan`, `receipts`), `deciding_evidence_ids`, `earlier_receipts` (`receipts`, `principal_paise`) and `freshness` (`same_extract`, `posted_in_run`, `posted_now`, `posted_matches`), because raw tables hold the loaded extract, not a copy per run. 404 for a month that run did not audit
 - `GET /api/runs/{run_id}/letters/{loan_id}?lang=en|hi|ta` (rendered letter + checker result)
@@ -231,6 +238,7 @@ Created by `sql/ask/ask_views.sql` (`make ask-setup`), not a pipeline step. Ever
 - 0.3.0 (31 Oct 2026): additive. New schema `SAHI_ASK` (views, latest run) and user `ASK_READER`; env `EXASOL_SCHEMA_ASK`, `EXASOL_ASK_USER`, `EXASOL_ASK_PASSWORD`. Affects nobody else
 - 0.3.1 (31 Oct 2026): additive. Work-queue API takes `page` and `size` (replaces `limit`) and returns `total_rows`. Affects app only
 - 0.4.0 (31 Oct 2026): additive. Data and inspection-pack endpoints. An uploaded book gets `dataset_id = upload_<UTC timestamp>`, `generator_version = 'upload'`, empty truth tables, and is stored under `data/uploads/`. Affects app only
+- 0.10.0 (6 Nov 2026): additive. S90 fills `fix_coverage`, `fix_coverage_grid`, `fix_loans`; three fix coverage endpoints. `cohorts` stays. Refund figures unchanged. Runs from before this have no rows until the audit is re-run. Affects pipeline, app
 - 0.9.0 (5 Nov 2026): additive. `GET /api/runs/{run_id}/loans/{loan_id}/source/{period_start}`. No table changes. Affects app only
 - 0.8.1 (5 Nov 2026): additive. `current.step_id` on `GET /api/live`. Affects app only
 - 0.8.0 (5 Nov 2026): additive. `GET /api/live`. No table changes. Affects app only

@@ -16,6 +16,7 @@ import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
+import pyexasol
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, PlainTextResponse, Response, StreamingResponse
@@ -227,6 +228,63 @@ def cohorts(run_id: str, branch: str):
     rid = resolve_run(run_id)
     return rows(f"SELECT sanction_quarter, period_quarter, loans_in_cohort, loans_overcharged, excess_paise "
                 f"FROM {OUT}.cohorts WHERE run_id = {{r}} AND branch_id = {{b}} ORDER BY 1, 2", {"r": rid, "b": branch})
+
+
+FIX_VERDICT_ORDER = """CASE c.verdict WHEN 'NEW_LOANS_ONLY' THEN 1 WHEN 'MIXED' THEN 2 WHEN 'NOT_FIXED' THEN 3
+                                   WHEN 'NOT_ENOUGH_EVIDENCE' THEN 4 ELSE 5 END"""
+
+
+def _fix_rows(sql: str, params: dict) -> list:
+    """Runs from before fix coverage existed have no rows, and until one newer run the tables do not exist either."""
+    try:
+        return rows(sql, params)
+    except pyexasol.ExaQueryError as e:
+        if "not found" in str(e).lower():
+            return []
+        raise
+
+
+@app.get("/api/runs/{run_id}/fix-coverage")
+def fix_coverage(run_id: str):
+    rid = resolve_run(run_id)
+    return _fix_rows(f"""SELECT c.*, br.branch_name FROM {OUT}.fix_coverage c
+                         JOIN {RAW}.branches br ON br.branch_id = c.branch_id
+                         WHERE c.run_id = {{r}}
+                         ORDER BY {FIX_VERDICT_ORDER}, c.excess_paise DESC""", {"r": rid})
+
+
+@app.get("/api/runs/{run_id}/fix-coverage/{branch}")
+def fix_coverage_branch(run_id: str, branch: str, convention: str):
+    rid = resolve_run(run_id)
+    p = {"r": rid, "b": branch, "c": convention}
+    return {
+        "grid": _fix_rows(f"""SELECT sanction_quarter, period_quarter, old_rule_months, fair_months, undecided_months
+                              FROM {OUT}.fix_coverage_grid
+                              WHERE run_id = {{r}} AND branch_id = {{b}} AND convention_id = {{c}}""", p),
+        "loans": _fix_rows(f"""SELECT loan_id, old_rule_months, first_old_rule_period, last_old_rule_period, loan_status,
+                                      undisbursed_paise, refund_paise
+                               FROM {OUT}.fix_loans
+                               WHERE run_id = {{r}} AND branch_id = {{b}} AND convention_id = {{c}}
+                               ORDER BY refund_paise DESC, loan_id LIMIT 25""", p),
+    }
+
+
+@app.get("/api/runs/{run_id}/fix-coverage/{branch}/loans.csv")
+def fix_loans_csv(run_id: str, branch: str, convention: str):
+    rid = resolve_run(run_id)
+    data = _fix_rows(f"""SELECT loan_id, branch_id, convention_id, old_rule_months, first_old_rule_period, last_old_rule_period,
+                                loan_status, undisbursed_paise, refund_paise
+                         FROM {OUT}.fix_loans
+                         WHERE run_id = {{r}} AND branch_id = {{b}} AND convention_id = {{c}}
+                         ORDER BY loan_id""", {"r": rid, "b": branch, "c": convention})
+    buf = io.StringIO()
+    if data:
+        w = csv.DictWriter(buf, fieldnames=list(data[0].keys()) + ["run_id"])
+        w.writeheader()
+        for r in data:
+            w.writerow({**r, "run_id": rid})
+    return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv",
+                             headers={"Content-Disposition": f"attachment; filename=loans_to_correct_{branch}_{rid[:8]}.csv"})
 
 
 @app.get("/api/runs/{run_id}/loans/{loan_id}")

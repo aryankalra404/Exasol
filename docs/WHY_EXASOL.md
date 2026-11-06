@@ -20,7 +20,7 @@ Rows out are from the 10,003-loan demo book (seed 42), run on 30 Oct 2026; see `
 | S60 Candidates | Every differing month recomputed under all candidate conventions side by side | `sql/60_candidate_conventions.sql` | one join, all conventions at once |
 | S70 Fingerprint + permitted check | Which convention reproduces each posting to the paisa; loan-history tie-break; KFS commitment fee permitted by policy | `sql/70_fingerprint.sql` | `DENSE_RANK`, `REGEXP_SUBSTR` |
 | S80 Findings | Status per month, excess split across practices so the parts sum exactly, evidence ids, step id | `sql/80_findings.sql` | telescoping attribution in one statement |
-| S90 Ledger | Refund ledger, gap queue with drafted queries, rollups, root causes, cohorts, letter figures, interval proof, run summary | `sql/90_ledger_and_rollups.sql` | `GROUPING SETS`, string building in SQL |
+| S90 Ledger | Refund ledger, gap queue with drafted queries, rollups, root causes, cohorts, fix coverage from test months, letter figures, interval proof, run summary | `sql/90_ledger_and_rollups.sql` | `GROUPING SETS`, string building in SQL |
 | Lineage | Step id, file, SHA-256 of each SQL file; per-step timings; policy snapshot per run | `scripts/audit.py` writes `SAHI_OUT.lineage`, `step_timings`, `audit_runs` | `MERGE` |
 | Live view | Shows the statement executing and its operators with row counts, as Exasol reports them. Not an audit step: reads only | `app/api/live.py` | `EXA_DBA_SESSIONS`, `EXA_DBA_PROFILE_RUNNING` |
 | Ask the book | Latest-run views and a read-only user for Exasol's MCP server | `sql/ask/ask_views.sql`, `scripts/ask_setup.py` | views with owner rights, `GRANT SELECT ON SCHEMA`, `exasol-mcp-server` |

@@ -24,7 +24,8 @@ scripts/load ──IMPORT──►  SAHI_RAW            SAHI_TRUTH (eval only)
                       70 fingerprint + permitted     │
                       80 findings + attribution      │
                       90 ledger, gaps, rollups,      │
-                         root causes, cohorts,       │
+                         root causes, cohorts, fix   │
+                         coverage,                   │
                          letter figures, proof       │
                               │   (SAHI_WORK holds   │
                               ▼    intermediates)    │

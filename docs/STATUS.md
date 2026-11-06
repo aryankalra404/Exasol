@@ -15,6 +15,7 @@ Live task board. Update it when you start, finish, block or cut something. Keep 
 
 Breaking or notable changes to `CONTRACT.md` that others must react to. Newest first.
 
+- 0.10.0 (6 Nov): additive, `fix_coverage`, `fix_coverage_grid`, `fix_loans`, three endpoints. Re-run the audit and restart the app. Refund figures unchanged
 - 0.9.0 (5 Nov): additive, `GET /api/runs/{run_id}/loans/{loan_id}/source/{period_start}`. No table changes
 - 0.8.1 (5 Nov): additive, `current.step_id` on `GET /api/live`. No table changes
 - 0.8.0 (5 Nov): additive, `GET /api/live`. No table changes
@@ -95,7 +96,7 @@ Breaking or notable changes to `CONTRACT.md` that others must react to. Newest f
 | R6 | Exasol live view: running SQL, operators and step progress during a run | Aryan | done | `app/api/live.py`, live panel on Policy that opens on a re-run, then walks through the finished run step by step (arrows, left and right keys, or clicking a step), the same panel on Data for a load and audit, step strip on Work queues, `tests/test_live.py`. Read-only, no pipeline change. Run through the real buttons in headless Chrome |
 | R7 | Show source records: the raw rows and decision path behind one month | Aryan | done | `app/api/source.py`, panel on the loan page, `make tamper` and `make tamper-undo`, `tests/test_source_records.py`. Read-only, no pipeline change. Run through the real button in headless Chrome for refund, permitted, gap, fair, changed and unexplained months |
 | R8 | Pre-rehearsal fixes: review state, app restart, refusal prompt, deck figures | Aryan | done | Slides 9 and 14 patched in the PDF, as the deck source is not in the repo. Exasol status and standby laptop still open, see Blockers |
-| R9 | Fix coverage from test months: judge a fix only on months the old rule and fair differ | Aryan | doing | |
+| R9 | Fix coverage from test months: judge a fix only on months the old rule and fair differ | Aryan | done | S90, `app/api/main.py`, Fix coverage page, `tests/test_fix_coverage.py`. Verdicts agree with the generator's hidden config at all 8 branches with a refundable main rule. 500k scale run not repeated with this step |
 
 ### Submission
 | # | Task | Owner | State | Notes |
@@ -148,6 +149,7 @@ Only numbers we actually ran. Hardware for all rows: Exasol Personal local, VM 2
 | Load and audit from the Data page | Sample reload: load 1.4 to 1.6 s, audit 8.2 to 9.2 s. Three-loan template upload: load 0.8 s, audit 1.1 to 1.5 s. Slowest live poll during an upload 0.14 s | s42_n10000 and the template book, separate schemas | 5 Nov 2026 |
 | One paisa added to one posting (`PDM0001010`), re-run | Meena's March 2025 goes from Refund to Unexplained (closest rule off by 1 paisa); refund total ₹8,83,23,995.69 to ₹8,83,21,694.32, down exactly ₹2,301.37; refund loans 3,063 to 3,062; unexplained months 454 to 455; her approved letter leaves the book. Paisa taken back, re-run: total, loans and unexplained restored exactly and the approval counts again. Re-runs 7.4 to 8.4 s | s42_n10000, separate schemas | 5 Nov 2026 |
 | Tests | 72 passed, 1 skipped locally with Exasol | separate schemas | 5 Nov 2026 |
+| Fix coverage, test months at BR001 from Jul 2024 | Sanctioned before: 40 old rule, 0 fair. Sanctioned from: 0 old rule, 144 fair. 8 undecided over the branch's whole history. Verdicts match the hidden config at 8 of 8 branches. Refund total and oracle (232,890 / 232,890, 0 paise) unchanged. Tests 79 passed. S90 about 1.0 s to 1.25 s, audit 9.1 s, one run | s42_n10000 | 6 Nov 2026 |
 | Unseen seed, generate + load + audit | 15.9 s (audit 8.3 s); refund ₹8,94,88,373.53, 3,102 loans; Meena ₹2,301.37 | s1107_n10000, MacBook Air M4 24 GB, separate schemas, no screen share | 5 Nov 2026 |
 | Oracle agreement, unseen seed | 38.2 s, largest deviation 0 paise, no disagreements | s1107_n10000, all loans | 5 Nov 2026 |
 

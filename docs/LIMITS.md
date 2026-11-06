@@ -20,6 +20,7 @@ What this does not do, what we assumed, and where it can be wrong. Add to this w
 - **Broken-period interest is not a separate case.** Interest from disbursal to the first EMI is part of the fair path; there is no separately disclosed broken-period charge to test as a false positive
 - **A wrong day count in the LMS** (30E/360 against a KFS that says ACT/365) is not one of the 33 conventions, so it lands in UNEXPLAINED or UNDERCHARGE, by design
 - **AMBIGUOUS months remain** where no month of the same loan separates the candidates (often single-month differences). Their excess is known and counted by default (policy setting)
+- **Fix coverage reads postings only.** The first fair test month is the earliest sign of a fix, not its date, and a loan with no test month since then is no evidence either way. A refund paid outside the loan system does not change any page: only a reversal posted for that month and a new extract does. Tested against the generator's hidden configuration, so real books may give more Mixed verdicts
 - **`findings.tranche_no` is not filled yet**; the loan page shows which tranche from the evidence timeline
 
 ## Interpretation
